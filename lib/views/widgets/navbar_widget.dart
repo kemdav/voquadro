@@ -12,7 +12,7 @@ class NavbarWidget extends StatelessWidget {
         return NavigationBar(
           destinations: [
             NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
+            NavigationDestination(icon: Icon(Icons.data_array), label: 'Status'),
           ],
           selectedIndex: selectedPage,
           onDestinationSelected: (int value) {

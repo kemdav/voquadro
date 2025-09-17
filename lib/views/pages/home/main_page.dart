@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/views/pages/home/select_mode_page.dart';
+import 'package:voquadro/views/widgets/navbar_widget.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -26,12 +27,23 @@ class MainPage extends StatelessWidget {
               );
             },
           ),
+          IconButton(onPressed: () {
+            
+          }, icon: Icon(Icons.person)),
+          IconButton(onPressed: () {
+            
+          }, icon: Icon(Icons.settings)),
         ],
       ),
+      bottomNavigationBar: NavbarWidget(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text('Rank: Normal Person'),
+            Text('Pacing Control: 100'),
+            Text('Filler Word Control: 100'),
+            Image.asset('assets/images/tempCharacter.png'),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -43,7 +55,7 @@ class MainPage extends StatelessWidget {
                   ),
                 );
               },
-              child: Text('Select Mode'),
+              child: Text('Start Speaking'),
             ),
           ],
         ),
