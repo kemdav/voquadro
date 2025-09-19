@@ -50,7 +50,7 @@ class _NavbarModeState extends State<NavbarMode> {
                     shape: const StadiumBorder(),
                     onPressed: () {
                     },
-                    backgroundColor: const Color(0xFFC8E6C9),
+                    backgroundColor: "00A9A5".toColor(),
                     elevation: 3.0,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -66,10 +66,11 @@ class _NavbarModeState extends State<NavbarMode> {
                 ),
                 SizedBox(width: 20,),
                 CircleAvatar(
+                  backgroundColor: "7962A5".toColor(),
                   radius: 40,
                   child: IconButton(onPressed: () {
                     
-                  }, icon: Icon(Icons.analytics), iconSize: 50,),
+                  }, icon: Icon(Icons.analytics), iconSize: 50, color: Colors.white,),
                 )
               ],
             ),
