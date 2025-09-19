@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/views/pages/gameplay/public_speaking/mode_page.dart';
 import 'package:voquadro/views/pages/gameplay/public_speaking/status_page.dart';
-import 'package:voquadro/views/widgets/navbar_mode_selection.dart';
+import 'package:voquadro/views/widgets/navbar_mode.dart';
 
 List<Widget> pages = [ModePage(), PublicSpeakingStatusPage()];
 class PublicSpeakingSelectionPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _PublicSpeakingSelectionPageState extends State<PublicSpeakingSelectionPag
         title: Text('Public Speaking Mode'),
         centerTitle: true,
       ),
-      bottomNavigationBar: NavbarModeSelectionWidget(statusPage: PublicSpeakingStatusPage(),),
+      bottomNavigationBar: NavbarMode(statusPage: PublicSpeakingStatusPage(),),
       body: ValueListenableBuilder(valueListenable: publicModeSelectedNotifier, builder: (context, value, child) {
         return pages.elementAt(value);
       },),
