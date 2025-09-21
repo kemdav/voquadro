@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/views/pages/home/select_mode_page.dart';
 import 'package:voquadro/views/widgets/navbar_widget.dart';
+import 'package:voquadro/views/pages/authentication/login_page.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -56,6 +57,20 @@ class MainPage extends StatelessWidget {
                 );
               },
               child: Text('Start Speaking'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return LoginPage();
+                    },
+                  ),
+                );
+              },
+              child: Text('Login'),
             ),
           ],
         ),
