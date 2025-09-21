@@ -91,7 +91,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               InkWell(
                 onTap: () {
-                  print('ímage selected');
                 },
                 child: Container(
                   height: 50,
