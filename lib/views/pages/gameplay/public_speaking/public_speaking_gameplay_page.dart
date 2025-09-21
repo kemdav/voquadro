@@ -1,51 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/views/pages/gameplay/feedback_page.dart';
+import 'package:voquadro/views/widgets/AppBar/general_app_bar.dart';
+import 'package:voquadro/views/widgets/AppBar/empty_actions.dart';
+import 'package:voquadro/views/widgets/BottomBar/gameplay_actions.dart';
+import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
 
 class PublicSpeakingGameplayPage extends StatelessWidget {
   const PublicSpeakingGameplayPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    const double customAppBarHeight = 80.0;
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              color: Colors.amberAccent,
-              width: 300,
-              height: 100,
-              child: Center(child: Text('Prompt')),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: customAppBarHeight),
+            child: Text('GH'),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AppBarGeneral(actionButtons: EmptyActions()),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: GeneralNavigationBar(
+              actions: GameplayActions(),
+              navBarVisualHeight: 70,
+              totalHitTestHeight: 130,
+              verticalOffset: 0,
             ),
-            Image.asset('assets/images/tempCharacter.png'),
-            Container(
-              color: Colors.amberAccent,
-              width: 200,
-              height: 50,
-              child: Center(child: Text('Timer')),
-            ),
-            SizedBox(height: 20,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  child: IconButton(
-                    onPressed: () {
-                      // Temporary Route to Feedback Page
-
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
-                        return FeedbackPage();
-                      },));
-                    },
-                    icon: Icon(Icons.mic),
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,46 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
 import 'package:logger/logger.dart';
+import 'package:voquadro/src/hex_color.dart';
 
 var logger = Logger();
 
-class AppBarMode extends StatelessWidget {
-  const AppBarMode({super.key});
+class OnlyBackActions extends StatelessWidget {
+  const OnlyBackActions({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const double visibleBarHeight = 80.0;
     const double buttonSize = 60.0; 
-    const double buttonOverflow = 20.0;
-    
-    const double totalWidgetHeight = visibleBarHeight + buttonOverflow;
+    const double visibleBarHeight = 80;
 
-    return SizedBox(
-      height: totalWidgetHeight,
-      child: Stack(
-        clipBehavior: Clip.none, 
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: visibleBarHeight,
-            child: Container(
-              decoration: BoxDecoration(
-                color: "49416D".toColor(),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          Positioned(
+    return Positioned(
             top: visibleBarHeight - (buttonSize / 2),
             left: 20,
             right: 20,
@@ -88,9 +60,6 @@ class AppBarMode extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
+          );
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/views/pages/gameplay/public_speaking/mode_page.dart';
 import 'package:voquadro/views/pages/gameplay/public_speaking/status_page.dart';
-import 'package:voquadro/views/widgets/appbar_mode.dart';
-import 'package:voquadro/views/widgets/navbar_mode.dart';
+import 'package:voquadro/views/widgets/AppBar/general_app_bar.dart';
+import 'package:voquadro/views/widgets/AppBar/default_actions.dart';
+import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
+import 'package:voquadro/views/widgets/BottomBar/mode_selection_actions.dart';
 
 List<Widget> pages = [PublicSpeakingModePage(), PublicSpeakingStatusPage()];
 
@@ -26,15 +28,20 @@ class _PublicSpeakingSelectionPageState
             padding: const EdgeInsets.only(top: customAppBarHeight),
             child: PublicSpeakingModePage(),
           ),
-           Positioned(
+          Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: AppBarMode(),
+            child: AppBarGeneral(actionButtons: DefaultActions()),
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: NavbarMode(statusPage: PublicSpeakingStatusPage()),
+            child: GeneralNavigationBar(
+              actions: ModeSelectionActions(),
+              navBarVisualHeight: 140,
+              totalHitTestHeight: 180,
+              verticalOffset: 0,
+            ),
           ),
         ],
       ),
