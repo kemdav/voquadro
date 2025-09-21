@@ -40,7 +40,6 @@ class _PublicSpeakingSelectionPageState
               actions: ModeSelectionActions(),
               navBarVisualHeight: 140,
               totalHitTestHeight: 180,
-              verticalOffset: 0,
             ),
           ),
         ],

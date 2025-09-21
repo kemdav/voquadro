@@ -1,39 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/views/widgets/AppBar/general_app_bar.dart';
-import 'package:voquadro/views/widgets/AppBar/empty_actions.dart';
-import 'package:voquadro/views/widgets/BottomBar/gameplay_actions.dart';
-import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
+import 'package:voquadro/data/voquadro_controller.dart';
+import 'package:voquadro/views/pages/gameplay/public_speaking/gameplay/readying_prompt_page.dart';
+import 'package:voquadro/views/pages/gameplay/public_speaking/gameplay/speaking_page.dart';
 
-class PublicSpeakingGameplayPage extends StatelessWidget {
+class PublicSpeakingGameplayPage extends StatefulWidget {
   const PublicSpeakingGameplayPage({super.key});
 
   @override
+  State<PublicSpeakingGameplayPage> createState() => _PublicSpeakingGameplayPageState();
+}
+
+class _PublicSpeakingGameplayPageState extends State<PublicSpeakingGameplayPage> {
+     final voquadroController = VoquadroController.instance;
+  @override
+  void initState(){
+    super.initState();
+    voquadroController.addListener(_onStateChanged);
+  }
+
+  @override
+  void dispose(){
+    voquadroController.removeListener(_onStateChanged);
+    super.dispose();
+  }
+
+  void _onStateChanged(){
+    setState(() {});
+  }
+  @override
   Widget build(BuildContext context) {
-    const double customAppBarHeight = 80.0;
-    return Scaffold(
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: customAppBarHeight),
-            child: Text('GH'),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: AppBarGeneral(actionButtons: EmptyActions()),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: GeneralNavigationBar(
-              actions: GameplayActions(),
-              navBarVisualHeight: 70,
-              totalHitTestHeight: 130,
-              verticalOffset: 0,
-            ),
-          ),
-        ],
-      ),
-    );
+    switch (voquadroController.voquadroState){
+      case VoquadroState.idle:
+        return ReadyingPromptPage();
+      case VoquadroState.ready:
+        return ReadyingPromptPage();
+      case VoquadroState.speaking:
+        return SpeakingPage();
+    }
   }
 }

@@ -3,6 +3,7 @@ import 'package:voquadro/src/hex_color.dart';
 import 'package:logger/logger.dart';
 
 var logger = Logger();
+
 class GeneralNavigationBar extends StatefulWidget {
   const GeneralNavigationBar({super.key, required this.actions, required this.navBarVisualHeight, required this.totalHitTestHeight});
 
