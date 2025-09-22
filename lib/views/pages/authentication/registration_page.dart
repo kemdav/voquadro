@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class RegistrationPage extends StatelessWidget {
   const RegistrationPage({super.key});
 

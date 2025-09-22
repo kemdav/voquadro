@@ -22,17 +22,19 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             SizedBox(width: double.infinity, child: Text('Email')),
-            TextField(controller: emailController,),
+            TextField(controller: emailController),
             SizedBox(height: 20),
             SizedBox(width: double.infinity, child: Text('Password')),
-            TextField(controller : passwordController,),
+            TextField(controller: passwordController),
             SizedBox(height: 20),
-            invalidAuthentication == true ? Text('WRONG INFORMATION') : SizedBox(height: 0,),
+            invalidAuthentication == true
+                ? Text('WRONG INFORMATION')
+                : SizedBox(height: 0),
             ElevatedButton(
               onPressed: () {
                 setState(() {
-                    invalidAuthentication = false;
-                  });
+                  invalidAuthentication = false;
+                });
                 if (authenticateUser(
                       emailController.text,
                       passwordController.text,
