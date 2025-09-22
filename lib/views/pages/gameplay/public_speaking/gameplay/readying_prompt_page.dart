@@ -15,7 +15,7 @@ class ReadyingPromptPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: customAppBarHeight),
-            child: Text('GH'),
+            child: Text('READYING!'),
           ),
           Positioned(
             top: 0,

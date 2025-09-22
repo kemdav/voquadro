@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum VoquadroState {
-  idle,
-  ready,
-  speaking,
-}
+enum VoquadroState { idle, ready, speaking, feedback }
 
 class VoquadroController with ChangeNotifier {
   VoquadroController._();
@@ -13,8 +9,8 @@ class VoquadroController with ChangeNotifier {
 
   VoquadroState _voquadroState = VoquadroState.idle;
   VoquadroState get voquadroState => _voquadroState;
-  
-  void changeVoquadroState(VoquadroState newState){
+
+  void changeVoquadroState(VoquadroState newState) {
     _voquadroState = newState;
     notifyListeners();
   }
