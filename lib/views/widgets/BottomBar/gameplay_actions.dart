@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:voquadro/data/voquadro_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/views/pages/gameplay/feedback/feedback_page.dart';
+import 'package:voquadro/views/pages/gameplay/public_speaking/gameplay/mic_test_page.dart';
 
 var logger = Logger();
 
@@ -79,7 +80,10 @@ class _GameplayActionsState extends State<GameplayActions> {
   }
 
   void _navigateToFeedbackPage() {
+    // This is where post game stuff will be inserted
+
     logger.d('Going to feedback page');
+    voquadroController.changeVoquadroState(VoquadroState.idle);
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const FeedbackPage()),
@@ -128,6 +132,15 @@ class _GameplayActionsState extends State<GameplayActions> {
         IconButton.filled(
           onPressed: () {
             logger.d('Mic Button Pressed!');
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return MicTestPage();
+                },
+              ),
+            );
           },
           icon: const Icon(Icons.mic),
           iconSize: 50,
