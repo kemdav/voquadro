@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:voquadro/data/voquadro_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/views/pages/gameplay/feedback/feedback_page.dart';
+import 'package:voquadro/views/pages/gameplay/public_speaking/gameplay/mic_test_page.dart';
 
 var logger = Logger();
 
@@ -14,20 +17,77 @@ class GameplayActions extends StatefulWidget {
 
 class _GameplayActionsState extends State<GameplayActions> {
   final voquadroController = VoquadroController.instance;
+  Timer? _startDelayTimer;
+  Timer? _navigationTimer;
+
   @override
   void initState() {
     super.initState();
+    logger.d('--- GameplayActions INIT --- Instance HashCode: $hashCode');
     voquadroController.addListener(_onStateChanged);
   }
 
   @override
   void dispose() {
+    _startDelayTimer?.cancel();
+    _navigationTimer?.cancel();
+    logger.d('--- GameplayActions DISPOSE --- Instance HashCode: $hashCode');
     voquadroController.removeListener(_onStateChanged);
     super.dispose();
   }
 
   void _onStateChanged() {
+    logger.d('State changed to: ${voquadroController.voquadroState}');
+    if (voquadroController.voquadroState == VoquadroState.idle) {
+      logger.d('Cancelling sequence because state changed to idle.');
+      _cancelGameplaySequence();
+    }
     setState(() {});
+  }
+
+  void _startGameplaySequence() {
+    _cancelGameplaySequence();
+
+    logger.d('Start Button Pressed!');
+    voquadroController.changeVoquadroState(VoquadroState.ready);
+
+    logger.d('Scheduling speech start delay...');
+    _startDelayTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted) return;
+
+      logger.d('Going to speaking state');
+      voquadroController.changeVoquadroState(VoquadroState.speaking);
+
+      logger.d('Scheduling navigation to feedback page...');
+      _navigationTimer = Timer(const Duration(seconds: 10), () {
+        logger.d('Checking if mounted...');
+        if (!mounted) return;
+        logger.d('Mounted!');
+        _navigateToFeedbackPage();
+      });
+    });
+  }
+
+  void _cancelGameplaySequence() {
+    if (_startDelayTimer?.isActive ?? false) {
+      logger.d('Start delay timer cancelled!');
+      _startDelayTimer?.cancel();
+    }
+    if (_navigationTimer?.isActive ?? false) {
+      logger.d('Navigation timer cancelled!');
+      _navigationTimer?.cancel();
+    }
+  }
+
+  void _navigateToFeedbackPage() {
+    // This is where post game stuff will be inserted
+
+    logger.d('Going to feedback page');
+    voquadroController.changeVoquadroState(VoquadroState.idle);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const FeedbackPage()),
+    );
   }
 
   @override
@@ -36,9 +96,10 @@ class _GameplayActionsState extends State<GameplayActions> {
       case VoquadroState.idle:
         return defaultActions();
       case VoquadroState.ready:
-        return speakingActions();
       case VoquadroState.speaking:
-        return Text('Temp');
+        return speakingActions();
+      default:
+        return const Text('Invalid State');
     }
   }
 
@@ -50,6 +111,7 @@ class _GameplayActionsState extends State<GameplayActions> {
         IconButton.filled(
           onPressed: () {
             logger.d('Restart Button Pressed!');
+            _startGameplaySequence();
           },
           icon: const Icon(Icons.loop),
           iconSize: 50,
@@ -59,22 +121,7 @@ class _GameplayActionsState extends State<GameplayActions> {
           ),
         ),
         IconButton.filled(
-          onPressed: () {
-            logger.d('Start Button Pressed!');
-            voquadroController.changeVoquadroState(VoquadroState.ready);
-
-            // Switch to the Speaking Page after a delay
-            logger.d('Scheduling Speech Start Delay');
-            const delay = Duration(seconds: 5);
-
-            Future.delayed(delay, () {
-              logger.d('Going to speaking page');
-
-              voquadroController.changeVoquadroState(VoquadroState.speaking);
-
-              // !Start Gameplay Insert Here
-            });
-          },
+          onPressed: _startGameplaySequence,
           icon: const Icon(Icons.play_arrow),
           iconSize: 100,
           style: IconButton.styleFrom(
@@ -85,6 +132,15 @@ class _GameplayActionsState extends State<GameplayActions> {
         IconButton.filled(
           onPressed: () {
             logger.d('Mic Button Pressed!');
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return MicTestPage();
+                },
+              ),
+            );
           },
           icon: const Icon(Icons.mic),
           iconSize: 50,
@@ -105,6 +161,7 @@ class _GameplayActionsState extends State<GameplayActions> {
         IconButton.filled(
           onPressed: () {
             logger.d('Restart Button Pressed!');
+            _startGameplaySequence();
           },
           icon: const Icon(Icons.loop),
           iconSize: 50,
@@ -116,6 +173,8 @@ class _GameplayActionsState extends State<GameplayActions> {
         IconButton.filled(
           onPressed: () {
             logger.d('Close Button Pressed!');
+            _cancelGameplaySequence();
+            voquadroController.changeVoquadroState(VoquadroState.idle);
           },
           icon: const Icon(Icons.close),
           iconSize: 100,
