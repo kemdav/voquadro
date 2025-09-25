@@ -123,7 +123,7 @@ We use the Supabase CLI to run the entire backend stack (database, auth, storage
 
 3. **Update your `.env.local` file:** Copy and paste the `API URL` and `anon key` from the terminal output into your `.env.local` file.
 
-   ```.env.local
+   ```env
    SUPABASE_URL="http://localhost:54321"
    SUPABASE_ANON_KEY="your-local-anon-key-from-cli"
    ```
