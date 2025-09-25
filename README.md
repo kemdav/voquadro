@@ -54,47 +54,47 @@ Follow these steps to set up your local development environment.
 
 2. **Clone the repository:**
 
-    ```bash
-    git clone https://github.com/your-repo/project-name.git
-    cd project-name
-    ```
+   ```bash
+   git clone https://github.com/your-repo/project-name.git
+   cd project-name
+   ```
 
 3. **Install Project Dependencies:**
 
-    ```bash
-    flutter pub get
-    ```
+   ```bash
+   flutter pub get
+   ```
 
 ## Local Development
 
 ### Setting Up Environment Variables
 
-Environment variables are used to store sensitive information like API keys. We use a `.env` file for local development, which is ignored by Git. This project uses the `flutter_dotenv` package to manage them.
+Environment variables are used to store sensitive information like API keys. We use a `.env.local` file for local development, which is ignored by Git. This project uses the `flutter_dotenv` package to manage them.
 
 1. Create a local environment file by copying the example file.
-    **For Windows (in Command Prompt):**
+   **For Windows (in Command Prompt):**
 
-    ```powershell
-    copy .env.example .env
-    ```
+   ```powershell
+   copy .env.example .env.local
+   ```
 
-    **For Mac/Linux:**
+   **For Mac/Linux:**
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   cp .env.example .env.local
+   ```
 
-2. Ensure your `pubspec.yaml` file is configured to include the `.env` file as an asset:
+2. Ensure your `pubspec.yaml` file is configured to include the `.env.local` file as an asset:
 
-    ```yaml
-    flutter:
-      assets:
-        - .env
-    ```
+   ```yaml
+   flutter:
+     assets:
+       - .env.local
+   ```
 
-    *Note: Remember to run `flutter pub get` again if you modify `pubspec.yaml`.*
+   _Note: Remember to run `flutter pub get` again if you modify `pubspec.yaml`._
 
-3. The new `.env` file will be populated with the correct credentials in the next step.
+3. The new `.env.local` file will be populated with the correct credentials in the next step.
 
 ### Running the Local Backend
 
@@ -102,29 +102,31 @@ We use the Supabase CLI to run the entire backend stack (database, auth, storage
 
 1. **Start all Supabase services:**
 
-    ```bash
-    supabase start
-    ```    *Note: The first time you run this, it will download the necessary Docker images, which may take a few minutes.*
+   ````bash
+   supabase start
+   ```    *Note: The first time you run this, it will download the necessary Docker images, which may take a few minutes.*
+
+   ````
 
 2. Once successful, the CLI will output your local credentials and service URLs:
 
-    ```plaintext
-    Supabase local development setup initiated.
+   ```plaintext
+   Supabase local development setup initiated.
 
-    API URL: http://localhost:54321
-    DB URL: postgresql://postgres:postgres@localhost:54322/postgres
-    Studio URL: http://localhost:54323
-    Inbucket URL: http://localhost:54324
-    anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-    service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-    ```
+   API URL: http://localhost:54321
+   DB URL: postgresql://postgres:postgres@localhost:54322/postgres
+   Studio URL: http://localhost:54323
+   Inbucket URL: http://localhost:54324
+   anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   ```
 
-3. **Update your `.env` file:** Copy and paste the `API URL` and `anon key` from the terminal output into your `.env` file.
+3. **Update your `.env.local` file:** Copy and paste the `API URL` and `anon key` from the terminal output into your `.env.local` file.
 
-    ```.env
-    SUPABASE_URL="http://localhost:54321"
-    SUPABASE_ANON_KEY="your-local-anon-key-from-cli"
-    ```
+   ```env
+   SUPABASE_URL="http://localhost:54321"
+   SUPABASE_ANON_KEY="your-local-anon-key-from-cli"
+   ```
 
 ### Running the Frontend App
 
@@ -158,17 +160,17 @@ When you need to make a schema change (e.g., create a table, add a column, set u
 
 2. **Generate a new migration file:** Once you are happy with your changes, create a new migration file to record the SQL. Give it a descriptive name.
 
-    ```bash
-    supabase migration new <your_descriptive_name>
-    ```
+   ```bash
+   supabase migration new <your_descriptive_name>
+   ```
 
-    For example:
+   For example:
 
-    ```bash
-    supabase migration new create_profiles_table_with_rls
-    ```
+   ```bash
+   supabase migration new create_profiles_table_with_rls
+   ```
 
-    This command creates a new, empty SQL file in the `supabase/migrations` directory.
+   This command creates a new, empty SQL file in the `supabase/migrations` directory.
 
 3. **Get the SQL for your changes:** In the Supabase Studio, you can often find the SQL equivalent of your UI actions. For table creation, you can use the "SQL" button in the table editor.
 
@@ -176,9 +178,9 @@ When you need to make a schema change (e.g., create a table, add a column, set u
 
 5. **Apply the migration locally:** To confirm your migration file works correctly, reset your local database. This will apply the new migration you just created.
 
-    ```bash
-    supabase db reset
-    ```
+   ```bash
+   supabase db reset
+   ```
 
 ### Committing and Sharing Migrations
 
@@ -186,15 +188,15 @@ Once you have created and tested your migration file, it's ready to be shared wi
 
 1. **Add the migration file to Git:**
 
-    ```bash
-    git add supabase/migrations
-    ```
+   ```bash
+   git add supabase/migrations
+   ```
 
 2. **Commit your changes** along with any related application code.
 
-    ```bash
-    git commit -m "feat: create profiles table and setup RLS policies"
-    ```
+   ```bash
+   git commit -m "feat: create profiles table and setup RLS policies"
+   ```
 
 3. **Push your branch** and create a Pull Request. Your teammates can now pull your changes and update their own local databases.
 
