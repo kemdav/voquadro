@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/views/widget_tree.dart';
-// for testing only:
-import 'package:voquadro/views/pages/authentication/registration_section/registration_page_1.dart';
+import 'package:voquadro/views/pages/authentication/registration_section/registration_page_1.dart'; // for testing only:
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
