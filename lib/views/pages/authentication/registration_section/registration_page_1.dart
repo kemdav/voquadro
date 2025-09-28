@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'registration_page_2.dart';
 
 class RegistrationPage extends StatelessWidget {
   const RegistrationPage({super.key});
@@ -8,31 +9,33 @@ class RegistrationPage extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F0FB),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top bar with back button
+              //back button
               Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: Icon(Icons.arrow_back, color: colors.primary),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     style: IconButton.styleFrom(
-                      backgroundColor: colors.primary.withOpacity(0.25),
+                      backgroundColor: const Color(0xFF7962A5),
                     ),
+                    iconSize: 30,
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 100),
 
-              // Centered circular placeholder logo using tempCharacter
+              // placeholder logo
               Center(
                 child: CircleAvatar(
                   radius: 56,
-                  backgroundColor: colors.surfaceVariant,
+                  backgroundColor: colors.surfaceContainerHighest,
                   backgroundImage: const AssetImage(
                     'assets/images/tempCharacter.png',
                   ),
@@ -41,14 +44,14 @@ class RegistrationPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Rounded progress bar
+              // progress bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: SizedBox(
                   height: 12,
                   child: LinearProgressIndicator(
                     value: 0.22,
-                    color: colors.tertiary,
+                    color: const Color(0xFF00A9A5),
                     backgroundColor: colors.outlineVariant.withOpacity(0.5),
                     minHeight: 12,
                   ),
@@ -57,31 +60,39 @@ class RegistrationPage extends StatelessWidget {
 
               const SizedBox(height: 36),
 
-              // Title
+              // Let's start with a name…
               Text(
                 "Let's start with a name…",
                 textAlign: TextAlign.left,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: colors.primary,
+                  color: const Color(0xFF322082),
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 40),
 
-              // Username field with leading icon and large radius
+              // Username field
               _UsernameField(),
+
+              const Spacer(),
 
               const SizedBox(height: 24),
 
-              // Continue button with big rounded corners and subtle shadow
+              // Continue button
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const RegistrationPage2(),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.primary,
-                    foregroundColor: colors.onPrimary,
+                    backgroundColor: const Color(0xFF7962A5),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
@@ -126,24 +137,25 @@ class _UsernameFieldState extends State<_UsernameField> {
       controller: _controller,
       decoration: InputDecoration(
         hintText: 'Username',
-        prefixIcon: Icon(Icons.person, color: colors.primary),
+        hintStyle: const TextStyle(color: Color(0xFF322082)),
+        prefixIcon: const Icon(Icons.person, color: Color(0xFF7962A5)),
         filled: true,
-        fillColor: colors.primary.withOpacity(0.08),
+        fillColor: const Color(0xFFE5D3EC),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 18,
           horizontal: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide(color: colors.outlineVariant),
+          borderSide: const BorderSide(color: Color(0xFFE5D3EC)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide(color: colors.outlineVariant),
+          borderSide: const BorderSide(color: Color(0xFFE5D3EC)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide(color: colors.primary, width: 2),
+          borderSide: const BorderSide(color: Color(0xFFE5D3EC), width: 2),
         ),
       ),
       textInputAction: TextInputAction.done,

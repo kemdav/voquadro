@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/views/widget_tree.dart';
-
+// for testing only:
+import 'package:voquadro/views/pages/authentication/registration_section/registration_page_1.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
               brightness: value == true ? Brightness.dark : Brightness.light,
             ),
           ),
-          home: MyHomePage(),
+          home:
+              MyHomePage(), //revert back to MyHomePage() or go RegistrationPage() for testing
         );
       },
     );
