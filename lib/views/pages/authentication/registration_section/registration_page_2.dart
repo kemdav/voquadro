@@ -24,6 +24,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F0FB),
       body: SafeArea(
@@ -33,6 +34,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // back button
+              const SizedBox(height: 30),
               Row(
                 children: [
                   IconButton(
@@ -66,21 +68,26 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
               const SizedBox(height: 24),
 
               // progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  height: 12,
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color(0xFF7962A5), // Border color
+                    width: 1.0,
+                  ),
+                  borderRadius: BorderRadius.circular(12), // Rounded border
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10), // Inner rounding
                   child: LinearProgressIndicator(
                     value: 0.65,
                     color: const Color(0xFF00A9A5),
-                    backgroundColor: const Color(0xFFE5D3EC),
+                    backgroundColor: colors.outlineVariant.withOpacity(0.5),
                     minHeight: 12,
                   ),
                 ),
               ),
 
-              const SizedBox(height: 36),
-
+              const SizedBox(height: 45),
               // You're getting there! with dolphin icon
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

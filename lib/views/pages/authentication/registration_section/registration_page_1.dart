@@ -17,6 +17,7 @@ class RegistrationPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               //back button
+              const SizedBox(height: 30),
               Row(
                 children: [
                   IconButton(
@@ -45,10 +46,16 @@ class RegistrationPage extends StatelessWidget {
               const SizedBox(height: 24),
 
               // progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  height: 12,
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color(0xFF7962A5), // Border color
+                    width: 1.0,
+                  ),
+                  borderRadius: BorderRadius.circular(12), // Rounded border
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10), // Inner rounding
                   child: LinearProgressIndicator(
                     value: 0.22,
                     color: const Color(0xFF00A9A5),
@@ -58,9 +65,8 @@ class RegistrationPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 36),
-
               // Let's start with a name…
+              const SizedBox(height: 45),
               Text(
                 "Let's start with a name…",
                 textAlign: TextAlign.left,
