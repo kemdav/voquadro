@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
           home:
-              RegistrationPage(), //revert back to MyHomePage() or go RegistrationPage() for testing
+              MyHomePage(), //revert back to MyHomePage() or go RegistrationPage() for testing
         );
       },
     );

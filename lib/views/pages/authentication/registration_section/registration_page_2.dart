@@ -88,12 +88,12 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
               ),
 
               const SizedBox(height: 45),
-              // You're getting there! with dolphin icon
+              // You're getting there!
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "You're getting there!",
+                    "You're getting there!🐬",
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
@@ -101,7 +101,6 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.pets, color: Colors.blue[400], size: 28),
                 ],
               ),
 
