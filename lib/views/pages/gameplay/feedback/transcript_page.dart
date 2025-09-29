@@ -5,10 +5,12 @@ class TranscriptPage extends StatelessWidget {
     super.key,
     required this.cardBackground,
     required this.primaryPurple,
+    required this.transcript, // Add transcript parameter
   });
 
   final Color cardBackground;
   final Color primaryPurple;
+  final String transcript; // Store the transcript
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,7 @@ class TranscriptPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -31,7 +33,7 @@ class TranscriptPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Transcipt page',
+                'Transcript',
                 style: TextStyle(
                   color: primaryPurple,
                   fontSize: 32,
@@ -39,9 +41,16 @@ class TranscriptPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                style: TextStyle(
+              Text(
+                //transcript, //?will use this variable during AI speech transcription feature implemented
+                '''
+                  Good morning. Look at the person to your left. Now, look to your right. Each of you, and every person in this room, carries with you an invisible birthright. 
+                  It's not a passport, it's not a bank account—it's something more fundamental. It's a set of inherent rights, simply because you are a human being.
+                  This idea—that we all possess basic, inalienable rights—is one of the most powerful and revolutionary concepts in human history. But what are these 'human rights'? 
+                  They aren't physical objects; they are a framework, a promise. A promise of dignity, of fairness, of a life free from fear and want. 
+                  Today, we're going to explore what that promise really means, why it matters to you, right here, right now, and why it remains a battle we must all fight.
+                ''',
+                style: const TextStyle(
                   color: Colors.black87,
                   fontSize: 16,
                   height: 1.5,
