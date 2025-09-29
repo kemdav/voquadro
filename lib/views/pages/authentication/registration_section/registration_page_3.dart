@@ -53,13 +53,13 @@ class RegistrationPage3 extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: const Color(0xFF7962A5), // Border color
+                    color: const Color(0xFF7962A5),
                     width: 1.0,
                   ),
-                  borderRadius: BorderRadius.circular(12), // Rounded border
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10), // Inner rounding
+                  borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
                     value: 1,
                     color: const Color(0xFF00A9A5),
@@ -71,7 +71,7 @@ class RegistrationPage3 extends StatelessWidget {
 
               const SizedBox(height: 45),
 
-              // Bravo! Let's start. with dolphin icon
+              // Bravo! Let's start.
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

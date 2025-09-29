@@ -57,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 15),
 
-              // Placeholder circular logo
+              // circular logo placeholder
               Center(
                 child: CircleAvatar(
                   radius: 56,
