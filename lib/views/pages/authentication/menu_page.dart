@@ -38,7 +38,6 @@ class MenuPage extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            // App name
             const Center(
               child: Text(
                 'Voquadro',
@@ -54,7 +53,6 @@ class MenuPage extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Tagline
             const Center(
               child: Text(
                 'Speak up. Or else.',
