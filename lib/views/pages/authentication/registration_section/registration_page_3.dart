@@ -84,7 +84,6 @@ class RegistrationPage3 extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.pets, color: Colors.blue[400], size: 28),
                 ],
               ),
 
