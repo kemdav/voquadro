@@ -6,9 +6,15 @@ class RegistrationPage3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    // standard color palette (matches Login/Menu pages)
+    const Color bgColor = Color(0xFFF8F0FB);
+    const Color primaryText = Color(0xFF322082);
+    const Color inputFill = Color(0xFFEADDF0);
+    const Color accentTeal = Color(0xFF00A9A5);
+    const Color buttonPurple = Color(0xFF7962A5);
+    const Color chipBorder = Color(0xFFEDD5F6);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F0FB),
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -22,9 +28,7 @@ class RegistrationPage3 extends StatelessWidget {
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFF7962A5),
-                    ),
+                    style: IconButton.styleFrom(backgroundColor: buttonPurple),
                     iconSize: 30,
                   ),
                 ],
@@ -35,7 +39,7 @@ class RegistrationPage3 extends StatelessWidget {
               Center(
                 child: CircleAvatar(
                   radius: 56,
-                  backgroundColor: Colors.grey[600],
+                  backgroundColor: Colors.grey.shade600,
                   child: const Text(
                     'Logo',
                     style: TextStyle(
@@ -52,18 +56,15 @@ class RegistrationPage3 extends StatelessWidget {
               // progress bar
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color(0xFF7962A5),
-                    width: 1.0,
-                  ),
+                  border: Border.all(color: buttonPurple, width: 1.0),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
                     value: 1,
-                    color: const Color(0xFF00A9A5),
-                    backgroundColor: colors.outlineVariant.withOpacity(0.5),
+                    color: accentTeal,
+                    backgroundColor: chipBorder.withOpacity(0.5),
                     minHeight: 12,
                   ),
                 ),
@@ -80,7 +81,7 @@ class RegistrationPage3 extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF322082),
+                      color: primaryText,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -122,13 +123,13 @@ class RegistrationPage3 extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7962A5),
+                    backgroundColor: buttonPurple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 6,
-                    shadowColor: const Color(0xFF7962A5).withOpacity(0.4),
+                    shadowColor: buttonPurple.withOpacity(0.4),
                   ),
                   child: const Text(
                     'Public Speaking',
@@ -147,13 +148,13 @@ class RegistrationPage3 extends StatelessWidget {
                     // Not functional for now
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7962A5),
+                    backgroundColor: buttonPurple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 6,
-                    shadowColor: const Color(0xFF7962A5).withOpacity(0.4),
+                    shadowColor: buttonPurple.withOpacity(0.4),
                   ),
                   child: const Text(
                     'Just Chatting',

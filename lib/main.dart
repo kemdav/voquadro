@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
-import 'package:voquadro/views/widget_tree.dart';
+import 'package:voquadro/views/pages/authentication/menu_page.dart';
 // for testing only
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -33,8 +33,7 @@ class MyApp extends StatelessWidget {
               brightness: value == true ? Brightness.dark : Brightness.light,
             ),
           ),
-          home:
-              MyHomePage(), //revert back to MyHomePage() or go RegistrationPage() for testing
+          home: const MenuPage(),
         );
       },
     );
@@ -51,6 +50,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return WidgetTree();
+    return const MenuPage();
   }
 }

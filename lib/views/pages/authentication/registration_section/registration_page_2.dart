@@ -24,9 +24,15 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    // standard color palette (matches Login/Menu pages)
+    const Color bgColor = Color(0xFFF8F0FB);
+    const Color primaryText = Color(0xFF322082);
+    const Color inputFill = Color(0xFFEADDF0);
+    const Color accentTeal = Color(0xFF00A9A5);
+    const Color buttonPurple = Color(0xFF7962A5);
+    const Color chipBorder = Color(0xFFEDD5F6);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F0FB),
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -41,7 +47,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                     onPressed: () => Navigator.of(context).maybePop(),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFF7962A5),
+                      backgroundColor: buttonPurple,
                     ),
                     iconSize: 30,
                   ),
@@ -53,7 +59,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
               Center(
                 child: CircleAvatar(
                   radius: 56,
-                  backgroundColor: Colors.grey[600],
+                  backgroundColor: Colors.grey.shade600,
                   child: const Text(
                     'Logo',
                     style: TextStyle(
@@ -71,7 +77,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: const Color(0xFF7962A5), // Border color
+                    color: buttonPurple, // Border color
                     width: 1.0,
                   ),
                   borderRadius: BorderRadius.circular(12), // Rounded border
@@ -80,8 +86,8 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                   borderRadius: BorderRadius.circular(10), // Inner rounding
                   child: LinearProgressIndicator(
                     value: 0.65,
-                    color: const Color(0xFF00A9A5),
-                    backgroundColor: colors.outlineVariant.withOpacity(0.5),
+                    color: accentTeal,
+                    backgroundColor: chipBorder.withOpacity(0.5),
                     minHeight: 12,
                   ),
                 ),
@@ -97,7 +103,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF322082),
+                      color: primaryText,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -148,13 +154,13 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7962A5),
+                    backgroundColor: buttonPurple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 6,
-                    shadowColor: const Color(0xFF7962A5).withOpacity(0.4),
+                    shadowColor: buttonPurple.withOpacity(0.4),
                   ),
                   child: const Text(
                     'Continue',

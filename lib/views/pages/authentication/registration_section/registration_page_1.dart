@@ -6,10 +6,16 @@ class RegistrationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    // standard color palette (matches Login/Menu pages)
+    const Color bgColor = Color(0xFFF8F0FB);
+    const Color primaryText = Color(0xFF322082);
+    const Color inputFill = Color(0xFFEADDF0);
+    const Color accentTeal = Color(0xFF00A9A5);
+    const Color buttonPurple = Color(0xFF7962A5);
+    const Color chipBorder = Color(0xFFEDD5F6);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F0FB),
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -24,7 +30,7 @@ class RegistrationPage extends StatelessWidget {
                     onPressed: () => Navigator.of(context).maybePop(),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFF7962A5),
+                      backgroundColor: buttonPurple,
                     ),
                     iconSize: 30,
                   ),
@@ -36,7 +42,7 @@ class RegistrationPage extends StatelessWidget {
               Center(
                 child: CircleAvatar(
                   radius: 56,
-                  backgroundColor: colors.surfaceContainerHighest,
+                  backgroundColor: Colors.grey.shade600,
                   backgroundImage: const AssetImage(
                     'assets/images/tempCharacter.png',
                   ),
@@ -49,7 +55,7 @@ class RegistrationPage extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: const Color(0xFF7962A5),
+                    color: buttonPurple,
                     width: 1.0,
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -58,8 +64,8 @@ class RegistrationPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
                     value: 0.22,
-                    color: const Color(0xFF00A9A5),
-                    backgroundColor: colors.outlineVariant.withOpacity(0.5),
+                    color: accentTeal,
+                    backgroundColor: chipBorder.withOpacity(0.5),
                     minHeight: 12,
                   ),
                 ),
@@ -72,7 +78,7 @@ class RegistrationPage extends StatelessWidget {
                 textAlign: TextAlign.left,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF322082),
+                  color: primaryText,
                 ),
               ),
 
@@ -97,13 +103,13 @@ class RegistrationPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7962A5),
+                    backgroundColor: buttonPurple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 6,
-                    shadowColor: colors.primary.withOpacity(0.4),
+                    shadowColor: buttonPurple.withOpacity(0.4),
                   ),
                   child: const Text(
                     'Continue',
