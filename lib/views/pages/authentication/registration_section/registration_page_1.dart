@@ -49,13 +49,13 @@ class RegistrationPage extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: const Color(0xFF7962A5), // Border color
+                    color: const Color(0xFF7962A5),
                     width: 1.0,
                   ),
-                  borderRadius: BorderRadius.circular(12), // Rounded border
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10), // Inner rounding
+                  borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
                     value: 0.22,
                     color: const Color(0xFF00A9A5),
@@ -85,7 +85,7 @@ class RegistrationPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Continue button
+              // Continue
               SizedBox(
                 height: 56,
                 child: ElevatedButton(

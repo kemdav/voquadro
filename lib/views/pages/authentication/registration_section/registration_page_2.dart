@@ -93,7 +93,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "You're getting there!🐬",
+                    "You're getting there! 🐬",
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
@@ -106,7 +106,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
 
               const SizedBox(height: 40),
 
-              // Password field
+              // Password
               _PasswordField(
                 controller: _passwordController,
                 hintText: 'Password',

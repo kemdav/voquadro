@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     const Color bgColor = Color(0xFFF8F0FB); // page background
     const Color primaryText = Color(0xFF322082); // headings and links
-    const Color inputFill = Color(0xFFEADDF0); // email/password boxes
+    const Color inputFill = Color(0xFFEADDF0); // user/password boxes
     const Color accentTeal = Color(0xFF00A9A5); // forgot password
     const Color buttonPurple = Color(0xFF7962A5); // login button
     const Color chipBorder = Color(0xFFEDD5F6); // social border
@@ -91,11 +91,11 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 32),
 
-              // Email label and input
+              // username label and input
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Email address',
+                  'Username',
                   style: TextStyle(
                     color: primaryText,
                     fontWeight: FontWeight.w700,
@@ -105,9 +105,9 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 8),
               TextField(
                 controller: emailController,
-                keyboardType: TextInputType.emailAddress,
+                keyboardType: TextInputType.text,
                 decoration: InputDecoration(
-                  hintText: 'Your email',
+                  hintText: 'Your username',
                   filled: true,
                   fillColor: inputFill,
                   contentPadding: const EdgeInsets.symmetric(
