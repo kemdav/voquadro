@@ -1,48 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/views/pages/gameplay/public_speaking/mode_page.dart';
-import 'package:voquadro/views/pages/gameplay/public_speaking/status_page.dart';
-import 'package:voquadro/views/widgets/AppBar/general_app_bar.dart';
-import 'package:voquadro/views/widgets/AppBar/default_actions.dart';
-import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
-import 'package:voquadro/views/widgets/BottomBar/mode_selection_actions.dart';
-
-List<Widget> pages = [PublicSpeakingModePage(), PublicSpeakingStatusPage()];
-
-class PublicSpeakingSelectionPage extends StatefulWidget {
+import 'package:voquadro/views/pages/gameplay/public_speaking/public_speaking_gameplay_page.dart';
+class PublicSpeakingSelectionPage extends StatelessWidget {
   const PublicSpeakingSelectionPage({super.key});
 
   @override
-  State<PublicSpeakingSelectionPage> createState() =>
-      _PublicSpeakingSelectionPageState();
-}
-
-class _PublicSpeakingSelectionPageState
-    extends State<PublicSpeakingSelectionPage> {
-  @override
   Widget build(BuildContext context) {
-    const double customAppBarHeight = 80.0;
     return Scaffold(
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: customAppBarHeight),
-            child: PublicSpeakingModePage(),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: AppBarGeneral(actionButtons: DefaultActions()),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: GeneralNavigationBar(
-              actions: ModeSelectionActions(),
-              navBarVisualHeight: 140,
-              totalHitTestHeight: 180,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Public Speaking'),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return PublicSpeakingGameplayPage();
+                    },
+                  ),
+                );
+              },
+              child: Text('Play'),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
