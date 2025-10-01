@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/views/widgets/AppBar/empty_actions.dart';
 import 'package:voquadro/views/widgets/AppBar/general_app_bar.dart';
+import 'package:voquadro/views/widgets/BottomBar/gameplay_actions.dart';
 import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
-import 'package:logger/logger.dart';
-import 'package:voquadro/views/widgets/BottomBar/speaking_actions.dart';
 
-var logger = Logger();
-
-class SpeakingPage extends StatelessWidget {
+class SpeakingPage extends StatefulWidget {
   const SpeakingPage({super.key});
+
+  @override
+  State<SpeakingPage> createState() => _SpeakingPageState();
+}
+
+class _SpeakingPageState extends State<SpeakingPage> {
+  final GlobalKey<State<GameplayActions>> _gameplayActionsKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -17,33 +21,42 @@ class SpeakingPage extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: customAppBarHeight),
-                  child: IconButton.filled(
-                    onPressed: () {
-                      logger.d('Mic Button Pressed!');
-                    },
-                    icon: const Icon(Icons.mic),
-                    iconSize: 150,
-                    style: IconButton.styleFrom(
-                      backgroundColor: "00A9A5".toColor(),
-                      foregroundColor: Colors.white,
+          Padding(
+            padding: const EdgeInsets.only(top: customAppBarHeight),
+            child: Center(
+              child: Column(
+                children: [
+                  LinearProgressIndicator(
+                    value: 0.3,
+                    minHeight: 10,
+                    backgroundColor: Colors.grey[300],
+                    color: "6CCC51".toColor(),
+                  ),
+                  Container(
+                    width: 300,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "DOES LBGT PEOPLE DESERVE RIGHTS?",
+                        style: TextStyle(fontSize: 24, color: Colors.black),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  'Start Speaking',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 35,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
+                  Image.asset('assets/images/tempCharacter.png'),
+                ],
+              ),
             ),
           ),
           Positioned(
@@ -55,9 +68,9 @@ class SpeakingPage extends StatelessWidget {
           Align(
             alignment: Alignment.bottomCenter,
             child: GeneralNavigationBar(
-              actions: SpeakingActions(),
-              navBarVisualHeight: 30,
-              totalHitTestHeight: 50,
+              actions: GameplayActions(key: _gameplayActionsKey),
+              navBarVisualHeight: 70,
+              totalHitTestHeight: 130,
             ),
           ),
         ],
