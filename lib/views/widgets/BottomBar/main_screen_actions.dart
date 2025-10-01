@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
 import 'package:voquadro/src/hex_color.dart';
-
-var logger = Logger();
-
 class MainScreenActions extends StatelessWidget {
   const MainScreenActions({super.key});
 
