@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
-import 'package:voquadro/views/pages/authentication/menu_page.dart';
-// for testing only
+import 'package:voquadro/views/widget_tree.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env.local");
 
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
               brightness: value == true ? Brightness.dark : Brightness.light,
             ),
           ),
-          home: const MenuPage(),
+          home: MyHomePage(),
         );
       },
     );
@@ -50,6 +50,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return const MenuPage();
+    return WidgetTree();
   }
 }
