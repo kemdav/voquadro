@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../home/select_mode_page.dart';
+import 'package:voquadro/views/pages/gameplay/public_speaking/public_speaking_selection_page.dart';
 
 class RegistrationPage3 extends StatelessWidget {
   const RegistrationPage3({super.key});
@@ -134,7 +134,9 @@ class _ModeButtonsSection extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () {
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const SelectModePage()),
+                MaterialPageRoute(
+                  builder: (context) => const PublicSpeakingSelectionPage(),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(
