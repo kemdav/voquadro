@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../gameplay/public_speaking/public_speaking_gameplay_page.dart';
+import '../../home/select_mode_page.dart';
 
 class RegistrationPage3 extends StatelessWidget {
   const RegistrationPage3({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // standard color palette (matches Login/Menu pages)
     const Color bgColor = Color(0xFFF8F0FB);
     const Color primaryText = Color(0xFF322082);
-    const Color inputFill = Color(0xFFEADDF0);
     const Color accentTeal = Color(0xFF00A9A5);
     const Color buttonPurple = Color(0xFF7962A5);
     const Color chipBorder = Color(0xFFEDD5F6);
@@ -64,7 +62,7 @@ class RegistrationPage3 extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: 1,
                     color: accentTeal,
-                    backgroundColor: chipBorder.withOpacity(0.5),
+                    backgroundColor: chipBorder.withValues(alpha: 0.5),
                     minHeight: 12,
                   ),
                 ),
@@ -90,7 +88,6 @@ class RegistrationPage3 extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              // Username display circle
               Center(
                 child: CircleAvatar(
                   radius: 40,
@@ -110,64 +107,77 @@ class RegistrationPage3 extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Public Speaking button
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const PublicSpeakingGameplayPage(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonPurple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    elevation: 6,
-                    shadowColor: buttonPurple.withOpacity(0.4),
-                  ),
-                  child: const Text(
-                    'Public Speaking',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Just Chatting button
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Not functional for now
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonPurple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    elevation: 6,
-                    shadowColor: buttonPurple.withOpacity(0.4),
-                  ),
-                  child: const Text(
-                    'Just Chatting',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
+              _ModeButtonsSection(buttonPurple: buttonPurple),
 
               const SizedBox(height: 24),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ModeButtonsSection extends StatelessWidget {
+  const _ModeButtonsSection({required this.buttonPurple});
+
+  final Color buttonPurple;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Public Speaking button
+        SizedBox(
+          height: 56,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const SelectModePage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              elevation: 6,
+              shadowColor: buttonPurple.withValues(alpha: 0.4),
+            ),
+            child: const Text(
+              'Public Speaking',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Just Chatting button
+        SizedBox(
+          height: 56,
+          child: ElevatedButton(
+            onPressed: () {
+              // Not functional for now
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              elevation: 6,
+              shadowColor: buttonPurple.withValues(alpha: 0.4),
+            ),
+            child: const Text(
+              'Just Chatting',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

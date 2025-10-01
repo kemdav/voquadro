@@ -9,7 +9,6 @@ class RegistrationPage extends StatelessWidget {
     // standard color palette (matches Login/Menu pages)
     const Color bgColor = Color(0xFFF8F0FB);
     const Color primaryText = Color(0xFF322082);
-    const Color inputFill = Color(0xFFEADDF0);
     const Color accentTeal = Color(0xFF00A9A5);
     const Color buttonPurple = Color(0xFF7962A5);
     const Color chipBorder = Color(0xFFEDD5F6);
@@ -29,9 +28,7 @@ class RegistrationPage extends StatelessWidget {
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    style: IconButton.styleFrom(
-                      backgroundColor: buttonPurple,
-                    ),
+                    style: IconButton.styleFrom(backgroundColor: buttonPurple),
                     iconSize: 30,
                   ),
                 ],
@@ -54,10 +51,7 @@ class RegistrationPage extends StatelessWidget {
               // progress bar
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: buttonPurple,
-                    width: 1.0,
-                  ),
+                  border: Border.all(color: buttonPurple, width: 1.0),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ClipRRect(
@@ -65,7 +59,7 @@ class RegistrationPage extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: 0.22,
                     color: accentTeal,
-                    backgroundColor: chipBorder.withOpacity(0.5),
+                    backgroundColor: chipBorder.withValues(alpha: 0.5),
                     minHeight: 12,
                   ),
                 ),
@@ -109,7 +103,7 @@ class RegistrationPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 6,
-                    shadowColor: buttonPurple.withOpacity(0.4),
+                    shadowColor: buttonPurple.withValues(alpha: 0.4),
                   ),
                   child: const Text(
                     'Continue',
@@ -143,8 +137,6 @@ class _UsernameFieldState extends State<_UsernameField> {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
     return TextField(
       controller: _controller,
       decoration: InputDecoration(

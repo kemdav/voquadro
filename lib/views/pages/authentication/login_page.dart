@@ -26,7 +26,6 @@ class _LoginPageState extends State<LoginPage> {
     const Color buttonPurple = Color(0xFF7962A5); // login button
     const Color chipBorder = Color(0xFFEDD5F6); // social border
     const Color chipFill = Color(0xFFF8F0FB); // social fill
-    const Color chipText = Color(0xFFEDD5F6); // social text
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -216,9 +215,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const Spacer(),
                   TextButton(
-                    onPressed: () {
-                      // TODO: hook up when flow exists
-                    },
+                    onPressed: () {},
                     child: const Text(
                       'Forgot password?',
                       style: TextStyle(
@@ -280,7 +277,7 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 6,
-                    shadowColor: buttonPurple.withOpacity(0.4),
+                    shadowColor: buttonPurple.withValues(alpha: 0.4),
                   ),
                   child: const Text(
                     'Login',

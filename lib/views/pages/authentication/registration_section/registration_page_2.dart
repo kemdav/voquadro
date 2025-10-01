@@ -27,7 +27,6 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
     // standard color palette (matches Login/Menu pages)
     const Color bgColor = Color(0xFFF8F0FB);
     const Color primaryText = Color(0xFF322082);
-    const Color inputFill = Color(0xFFEADDF0);
     const Color accentTeal = Color(0xFF00A9A5);
     const Color buttonPurple = Color(0xFF7962A5);
     const Color chipBorder = Color(0xFFEDD5F6);
@@ -87,7 +86,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                   child: LinearProgressIndicator(
                     value: 0.65,
                     color: accentTeal,
-                    backgroundColor: chipBorder.withOpacity(0.5),
+                    backgroundColor: chipBorder.withValues(alpha: 0.5),
                     minHeight: 12,
                   ),
                 ),
@@ -160,7 +159,7 @@ class _RegistrationPage2State extends State<RegistrationPage2> {
                       borderRadius: BorderRadius.circular(28),
                     ),
                     elevation: 6,
-                    shadowColor: buttonPurple.withOpacity(0.4),
+                    shadowColor: buttonPurple.withValues(alpha: 0.4),
                   ),
                   child: const Text(
                     'Continue',
@@ -204,7 +203,7 @@ class _PasswordField extends StatelessWidget {
           onPressed: onToggleVisibility,
           icon: Icon(
             isVisible ? Icons.visibility_off : Icons.visibility,
-            color: const Color(0xFF7F7F7F).withOpacity(0.5),
+            color: const Color(0xFF7F7F7F).withValues(alpha: 0.5),
           ),
         ),
         filled: true,

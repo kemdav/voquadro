@@ -87,7 +87,7 @@ class MenuPage extends StatelessWidget {
                         backgroundColor: buttonPurple,
                         foregroundColor: Colors.white,
                         elevation: 8,
-                        shadowColor: buttonPurple.withOpacity(0.4),
+                        shadowColor: buttonPurple.withValues(alpha: 0.4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
@@ -117,12 +117,12 @@ class MenuPage extends StatelessWidget {
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: chipBorder, width: 2),
-                        backgroundColor: Colors.white.withOpacity(0.7),
+                        backgroundColor: Colors.white.withValues(alpha: 0.7),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
                         elevation: 6,
-                        shadowColor: Colors.black.withOpacity(0.08),
+                        shadowColor: Colors.black.withValues(alpha: 0.08),
                       ),
                       child: const Text(
                         'I already have an account',

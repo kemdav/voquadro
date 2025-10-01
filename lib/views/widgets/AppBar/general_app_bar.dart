@@ -31,7 +31,7 @@ class AppBarGeneral extends StatelessWidget {
                 color: "49416D".toColor(),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     spreadRadius: 2,
                     blurRadius: 5,
                     offset: const Offset(0, 3),
