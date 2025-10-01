@@ -8,16 +8,14 @@ import 'package:voquadro/views/widgets/BottomBar/mode_selection_actions.dart';
 
 List<Widget> pages = [PublicSpeakingModePage(), PublicSpeakingStatusPage()];
 
-class PublicSpeakingSelectionPage extends StatefulWidget {
-  const PublicSpeakingSelectionPage({super.key});
+class MainSelectionPage extends StatefulWidget {
+  const MainSelectionPage({super.key});
 
   @override
-  State<PublicSpeakingSelectionPage> createState() =>
-      _PublicSpeakingSelectionPageState();
+  State<MainSelectionPage> createState() => _MainSelectionPageState();
 }
 
-class _PublicSpeakingSelectionPageState
-    extends State<PublicSpeakingSelectionPage> {
+class _MainSelectionPageState extends State<MainSelectionPage> {
   @override
   Widget build(BuildContext context) {
     const double customAppBarHeight = 80.0;

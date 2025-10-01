@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/views/pages/gameplay/public_speaking/mode_page.dart';
 import 'package:voquadro/views/pages/gameplay/public_speaking/status_page.dart';
+import 'package:voquadro/views/pages/home/profile/profile_main_page.dart';
 import 'package:voquadro/views/widgets/AppBar/general_app_bar.dart';
 import 'package:voquadro/views/widgets/AppBar/default_actions.dart';
 import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
@@ -8,16 +9,14 @@ import 'package:voquadro/views/widgets/BottomBar/mode_selection_actions.dart';
 
 List<Widget> pages = [PublicSpeakingModePage(), PublicSpeakingStatusPage()];
 
-class PublicSpeakingSelectionPage extends StatefulWidget {
-  const PublicSpeakingSelectionPage({super.key});
+class ProfileController extends StatefulWidget {
+  const ProfileController({super.key});
 
   @override
-  State<PublicSpeakingSelectionPage> createState() =>
-      _PublicSpeakingSelectionPageState();
+  State<ProfileController> createState() => _ProfileControllerState();
 }
 
-class _PublicSpeakingSelectionPageState
-    extends State<PublicSpeakingSelectionPage> {
+class _ProfileControllerState extends State<ProfileController> {
   @override
   Widget build(BuildContext context) {
     const double customAppBarHeight = 80.0;
@@ -26,7 +25,7 @@ class _PublicSpeakingSelectionPageState
         children: [
           Padding(
             padding: const EdgeInsets.only(top: customAppBarHeight),
-            child: PublicSpeakingModePage(),
+            child: ProfileMainPage(),
           ),
           Positioned(
             top: 0,
