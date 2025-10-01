@@ -234,7 +234,7 @@ class _LoginPageState extends State<LoginPage> {
                 const Padding(
                   padding: EdgeInsets.only(bottom: 8.0),
                   child: Text(
-                    'WRONG INFORMATION',
+                    'Wrong, try again bucko.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.red,
