@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/controllers/app_flow_controller.dart';
 import 'package:voquadro/views/pages/authentication/login_page.dart';
-import 'package:voquadro/views/pages/authentication/registration_section/registration_page_1.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -77,11 +78,8 @@ class MenuPage extends StatelessWidget {
                     height: 60,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const RegistrationPage(),
-                          ),
-                        );
+                        final appController = context.read<AppFlowController>();
+                        appController.initiateRegistration();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonPurple,

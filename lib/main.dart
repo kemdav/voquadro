@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:voquadro/controllers/app_flow_controller.dart';
 import 'package:voquadro/data/notifiers.dart';
-import 'package:voquadro/views/pages/authentication/menu_page.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/screens/app_flow_manager.dart';
 // for testing only
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,7 +16,10 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-  runApp(MyApp());
+  runApp(ChangeNotifierProvider(
+      create: (context) => AppFlowController(),
+      child: const MyApp(),
+    ),);
 }
 
 class MyApp extends StatelessWidget {
@@ -23,33 +28,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: isDarkModeNotifier,
+      valueListenable: subtreeSelector,
       builder: (context, value, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.teal,
-              brightness: value == true ? Brightness.dark : Brightness.light,
             ),
           ),
-          home: const MenuPage(),
+          home: AppFlowManager(),
         );
       },
     );
   }
+
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return const MenuPage();
-  }
-}

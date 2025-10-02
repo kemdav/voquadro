@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/authentication/login.dart';
 import 'package:voquadro/views/pages/home/main_page.dart';
-import 'package:voquadro/views/pages/authentication/registration_section/registration_page_1.dart';
+import 'package:voquadro/screens/authentication/registration/username_stage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -382,7 +382,7 @@ class _LoginPageState extends State<LoginPage> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const RegistrationPage(),
+                          builder: (context) => const RegistrationUsernameStage(),
                         ),
                       );
                     },
