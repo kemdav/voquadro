@@ -23,7 +23,7 @@ class _SpeakingPageState extends State<SpeakingPage> {
   @override
   void initState() {
     super.initState();
-    _ollamaService = OllamaService();
+    _ollamaService = OllamaService.instance;
     _initializeOllama();
   }
 

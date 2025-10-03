@@ -31,8 +31,7 @@ class FeedbackControllerPage extends StatefulWidget {
 }
 
 class _FeedbackControllerPageState extends State<FeedbackControllerPage> {
-  final voquadroController = VoquadroController.instance;
-  final OllamaService _ollamaService = OllamaService();
+  final OllamaService _ollamaService = OllamaService.instance;
   bool _isOllamaInitialized = false;
 
   @override
@@ -41,6 +40,8 @@ class _FeedbackControllerPageState extends State<FeedbackControllerPage> {
     voquadroController.addListener(_onStateChanged);
     _initializeOllama();
   }
+
+  final voquadroController = VoquadroController.instance;
 
   @override
   void dispose() {

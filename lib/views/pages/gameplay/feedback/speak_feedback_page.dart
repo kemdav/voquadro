@@ -38,12 +38,12 @@ class _SpeakFeedbackPageState extends State<SpeakFeedbackPage> {
     }
 
     try {
-      // Generate a question first to create a session
-      _currentSession = await widget.ollamaService.generateQuestion(
-        widget.topic,
-      );
+      // Get the question saved in the ollama singleton service
+      _currentSession =
+          widget.ollamaService.currentSession ??
+          await widget.ollamaService.generateQuestion(widget.topic);
 
-      // Now get feedback using the session
+      // Get feedback using the session
       final results = await Future.wait([
         widget.ollamaService.getPublicSpeakingFeedback(
           widget.transcript,
@@ -166,30 +166,30 @@ class _SpeakFeedbackPageState extends State<SpeakFeedbackPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Display the practice question if available
-                        // if (_currentSession != null)
-                        //   Column(
-                        //     crossAxisAlignment: CrossAxisAlignment.start,
-                        //     children: [
-                        //       Text(
-                        //         'Practice Question:',
-                        //         style: TextStyle(
-                        //           color: widget.primaryPurple,
-                        //           fontSize: 18,
-                        //           fontWeight: FontWeight.bold,
-                        //         ),
-                        //       ),
-                        //       Text(
-                        //         _currentSession!.generatedQuestion,
-                        //         style: const TextStyle(
-                        //           fontSize: 16,
-                        //           fontStyle: FontStyle.italic,
-                        //           height: 1.5,
-                        //         ),
-                        //       ),
-                        //       const SizedBox(height: 16),
-                        //     ],
-                        //   )
+                        //Display the practice question
+                        if (_currentSession != null)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Question:',
+                                style: TextStyle(
+                                  color: widget.primaryPurple,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _currentSession!.generatedQuestion,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontStyle: FontStyle.italic,
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
                         Text(
                           feedback,
                           style: const TextStyle(

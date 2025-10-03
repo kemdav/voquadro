@@ -17,6 +17,9 @@ class SpeechSession {
 }
 
 class OllamaService with ChangeNotifier {
+  OllamaService._();
+  static final OllamaService instance = OllamaService._();
+
   final String _baseUrl = 'http://10.0.2.2:11434';
   SpeechSession? _currentSession;
 
@@ -54,9 +57,9 @@ class OllamaService with ChangeNotifier {
                 
                 You are a speech analyst, please evaluate how well the user responded to the specific question in 3 concise sentences:
                 
-                <li>Content Quality Evaluation:</li> An assessment of the substance and relevance of the user's speech.
-                <li>Clarity & Structure Evaluation:</li> An analysis of the organization and coherence of the user's message.
-                <li>Overall Evaluation:</li> A summary of the user's performance, combining all feedback components.
+                - Content Quality Evaluation: An assessment of the substance and relevance of the user's speech.
+                - Clarity & Structure Evaluation: An analysis of the organization and coherence of the user's message.
+                - Overall Evaluation: A summary of the user's performance, combining all feedback components.
                 
                 Keep each evaluation to one sentence.
                 ''',
@@ -99,7 +102,7 @@ class OllamaService with ChangeNotifier {
         body: jsonEncode({
           'model': 'qwen2:0.5b',
           'prompt':
-              'Generate one engaging question about the following topic: $topic, make it short and concise as possible but engaging',
+              'Generate only one engaging question about the following topic: $topic, make it short and concise as possible but engaging',
           'stream': false,
         }),
       );
