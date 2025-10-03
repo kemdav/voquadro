@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/data/notifiers.dart';
-import 'package:voquadro/views/pages/authentication/menu_page.dart';
+import 'package:voquadro/screens/authentication/firstLaunch/first_launch_page.dart';
 import 'package:voquadro/views/pages/home_page.dart';
 import 'package:voquadro/views/pages/profile_page.dart';
 
@@ -31,7 +31,7 @@ class WidgetTree extends StatelessWidget {
           ),
         ],
       ),
-      body: MenuPage(),
+      body: FirstLaunchPage(),
     );
   }
 }

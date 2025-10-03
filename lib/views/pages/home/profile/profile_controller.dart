@@ -7,7 +7,7 @@ import 'package:voquadro/views/widgets/AppBar/default_actions.dart';
 import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
 import 'package:voquadro/views/widgets/BottomBar/mode_selection_actions.dart';
 
-List<Widget> pages = [PublicSpeakingModePage(), PublicSpeakingStatusPage()];
+List<Widget> pages = [PublicSpeakingHomePage(), PublicSpeakingStatusPage()];
 
 class ProfileController extends StatefulWidget {
   const ProfileController({super.key});

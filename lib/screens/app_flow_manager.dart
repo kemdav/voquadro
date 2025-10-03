@@ -1,10 +1,12 @@
 // lib/screens/app_flow_manager.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voquadro/screens/home_screen.dart';
 import 'package:voquadro/screens/registration_screen.dart';
-import 'package:voquadro/views/pages/authentication/login_page.dart';
-import 'package:voquadro/views/pages/authentication/menu_page.dart';
+import 'package:voquadro/screens/authentication/login/login_page.dart';
+import 'package:voquadro/screens/authentication/firstLaunch/first_launch_page.dart';
 import 'package:voquadro/views/pages/gameplay/public_speaking/mode_page.dart';
+import 'package:voquadro/screens/authentication/home/public_speaking_selection_page.dart';
 import '../controllers/app_flow_controller.dart';
 
 class AppFlowManager extends StatelessWidget {
@@ -16,7 +18,7 @@ class AppFlowManager extends StatelessWidget {
       builder: (context, appFlow, child) {
         switch (appFlow.appState) {
           case AppState.firstLaunch:
-            return MenuPage();
+            return FirstLaunchPage();
           case AppState.login:
             return LoginPage();
           case AppState.registration:
@@ -28,7 +30,9 @@ class AppFlowManager extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           case AppState.authenticated:
-            return PublicSpeakingModePage();
+            return PublicSpeakingHomePage();
+          case AppState.home:
+            return HomeScreen();
         }
       },
     );

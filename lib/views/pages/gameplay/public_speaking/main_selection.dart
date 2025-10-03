@@ -6,7 +6,7 @@ import 'package:voquadro/views/widgets/AppBar/default_actions.dart';
 import 'package:voquadro/views/widgets/BottomBar/general_navigation_bar.dart';
 import 'package:voquadro/views/widgets/BottomBar/mode_selection_actions.dart';
 
-List<Widget> pages = [PublicSpeakingModePage(), PublicSpeakingStatusPage()];
+List<Widget> pages = [PublicSpeakingHomePage(), PublicSpeakingStatusPage()];
 
 class MainSelectionPage extends StatefulWidget {
   const MainSelectionPage({super.key});
@@ -24,7 +24,7 @@ class _MainSelectionPageState extends State<MainSelectionPage> {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: customAppBarHeight),
-            child: PublicSpeakingModePage(),
+            child: PublicSpeakingHomePage(),
           ),
           Positioned(
             top: 0,

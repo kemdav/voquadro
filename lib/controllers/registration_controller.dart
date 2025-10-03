@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum RegistrationStage {
-  username,
-  password,
-  confirmation,
-  submitting,
-}
+enum RegistrationStage { username, password, confirmation, submitting }
 
 class RegistrationController with ChangeNotifier {
   RegistrationStage _stage = RegistrationStage.username;
