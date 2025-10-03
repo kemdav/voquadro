@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/controllers/registration_controller.dart';
+import 'package:voquadro/hubs/controllers/registration_controller.dart';
 
 class RegistrationPasswordStage extends StatefulWidget {
   const RegistrationPasswordStage({super.key});
