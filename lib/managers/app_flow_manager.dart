@@ -1,11 +1,11 @@
 // lib/screens/app_flow_manager.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/hubs/managers/game_mode_manager.dart';
-import 'package:voquadro/hubs/managers/registration_screen.dart';
+import 'package:voquadro/managers/game_mode_manager.dart';
+import 'package:voquadro/managers/registration_screen.dart';
 import 'package:voquadro/screens/authentication/login/login_page.dart';
 import 'package:voquadro/screens/authentication/firstLaunch/first_launch_page.dart';
-import '../controllers/app_flow_controller.dart';
+import '../hubs/controllers/app_flow_controller.dart';
 
 class AppFlowManager extends StatelessWidget {
   const AppFlowManager({super.key});

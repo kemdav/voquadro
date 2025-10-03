@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/controllers/app_flow_controller.dart'; // Make sure this path is correct
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart'; // Make sure this path is correct
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
