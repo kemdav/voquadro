@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/controllers/app_flow_controller.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/screens/app_flow_manager.dart';
+import 'package:voquadro/hubs/managers/app_flow_manager.dart';
 // for testing only
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
