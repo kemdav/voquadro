@@ -12,16 +12,19 @@ class RegistrationUsernameStage extends StatefulWidget {
 class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _usernameController;
+  late final TextEditingController _emailController;
 
   @override
   void initState() {
     super.initState();
     _usernameController = TextEditingController();
+    _emailController = TextEditingController();
   }
 
   @override
   void dispose() {
     _usernameController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -31,7 +34,7 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
     }
     final registrationController = context.read<RegistrationController>();
     
-    registrationController.submitUsername(_usernameController.text);
+    registrationController.submitUsername(_usernameController.text, _emailController.text);
   }
 
   @override
@@ -130,12 +133,52 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                       borderSide: const BorderSide(color: Color(0xFFE5D3EC), width: 2),
                     ),
                   ),
-                  textInputAction: TextInputAction.done,
+                  textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().length < 4) {
                       return 'Username must be at least 4 characters';
                     }
                     return null; 
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    hintText: 'Email',
+                    hintStyle: const TextStyle(color: Color(0xFF322082)),
+                    prefixIcon: const Icon(Icons.email, color: Color(0xFF7962A5)),
+                    filled: true,
+                    fillColor: const Color(0xFFE5D3EC),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                      horizontal: 16,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: const BorderSide(color: Color(0xFFE5D3EC)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: const BorderSide(color: Color(0xFFE5D3EC)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: const BorderSide(color: Color(0xFFE5D3EC), width: 2),
+                    ),
+                  ),
+                  textInputAction: TextInputAction.done,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Email is required';
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                      return 'Please enter a valid email address';
+                    }
+                    return null;
                   },
                 ),
 

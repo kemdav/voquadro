@@ -7,10 +7,12 @@ class RegistrationController with ChangeNotifier {
   RegistrationStage get stage => _stage;
 
   String? username;
+  String? email;
   String? password;
 
-  void submitUsername(String name) {
+  void submitUsername(String name, String emailAddress) {
     username = name;
+    email = emailAddress;
     _stage = RegistrationStage.password;
     notifyListeners();
   }
