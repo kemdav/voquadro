@@ -28,13 +28,13 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return; 
     }
     final registrationController = context.read<RegistrationController>();
     
-    registrationController.submitUsername(_usernameController.text, _emailController.text);
+    await registrationController.submitUsername(_usernameController.text, _emailController.text);
   }
 
   @override
@@ -50,7 +50,7 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
       body: SafeArea(
         child: Form(
           key: _formKey, 
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -182,7 +182,33 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                   },
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 20),
+
+                // Error message display
+                Consumer<RegistrationController>(
+                  builder: (context, controller, child) {
+                    if (controller.errorMessage != null) {
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Text(
+                          controller.errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+
+                const SizedBox(height: 40),
 
                 SizedBox(
                   height: 56,
