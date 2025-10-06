@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/public_speaking_controller.dart'; // 1. Import the controller
 import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
@@ -71,9 +72,11 @@ class PublicSpeakingHub extends StatelessWidget {
   Widget build(BuildContext context) {
     const double customAppBarHeight = 80.0;
 
-    return ChangeNotifierProvider(
-      create: (_) => PublicSpeakingController(),
-      child: Scaffold(
+    return MultiProvider(providers: [
+      ChangeNotifierProvider(create: (_) => PublicSpeakingController()),
+        ChangeNotifierProvider(create: (_) => AudioController()),
+    ],
+    child: Scaffold(
         body: Stack(
           children: [
             // This Consumer will manage both the main content AND the bottom bar
