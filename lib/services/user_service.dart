@@ -1,7 +1,9 @@
-// FIX 1: Import this package to get access to 'debugPrint'
-import 'package:flutter/foundation.dart'; 
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 import 'package:bcrypt/bcrypt.dart';
+
+// Import our new custom exception class
+import 'package:voquadro/utils/exceptions.dart';
 
 // A simple User model to make your code cleaner and type-safe
 class User {
@@ -12,11 +14,7 @@ class User {
   User({required this.id, required this.username, required this.email});
 
   factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      id: map['id'],
-      username: map['username'],
-      email: map['email'],
-    );
+    return User(id: map['id'], username: map['username'], email: map['email']);
   }
 }
 
@@ -47,16 +45,19 @@ class UserService {
       return User.fromMap(response);
     } on PostgrestException catch (e) {
       if (e.code == '23505') {
+        // Unique constraint violation
         if (e.message.contains('users_username_key')) {
-          throw Exception('Username is already taken.');
+          throw AuthException('Username is already taken.');
         }
         if (e.message.contains('users_email_key')) {
-          throw Exception('Email is already taken.');
+          throw AuthException('Email is already taken.');
         }
       }
-      throw Exception('Failed to create user: ${e.message}');
+      throw AuthException('Could not create account. Please try again.');
     } catch (e) {
-      throw Exception('An unexpected error occurred: ${e.toString()}');
+      throw AuthException(
+        'An unexpected error occurred. Please try again later.',
+      );
     }
   }
 
@@ -74,20 +75,24 @@ class UserService {
 
       final userMap = response;
       final String storedHash = userMap['password_hash'];
+
       final bool isPasswordCorrect = BCrypt.checkpw(password, storedHash);
 
       if (!isPasswordCorrect) {
-        throw Exception('Invalid username or password.');
+        throw AuthException('Invalid username or password.');
       }
-      
+
       return User.fromMap(userMap);
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
-        throw Exception('Invalid username or password.');
+        // This code means ".single()" found 0 rows
+        throw AuthException('Invalid username or password.');
       }
-      throw Exception('Database error: ${e.message}');
+      throw AuthException('A database error occurred. Please try again.');
     } catch (e) {
-      rethrow;
+      throw AuthException(
+        'An unexpected error occurred. Please try again later.',
+      );
     }
   }
 
@@ -106,7 +111,6 @@ class UserService {
     }
   }
 
-  // FIX 2: Added the full implementation for this method
   static Future<bool> isUsernameTaken(String username) async {
     try {
       final response = await _supabase
@@ -121,7 +125,6 @@ class UserService {
     }
   }
 
-  // FIX 3: Added the full implementation for this method
   static Future<bool> isEmailTaken(String email) async {
     try {
       final response = await _supabase
@@ -136,7 +139,6 @@ class UserService {
     }
   }
 
-  /// Gets user by ID
   static Future<Map<String, dynamic>?> getUserById(String userId) async {
     try {
       final response = await _supabase

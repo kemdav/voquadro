@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/services/user_service.dart'; // Import the user service
+import 'package:voquadro/utils/exceptions.dart'; // Import your custom exception
 
 enum AppState {
   firstLaunch,
@@ -20,7 +21,7 @@ class AppFlowController with ChangeNotifier {
   AppMode get currentMode => _currentMode;
 
   String? loginErrorMessage;
-  User? currentUser; // Store the logged-in user's data
+  User? currentUser; // Stores the custom User object from your UserService
 
   void initiateRegistration() {
     _appState = AppState.registration;
@@ -42,7 +43,6 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
-  // --- THIS IS THE UPDATED LOGIN METHOD ---
   Future<void> login(String username, String password) async {
     _appState = AppState.authenticating;
     loginErrorMessage = null;
@@ -57,18 +57,26 @@ class AppFlowController with ChangeNotifier {
 
       currentUser = user; // Store the user data
       _appState = AppState.authenticated;
+
+      // --- THIS IS THE CORRECTED PART ---
+    } on AuthException catch (e) {
+      // 1. Catch the specific, structured error type.
+      _appState = AppState.login;
+      // 2. Assign the clean message directly. No more string manipulation!
+      loginErrorMessage = e.message;
     } catch (e) {
-      // If authentication fails, the service throws an exception.
-      _appState =
-          AppState.login; // Go back to the login state so user can retry
-      // Clean up the error message for display on the login page
-      loginErrorMessage = e.toString().replaceFirst('Exception: ', '');
+      // 3. (Optional but good practice) Catch any other unexpected errors.
+      _appState = AppState.login;
+      loginErrorMessage =
+          'An unexpected error occurred. Please try again later.';
     }
 
     notifyListeners();
   }
 
   void logout() {
+    // Note: Since you're not using Supabase Auth, there's no client-side
+    // session to clear. Just clearing the local state is correct.
     currentUser = null;
     _appState = AppState.unauthenticated;
     notifyListeners();

@@ -15,7 +15,7 @@ class RegistrationController with ChangeNotifier {
 
   Future<void> submitUsername(String name, String emailAddress) async {
     _errorMessage = null;
-    
+
     try {
       // Check if username is already taken
       final isUsernameTaken = await UserService.isUsernameTaken(name);
@@ -38,7 +38,8 @@ class RegistrationController with ChangeNotifier {
       _stage = RegistrationStage.password;
       notifyListeners();
     } catch (e) {
-      _errorMessage = 'Failed to validate credentials: ${e.toString()}';
+      _errorMessage =
+          'Unable to create account. Please try again or contact support.';
       notifyListeners();
     }
   }
