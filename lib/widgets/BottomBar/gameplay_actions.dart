@@ -31,8 +31,8 @@ class GameplayActions extends StatelessWidget {
     return Center(
       child: IconButton.filled(
         onPressed: () {
-          // Tell the controller to start the timed sequence
-          context.read<PublicSpeakingController>().startGameplaySequence();
+          // Generate a random question and start the timed sequence
+          context.read<PublicSpeakingController>().generateRandomQuestionAndStart();
         },
         icon: const Icon(Icons.play_arrow),
         iconSize: 100,

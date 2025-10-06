@@ -52,20 +52,20 @@ class PublicSpeakingHub extends StatelessWidget {
     }
   }
 
-  List<double> _bottomNavigationBarDimensions(PublicSpeakingState state){
+  List<double> _bottomNavigationBarDimensions(PublicSpeakingState state) {
     switch (state) {
-          case PublicSpeakingState.home:
-          case PublicSpeakingState.status:
-            return [140, 180];
+      case PublicSpeakingState.home:
+      case PublicSpeakingState.status:
+        return [140, 180];
 
-          case PublicSpeakingState.micTest:
-          case PublicSpeakingState.readying:
-          case PublicSpeakingState.speaking:
-            return [140, 180];
-          case PublicSpeakingState.inFeedback:
-            return [0, 180];
-        }
-      }
+      case PublicSpeakingState.micTest:
+      case PublicSpeakingState.readying:
+      case PublicSpeakingState.speaking:
+        return [140, 180];
+      case PublicSpeakingState.inFeedback:
+        return [0, 180];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,8 +100,12 @@ class PublicSpeakingHub extends StatelessWidget {
                       child: GeneralNavigationBar(
                         // The actions are now dynamically chosen by our helper method
                         actions: _buildBottomActions(controller.currentState),
-                        navBarVisualHeight: _bottomNavigationBarDimensions(controller.currentState)[0],
-                        totalHitTestHeight: _bottomNavigationBarDimensions(controller.currentState)[1],
+                        navBarVisualHeight: _bottomNavigationBarDimensions(
+                          controller.currentState,
+                        )[0],
+                        totalHitTestHeight: _bottomNavigationBarDimensions(
+                          controller.currentState,
+                        )[1],
                       ),
                     ),
                     Positioned(

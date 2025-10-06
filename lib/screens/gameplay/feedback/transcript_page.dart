@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
 
 class TranscriptPage extends StatelessWidget {
   const TranscriptPage({
@@ -12,45 +14,81 @@ class TranscriptPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Transcipt page',
-                style: TextStyle(
-                  color: primaryPurple,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: 16,
-                  height: 1.5,
-                ),
+    return Consumer<PublicSpeakingController>(
+      builder: (context, controller, child) {
+        final transcript = controller.userTranscript;
+        final question = controller.currentQuestion;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: cardBackground,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(13),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-        ),
-      ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your Response',
+                    style: TextStyle(
+                      color: primaryPurple,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  //Display the question here
+                  if (question != null) ...[
+                    Text(
+                      'Question: $question',
+                      style: TextStyle(
+                        color: primaryPurple,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                  ],
+
+                  //Display the actual transcript
+                  if (transcript != null && transcript.isNotEmpty)
+                    Text(
+                      transcript,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        height: 1.5,
+                      ),
+                    )
+                  else
+                    const Text(
+                      'No transcript available. Your speech will appear here after recording.',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 16,
+                        height: 1.5,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

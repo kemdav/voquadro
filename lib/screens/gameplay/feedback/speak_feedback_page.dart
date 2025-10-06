@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:provider/provider.dart';
 
 class SpeakFeedbackPage extends StatelessWidget {
   const SpeakFeedbackPage({
@@ -13,65 +15,137 @@ class SpeakFeedbackPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        IconButton.filled(
-          onPressed: () {},
-          icon: const Icon(Icons.close),
-          iconSize: 70,
-          style: IconButton.styleFrom(
-            backgroundColor: "23B5D3".toColor(),
-            foregroundColor: Colors.white,
-          ),
-        ),
-        Text(
-          'Rating: 69',
-          style: TextStyle(
-            color: primaryPurple,
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: cardBackground,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(13),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+    return Consumer<PublicSpeakingController>(
+      builder: (context, controller, child) {
+        return Column(
+          children: [
+            IconButton.filled(
+              onPressed: () {},
+              icon: const Icon(Icons.close),
+              iconSize: 70,
+              style: IconButton.styleFrom(
+                backgroundColor: "23B5D3".toColor(),
+                foregroundColor: Colors.white,
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Feedback speak page.',
-                      style: TextStyle(
-                        color: primaryPurple,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
+            Text(
+              'Rating: ${controller.overallScore ?? 0}',
+              style: TextStyle(
+                color: primaryPurple,
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cardBackground,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(13),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Feedback speak page.',
+                          style: TextStyle(
+                            color: primaryPurple,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFeedbackContent(controller),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFeedbackContent(PublicSpeakingController controller) {
+    final feedback = controller.formattedFeedback;
+
+    if (feedback.contains("Generating feedback")) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Generating feedback...',
+              style: TextStyle(fontSize: 18, color: Colors.black87),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (feedback.contains("Error") || feedback.contains("No feedback")) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            feedback,
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 16,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              controller.generateAIFeedback();
+            },
+            child: const Text('Retry Feedback Generation'),
+          ),
+        ],
+      );
+    }
+
+    //Display the actual feedback
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        //Display the question answered
+        if (controller.currentQuestion != null) ...[
+          Text(
+            'Question: ${controller.currentQuestion}',
+            style: TextStyle(
+              color: primaryPurple,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 16),
+        ],
+
+        //Display the feedback
+        Text(
+          feedback,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontSize: 16,
+            height: 1.5,
           ),
         ),
       ],

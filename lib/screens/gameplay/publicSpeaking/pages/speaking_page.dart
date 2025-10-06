@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/src/ai-integration/ollama_service.dart';
+import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
 
 // 1. Changed from StatefulWidget to StatelessWidget
 // This page no longer needs to manage any local state.
@@ -11,7 +14,8 @@ class SpeakingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
+    final controller = Provider.of<PublicSpeakingController>(context);
+    final session = controller.currentSession;
     // This page doesn't need its own Scaffold because the PublicSpeakingHub provides it.
     // It is now just a content widget.
     return Center(
@@ -25,25 +29,33 @@ class SpeakingPage extends StatelessWidget {
             backgroundColor: Colors.grey[300],
             color: "6CCC51".toColor(),
           ),
-          Container(
+
+          // Only rebuilds when
+          SizedBox(
             width: 300,
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(26),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(26),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    session?.generatedQuestion ??
+                        controller.currentQuestion ??
+                        "Waiting for question...",
+                    style: const TextStyle(fontSize: 24, color: Colors.black),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Text(
-                "DOES LBGT PEOPLE DESERVE RIGHTS?",
-                style: TextStyle(fontSize: 24, color: Colors.black),
-                textAlign: TextAlign.center,
               ),
             ),
           ),
