@@ -38,7 +38,6 @@ class SupabaseService {
 
       _client = Supabase.instance.client;
     } catch (e) {
-      // This provides a very clear error message if setup is wrong.
       throw Exception(
         'ERROR: Could not initialize Supabase. Did you forget to create a .env file from .env.example? Or is SUPABASE_URL missing? \n\nOriginal error: ${e.toString()}',
       );

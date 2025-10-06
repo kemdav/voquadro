@@ -2,10 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 import 'package:bcrypt/bcrypt.dart';
 
-// Import our new custom exception class
 import 'package:voquadro/utils/exceptions.dart';
 
-// A simple User model to make your code cleaner and type-safe
 class User {
   final String id;
   final String username;

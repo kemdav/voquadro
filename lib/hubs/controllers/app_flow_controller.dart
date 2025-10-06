@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/services/user_service.dart'; // Import the user service
-import 'package:voquadro/utils/exceptions.dart'; // Import your custom exception
+import 'package:voquadro/services/user_service.dart';
+import 'package:voquadro/utils/exceptions.dart';
 
 enum AppState {
   firstLaunch,
@@ -21,7 +21,7 @@ class AppFlowController with ChangeNotifier {
   AppMode get currentMode => _currentMode;
 
   String? loginErrorMessage;
-  User? currentUser; // Stores the custom User object from your UserService
+  User? currentUser; // Stores the custom User object from UserService
 
   void initiateRegistration() {
     _appState = AppState.registration;
@@ -49,7 +49,7 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Call the secure UserService to perform authentication
+      // Call secure UserService to perform authentication
       final user = await UserService.signInWithUsernameAndPassword(
         username: username,
         password: password,
@@ -57,15 +57,13 @@ class AppFlowController with ChangeNotifier {
 
       currentUser = user; // Store the user data
       _appState = AppState.authenticated;
-
-      // --- THIS IS THE CORRECTED PART ---
     } on AuthException catch (e) {
-      // 1. Catch the specific, structured error type.
+      //Catch the specific, structured error type.
       _appState = AppState.login;
-      // 2. Assign the clean message directly. No more string manipulation!
+      //Assign the clean message directly
       loginErrorMessage = e.message;
     } catch (e) {
-      // 3. (Optional but good practice) Catch any other unexpected errors.
+      //Catch any other unexpected errors.
       _appState = AppState.login;
       loginErrorMessage =
           'An unexpected error occurred. Please try again later.';
@@ -75,8 +73,7 @@ class AppFlowController with ChangeNotifier {
   }
 
   void logout() {
-    // Note: Since you're not using Supabase Auth, there's no client-side
-    // session to clear. Just clearing the local state is correct.
+    // session to clear. Just clearing the local state
     currentUser = null;
     _appState = AppState.unauthenticated;
     notifyListeners();
