@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/registration_controller.dart';
 
 class RegistrationUsernameStage extends StatefulWidget {
@@ -37,6 +38,10 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
     await registrationController.submitUsername(_usernameController.text, _emailController.text);
   }
 
+  void _goBackToLaunchPage(){
+    context.read<AppFlowController>().goBackToLaunchScreen();
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color bgColor = Color(0xFFF8F0FB);
@@ -59,7 +64,7 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                 Row(
                   children: [
                     IconButton(
-                      onPressed: () => Navigator.of(context).maybePop(),
+                      onPressed: () => _goBackToLaunchPage(),
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       style: IconButton.styleFrom(backgroundColor: buttonPurple),
                       iconSize: 30,

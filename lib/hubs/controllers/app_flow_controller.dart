@@ -10,10 +10,7 @@ enum AppState {
   authenticated,
 }
 
-enum AppMode {
-  modeSelection,
-  publicSpeaking
-}
+enum AppMode { modeSelection, publicSpeaking }
 
 class AppFlowController with ChangeNotifier {
   AppState _appState = AppState.firstLaunch;
@@ -52,17 +49,17 @@ class AppFlowController with ChangeNotifier {
         username: username,
         password: password,
       );
-      
+
       currentUser = user; // Store the user data
       _appState = AppState.authenticated;
-
     } catch (e) {
       // If authentication fails, the service throws an exception.
-      _appState = AppState.login; // Go back to the login state so user can retry
+      _appState =
+          AppState.login; // Go back to the login state so user can retry
       // Clean up the error message for display on the login page
-      loginErrorMessage = e.toString().replaceFirst('Exception: ', ''); 
+      loginErrorMessage = e.toString().replaceFirst('Exception: ', '');
     }
-    
+
     notifyListeners();
   }
 
