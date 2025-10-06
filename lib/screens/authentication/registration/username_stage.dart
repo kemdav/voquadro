@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/registration_controller.dart';
+import 'package:email_validator/email_validator.dart'; // <-- 1. ADD THIS IMPORT
 
 class RegistrationUsernameStage extends StatefulWidget {
   const RegistrationUsernameStage({super.key});
 
   @override
-  State<RegistrationUsernameStage> createState() => _RegistrationUsernameStageState();
+  State<RegistrationUsernameStage> createState() =>
+      _RegistrationUsernameStageState();
 }
 
 class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
@@ -31,14 +33,17 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
-      return; 
+      return;
     }
     final registrationController = context.read<RegistrationController>();
-    
-    await registrationController.submitUsername(_usernameController.text, _emailController.text);
+
+    await registrationController.submitUsername(
+      _usernameController.text,
+      _emailController.text,
+    );
   }
 
-  void _goBackToLaunchPage(){
+  void _goBackToLaunchPage() {
     context.read<AppFlowController>().goBackToLaunchScreen();
   }
 
@@ -54,7 +59,7 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
       backgroundColor: bgColor,
       body: SafeArea(
         child: Form(
-          key: _formKey, 
+          key: _formKey,
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
@@ -66,7 +71,9 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                     IconButton(
                       onPressed: () => _goBackToLaunchPage(),
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      style: IconButton.styleFrom(backgroundColor: buttonPurple),
+                      style: IconButton.styleFrom(
+                        backgroundColor: buttonPurple,
+                      ),
                       iconSize: 30,
                     ),
                   ],
@@ -118,7 +125,10 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                   decoration: InputDecoration(
                     hintText: 'Username',
                     hintStyle: const TextStyle(color: Color(0xFF322082)),
-                    prefixIcon: const Icon(Icons.person, color: Color(0xFF7962A5)),
+                    prefixIcon: const Icon(
+                      Icons.person,
+                      color: Color(0xFF7962A5),
+                    ),
                     filled: true,
                     fillColor: const Color(0xFFE5D3EC),
                     contentPadding: const EdgeInsets.symmetric(
@@ -135,7 +145,10 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: const BorderSide(color: Color(0xFFE5D3EC), width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE5D3EC),
+                        width: 2,
+                      ),
                     ),
                   ),
                   textInputAction: TextInputAction.next,
@@ -143,7 +156,7 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                     if (value == null || value.trim().length < 4) {
                       return 'Username must be at least 4 characters';
                     }
-                    return null; 
+                    return null;
                   },
                 ),
 
@@ -155,7 +168,10 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                   decoration: InputDecoration(
                     hintText: 'Email',
                     hintStyle: const TextStyle(color: Color(0xFF322082)),
-                    prefixIcon: const Icon(Icons.email, color: Color(0xFF7962A5)),
+                    prefixIcon: const Icon(
+                      Icons.email,
+                      color: Color(0xFF7962A5),
+                    ),
                     filled: true,
                     fillColor: const Color(0xFFE5D3EC),
                     contentPadding: const EdgeInsets.symmetric(
@@ -172,15 +188,20 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: const BorderSide(color: Color(0xFFE5D3EC), width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE5D3EC),
+                        width: 2,
+                      ),
                     ),
                   ),
                   textInputAction: TextInputAction.done,
+                  // --- 2. UPDATED VALIDATION LOGIC ---
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Email is required';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                    // Replace the complex RegExp with a simple call to the package
+                    if (!EmailValidator.validate(value.trim())) {
                       return 'Please enter a valid email address';
                     }
                     return null;
@@ -230,7 +251,10 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                     ),
                     child: const Text(
                       'Continue',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
