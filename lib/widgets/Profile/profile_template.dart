@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
 
+class StatTileData {
+  const StatTileData({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+  final IconData icon;
+  final String label;
+  final String value;
+}
+
 class ProfileTemplate extends StatelessWidget {
   const ProfileTemplate({
     super.key,
     required this.username,
     required this.level,
-    required this.masteryLevel,
-    required this.publicSpeakingLevel,
-    required this.highestStreak,
     required this.bio,
     required this.bannerImage,
     required this.avatarImage,
     this.onEdit,
     this.onBack,
+    this.stats,
   });
 
   final String username;
   final int level;
-  final int masteryLevel;
-  final int publicSpeakingLevel;
-  final int highestStreak;
   final String bio;
 
   /// Supports either AssetImage or NetworkImage in future DB integration
@@ -29,6 +35,7 @@ class ProfileTemplate extends StatelessWidget {
 
   final VoidCallback? onEdit;
   final VoidCallback? onBack;
+  final List<StatTileData>? stats; // if null, a default set will be built
 
   @override
   Widget build(BuildContext context) {
@@ -70,9 +77,7 @@ class ProfileTemplate extends StatelessWidget {
                       child: _ProfileHeaderCard(
                         username: username,
                         level: level,
-                        masteryLevel: masteryLevel,
-                        publicSpeakingLevel: publicSpeakingLevel,
-                        highestStreak: highestStreak,
+                        stats: stats,
                         titleColor: purpleDark,
                         cardBg: cardBg,
                         avatarImage: avatarImage,
@@ -122,9 +127,7 @@ class _ProfileHeaderCard extends StatelessWidget {
   const _ProfileHeaderCard({
     required this.username,
     required this.level,
-    required this.masteryLevel,
-    required this.publicSpeakingLevel,
-    required this.highestStreak,
+    this.stats,
     required this.titleColor,
     required this.cardBg,
     required this.avatarImage,
@@ -132,9 +135,7 @@ class _ProfileHeaderCard extends StatelessWidget {
 
   final String username;
   final int level;
-  final int masteryLevel;
-  final int publicSpeakingLevel;
-  final int highestStreak;
+  final List<StatTileData>? stats;
   final Color titleColor;
   final Color cardBg;
   final ImageProvider avatarImage;
@@ -188,29 +189,17 @@ class _ProfileHeaderCard extends StatelessWidget {
                 const SizedBox(height: 26),
                 Row(
                   children: [
-                    Expanded(
-                      child: _StatTile(
-                        icon: Icons.school,
-                        label: 'Mastery Level',
-                        value: 'lvl$masteryLevel',
+                    for (int i = 0; i < _effectiveStats.length; i++) ...[
+                      Expanded(
+                        child: _StatTile(
+                          icon: _effectiveStats[i].icon,
+                          label: _effectiveStats[i].label,
+                          value: _effectiveStats[i].value,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _StatTile(
-                        icon: Icons.spatial_audio_off,
-                        label: 'Public Speaking Level',
-                        value: 'lvl$publicSpeakingLevel',
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _StatTile(
-                        icon: Icons.local_fire_department,
-                        label: 'Highest Streak',
-                        value: '$highestStreak',
-                      ),
-                    ),
+                      if (i != _effectiveStats.length - 1)
+                        const SizedBox(width: 10),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -277,6 +266,23 @@ class _ProfileHeaderCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<StatTileData> get _effectiveStats {
+    if (stats != null && stats!.isNotEmpty) return stats!;
+    return const [
+      StatTileData(icon: Icons.school, label: 'Mastery Level', value: 'lvl—'),
+      StatTileData(
+        icon: Icons.spatial_audio_off,
+        label: 'Public Speaking Level',
+        value: 'lvl—',
+      ),
+      StatTileData(
+        icon: Icons.local_fire_department,
+        label: 'Highest Streak',
+        value: '—',
+      ),
+    ];
   }
 }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/widgets/Profile/profile_template.dart';
 
 class ProfileStage extends StatefulWidget {
@@ -23,15 +25,19 @@ class _ProfileStageState extends State<ProfileStage> {
 
   @override
   Widget build(BuildContext context) {
+    final stats = [
+      StatTileData(icon: Icons.school, label: 'Mastery Level', value: 'lvl$masteryLevel'),
+      StatTileData(icon: Icons.spatial_audio_off, label: 'Public Speaking Level', value: 'lvl$publicSpeakingLevel'),
+      StatTileData(icon: Icons.local_fire_department, label: 'Highest Streak', value: '$highestStreak'),
+    ];
+
     return ProfileTemplate(
       username: username,
       level: level,
-      masteryLevel: masteryLevel,
-      publicSpeakingLevel: publicSpeakingLevel,
-      highestStreak: highestStreak,
       bio: bio,
       bannerImage: AssetImage(bannerPath),
       avatarImage: AssetImage(avatarPath),
+      stats: stats,
       onBack: () => Navigator.of(context).maybePop(),
       onEdit: _openEditSheet,
     );
@@ -319,91 +325,40 @@ class _ProfileStageState extends State<ProfileStage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: 'F0E6F6'.toColor(),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    'Edit Profile',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        // Toggle between two available placeholders
-                        avatarPath = avatarPath.endsWith('tempCharacter.png')
-                            ? 'assets/images/tempRank.jpg'
-                            : 'assets/images/tempCharacter.png';
-                      });
-                    },
-                    icon: const Icon(Icons.photo_camera),
-                    label: const Text('Change Avatar'),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        bannerPath = bannerPath.endsWith('bg.jpg')
-                            ? 'assets/images/promptCardRevealed.png'
-                            : 'assets/images/bg.jpg';
-                      });
-                    },
-                    icon: const Icon(Icons.wallpaper),
-                    label: const Text('Change Banner'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text('Bio'),
-              const SizedBox(height: 6),
-              TextField(
-                controller: bioController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Write your bio here...',
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      bio = bioController.text.isEmpty
-                          ? 'Write your bio here...'
-                          : bioController.text;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Save Changes'),
-                ),
-              ),
-            ],
-          ),
+        return ProfileEditSheet(
+          initialBio: bio,
+          onPickAvatar: _pickAvatar,
+          onPickBanner: _pickBanner,
+          onSaveBio: (newBio) {
+            setState(() {
+              bio = newBio.isEmpty ? 'Write your bio here...' : newBio;
+            });
+          },
         );
       },
     );
+  }
+
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final result = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024);
+    if (result == null) return;
+    setState(() {
+      avatarPath = result.path;
+    });
+  }
+
+  Future<void> _pickBanner() async {
+    final picker = ImagePicker();
+    final result = await picker.pickImage(source: ImageSource.gallery, maxWidth: 2048);
+    if (result == null) return;
+    setState(() {
+      bannerPath = result.path;
+    });
   }
 }
