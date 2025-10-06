@@ -37,6 +37,11 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
+  void goBackToLaunchScreen() {
+    _appState = AppState.firstLaunch;
+    notifyListeners();
+  }
+
   // --- THIS IS THE UPDATED LOGIN METHOD ---
   Future<void> login(String username, String password) async {
     _appState = AppState.authenticating;
