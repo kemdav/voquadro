@@ -38,6 +38,11 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
+  void goBackToLaunchScreen(){
+    _appState = AppState.firstLaunch;
+    notifyListeners();
+  }
+
   Future<void> login(String email, String password) async {
     _appState = AppState.authenticating;
     loginErrorMessage = null;
