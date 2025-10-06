@@ -29,7 +29,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
         // For any gameplay state, show the gameplay-specific buttons.
-        return const GameplayActions(); // The NEW, dumb version]
+        return const GameplayActions();
       case PublicSpeakingState.inFeedback:
         return FeedbackProgressActions();
     }

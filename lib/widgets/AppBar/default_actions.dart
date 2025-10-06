@@ -18,23 +18,9 @@ class DefaultActions extends StatelessWidget {
             right: 20,
             height: buttonSize, 
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton.filled(
-                  onPressed: () {
-                    if (Navigator.canPop(context)) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  iconSize: 50, 
-                  style: IconButton.styleFrom(
-                    backgroundColor: "7962A5".toColor(),
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-
                 Row(
                   children: [
                     IconButton.filled(

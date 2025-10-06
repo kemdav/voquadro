@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 enum PublicSpeakingState {
-  home,
+  home, //0 
   status,
   micTest,
   readying,
