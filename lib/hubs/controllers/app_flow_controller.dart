@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:voquadro/services/user_service.dart'; // Import the user service
 
 enum AppState {
   firstLaunch,
@@ -22,6 +23,7 @@ class AppFlowController with ChangeNotifier {
   AppMode get currentMode => _currentMode;
 
   String? loginErrorMessage;
+  User? currentUser; // Store the logged-in user's data
 
   void initiateRegistration() {
     _appState = AppState.registration;
@@ -38,26 +40,34 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login(String email, String password) async {
+  // --- THIS IS THE UPDATED LOGIN METHOD ---
+  Future<void> login(String username, String password) async {
     _appState = AppState.authenticating;
     loginErrorMessage = null;
     notifyListeners();
 
-    // --- Replace this with authentication logic ---
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network call
-    final bool success = (email == 'test' && password == 'pass');
-    // ---------------------------------------------------------
-
-    if (success) {
+    try {
+      // Call the secure UserService to perform authentication
+      final user = await UserService.signInWithUsernameAndPassword(
+        username: username,
+        password: password,
+      );
+      
+      currentUser = user; // Store the user data
       _appState = AppState.authenticated;
-    } else {
-      _appState = AppState.unauthenticated;
-      loginErrorMessage = 'Wrong, try again bucko. TEST';
+
+    } catch (e) {
+      // If authentication fails, the service throws an exception.
+      _appState = AppState.login; // Go back to the login state so user can retry
+      // Clean up the error message for display on the login page
+      loginErrorMessage = e.toString().replaceFirst('Exception: ', ''); 
     }
+    
     notifyListeners();
   }
 
   void logout() {
+    currentUser = null;
     _appState = AppState.unauthenticated;
     notifyListeners();
   }
