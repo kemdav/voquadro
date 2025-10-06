@@ -31,7 +31,7 @@ class AudioController with ChangeNotifier {
     // 1. Check for microphone permission
     final status = await Permission.microphone.request();
     if (!status.isGranted) {
-      throw 'Microphone permission not granted';
+      throw Exception('Microphone permission not granted');
     }
 
     // 2. Find a temporary directory to save the file
@@ -57,7 +57,7 @@ class AudioController with ChangeNotifier {
   /// Uploads the recorded audio file to a server.
   Future<void> uploadAudio() async {
     if (_audioPath == null) {
-      throw 'No audio file to upload.';
+      throw Exception('No audio file to upload.');
     }
 
     // Replace with your actual API endpoint
