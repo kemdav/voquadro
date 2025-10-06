@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
 
+/// ProfileTemplate
+/// Reusable, presentational widget that renders the profile UI used across
+/// modes. This widget is intentionally dumb: it receives already-prepared
+/// values and images (AssetImage/NetworkImage/FileImage) and renders them.
+///
+/// Extend by:
+/// - Passing different `stats` per mode via [StatTileData]
+/// - Supplying different [ImageProvider] types as data sources change
+/// - Wiring [onEdit] to open a profile editor or a route
+
+/// Simple value object for a single stat tile on the header card.
 class StatTileData {
   const StatTileData({
     required this.icon,
@@ -25,16 +36,20 @@ class ProfileTemplate extends StatelessWidget {
     this.stats,
   });
 
+  /// Display name of the user
   final String username;
+  /// Overall user level (displayed next to the name)
   final int level;
+  /// Bio text rendered in the lower card
   final String bio;
 
-  /// Supports either AssetImage or NetworkImage in future DB integration
+  /// Banner and avatar accept any ImageProvider (Asset/Network/File)
   final ImageProvider bannerImage;
   final ImageProvider avatarImage;
 
   final VoidCallback? onEdit;
   final VoidCallback? onBack;
+  /// Optional list of stats. If null/empty, a default placeholder set is used.
   final List<StatTileData>? stats; // if null, a default set will be built
 
   @override
@@ -123,6 +138,7 @@ class ProfileTemplate extends StatelessWidget {
   }
 }
 
+/// Internal header card: avatar, name/level, and stat tiles.
 class _ProfileHeaderCard extends StatelessWidget {
   const _ProfileHeaderCard({
     required this.username,
@@ -268,6 +284,7 @@ class _ProfileHeaderCard extends StatelessWidget {
     );
   }
 
+  /// If no stats were provided, return a default placeholder set.
   List<StatTileData> get _effectiveStats {
     if (stats != null && stats!.isNotEmpty) return stats!;
     return const [

@@ -4,6 +4,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/widgets/Profile/profile_template.dart';
 
+/// ProfileStage
+/// Screen wrapper that demonstrates how to use the reusable ProfileTemplate
+/// with local placeholder data and opens the reusable ProfileEditSheet.
+import 'package:voquadro/widgets/Profile/profile_template.dart';
+
 class ProfileStage extends StatefulWidget {
   const ProfileStage({super.key});
 
