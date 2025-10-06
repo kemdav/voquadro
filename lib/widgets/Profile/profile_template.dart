@@ -1,47 +1,146 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
-import 'package:voquadro/widgets/Profile/profile_template.dart';
 
-class ProfileStage extends StatefulWidget {
-  const ProfileStage({super.key});
+class ProfileTemplate extends StatelessWidget {
+  const ProfileTemplate({
+    super.key,
+    required this.username,
+    required this.level,
+    required this.masteryLevel,
+    required this.publicSpeakingLevel,
+    required this.highestStreak,
+    required this.bio,
+    required this.bannerImage,
+    required this.avatarImage,
+    this.onEdit,
+    this.onBack,
+  });
 
-  @override
-  State<ProfileStage> createState() => _ProfileStageState();
-}
+  final String username;
+  final int level;
+  final int masteryLevel;
+  final int publicSpeakingLevel;
+  final int highestStreak;
+  final String bio;
 
-class _ProfileStageState extends State<ProfileStage> {
-  String username = 'Adolp';
-  int level = 25;
-  int masteryLevel = 69;
-  int publicSpeakingLevel = 69;
-  int highestStreak = 23;
+  /// Supports either AssetImage or NetworkImage in future DB integration
+  final ImageProvider bannerImage;
+  final ImageProvider avatarImage;
 
-  String bio = 'Write your bio here...';
-
-  String bannerPath = 'assets/images/bg.jpg';
-  String avatarPath = 'assets/images/tempCharacter.png';
+  final VoidCallback? onEdit;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
-    return ProfileTemplate(
-      username: username,
-      level: level,
-      masteryLevel: masteryLevel,
-      publicSpeakingLevel: publicSpeakingLevel,
-      highestStreak: highestStreak,
-      bio: bio,
-      bannerImage: AssetImage(bannerPath),
-      avatarImage: AssetImage(avatarPath),
-      onBack: () => Navigator.of(context).maybePop(),
-      onEdit: _openEditSheet,
+    final Color purpleDark = '49416D'.toColor();
+    final Color purpleMid = '7962A5'.toColor();
+    const Color cardBg = Color(0xFFF0E6F6);
+    const Color pageBg = Color(0xFFF7F3FB);
+
+    return Scaffold(
+      backgroundColor: pageBg,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              top: 0,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  height: 220,
+                  decoration: BoxDecoration(
+                    color: purpleMid,
+                    image: DecorationImage(
+                      image: bannerImage,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            Positioned.fill(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 140, bottom: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _ProfileHeaderCard(
+                        username: username,
+                        level: level,
+                        masteryLevel: masteryLevel,
+                        publicSpeakingLevel: publicSpeakingLevel,
+                        highestStreak: highestStreak,
+                        titleColor: purpleDark,
+                        cardBg: cardBg,
+                        avatarImage: avatarImage,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _BioCard(
+                        bio: bio,
+                        titleColor: purpleDark,
+                        cardBg: cardBg,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: 16,
+              left: 16,
+              child: _RoundIconButton(
+                icon: Icons.arrow_back,
+                background: purpleMid,
+                onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+              ),
+            ),
+
+            Positioned(
+              top: 16,
+              right: 16,
+              child: _RoundIconButton(
+                icon: Icons.edit,
+                background: purpleMid,
+                onPressed: onEdit,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
+}
 
-  Widget _buildProfileCard(
-    BuildContext context,
-    Color cardBg,
-    Color titleColor,
-  ) {
+class _ProfileHeaderCard extends StatelessWidget {
+  const _ProfileHeaderCard({
+    required this.username,
+    required this.level,
+    required this.masteryLevel,
+    required this.publicSpeakingLevel,
+    required this.highestStreak,
+    required this.titleColor,
+    required this.cardBg,
+    required this.avatarImage,
+  });
+
+  final String username;
+  final int level;
+  final int masteryLevel;
+  final int publicSpeakingLevel;
+  final int highestStreak;
+  final Color titleColor;
+  final Color cardBg;
+  final ImageProvider avatarImage;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: cardBg,
@@ -62,7 +161,6 @@ class _ProfileStageState extends State<ProfileStage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -91,7 +189,7 @@ class _ProfileStageState extends State<ProfileStage> {
                 Row(
                   children: [
                     Expanded(
-                      child: _statTile(
+                      child: _StatTile(
                         icon: Icons.school,
                         label: 'Mastery Level',
                         value: 'lvl$masteryLevel',
@@ -99,7 +197,7 @@ class _ProfileStageState extends State<ProfileStage> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: _statTile(
+                      child: _StatTile(
                         icon: Icons.spatial_audio_off,
                         label: 'Public Speaking Level',
                         value: 'lvl$publicSpeakingLevel',
@@ -107,7 +205,7 @@ class _ProfileStageState extends State<ProfileStage> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: _statTile(
+                      child: _StatTile(
                         icon: Icons.local_fire_department,
                         label: 'Highest Streak',
                         value: '$highestStreak',
@@ -120,7 +218,6 @@ class _ProfileStageState extends State<ProfileStage> {
             ),
           ),
 
-          // Avatar
           Positioned(
             top: -56,
             left: 0,
@@ -143,15 +240,15 @@ class _ProfileStageState extends State<ProfileStage> {
                         ),
                       ],
                       image: DecorationImage(
-                        image: AssetImage(avatarPath),
+                        image: avatarImage,
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                  // Rank emblem placeholder
                   Positioned(
-                    right: -10,
-                    bottom: 2,
+                    //placeholder btw
+                    right: -2,
+                    bottom: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -181,12 +278,21 @@ class _ProfileStageState extends State<ProfileStage> {
       ),
     );
   }
+}
 
-  Widget _statTile({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -226,8 +332,21 @@ class _ProfileStageState extends State<ProfileStage> {
       ),
     );
   }
+}
 
-  Widget _buildBioCard(Color cardBg, Color titleColor) {
+class _BioCard extends StatelessWidget {
+  const _BioCard({
+    required this.bio,
+    required this.titleColor,
+    required this.cardBg,
+  });
+
+  final String bio;
+  final Color titleColor;
+  final Color cardBg;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: cardBg,
@@ -263,7 +382,7 @@ class _ProfileStageState extends State<ProfileStage> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.015),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border: Border.all(color: Colors.transparent),
               ),
               child: Text(
                 bio,
@@ -280,12 +399,21 @@ class _ProfileStageState extends State<ProfileStage> {
       ),
     );
   }
+}
 
-  Widget _roundIconButton({
-    required IconData icon,
-    required Color background,
-    required VoidCallback onPressed,
-  }) {
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({
+    required this.icon,
+    required this.background,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final Color background;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -310,100 +438,19 @@ class _ProfileStageState extends State<ProfileStage> {
       ),
     );
   }
-
-  void _openEditSheet() {
-    final TextEditingController bioController = TextEditingController(
-      text: bio,
-    );
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    'Edit Profile',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        // Toggle between two available placeholders
-                        avatarPath = avatarPath.endsWith('tempCharacter.png')
-                            ? 'assets/images/tempRank.jpg'
-                            : 'assets/images/tempCharacter.png';
-                      });
-                    },
-                    icon: const Icon(Icons.photo_camera),
-                    label: const Text('Change Avatar'),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        bannerPath = bannerPath.endsWith('bg.jpg')
-                            ? 'assets/images/promptCardRevealed.png'
-                            : 'assets/images/bg.jpg';
-                      });
-                    },
-                    icon: const Icon(Icons.wallpaper),
-                    label: const Text('Change Banner'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text('Bio'),
-              const SizedBox(height: 6),
-              TextField(
-                controller: bioController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Write your bio here...',
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      bio = bioController.text.isEmpty
-                          ? 'Write your bio here...'
-                          : bioController.text;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Save Changes'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
+/*
+HOW TO USE THIS WIDGET ELSEWHERE:
+
+return ProfileTemplate(
+  username: user.username,
+  level: user.level,
+  masteryLevel: user.masteryLevel,
+  publicSpeakingLevel: user.psLevel,
+  highestStreak: user.highestStreak,
+  bio: user.bio,
+  bannerImage: NetworkImage(user.bannerUrl),  // swap in once DB ready
+  avatarImage: NetworkImage(user.avatarUrl),  // swap in once DB ready
+  onBack: () => Navigator.of(context).maybePop(),
+  onEdit: () { /* open edit UI or navigate to profile editor */ },
+);*/
