@@ -7,17 +7,20 @@ This directory contains the AI integration services for the VoQuadro public spea
 The hybrid AI system consists of three main components:
 
 ### 1. OllamaService (`ollama_service.dart`)
+
 - **Purpose**: Direct integration with Ollama for advanced AI features
 - **Features**: AI-generated questions, advanced speech analysis, detailed feedback
 - **Requirements**: Ollama must be installed and running locally
 
 ### 2. Fallback Services
+
 - **FallbackQuestionService** (`fallback_question_service.dart`): Provides static question bank with 200+ questions across 20+ topics
 - **FallbackFeedbackService** (`fallback_feedback_service.dart`): Rule-based feedback system using heuristics and pattern analysis
 
 ### 3. HybridAIService (`hybrid_ai_service.dart`)
+
 - **Purpose**: Orchestrates between Ollama and fallback services
-- **Behavior**: 
+- **Behavior**:
   - Tries Ollama first for all AI operations
   - Falls back to static/rule-based services if Ollama fails
   - Provides transparent interface to the rest of the app
@@ -42,6 +45,7 @@ graph TD
 ## Service Priority
 
 1. **Primary**: Ollama (when available)
+
    - Advanced AI question generation
    - Sophisticated speech analysis
    - Context-aware feedback
@@ -56,10 +60,12 @@ graph TD
 ## Key Features
 
 ### Question Generation
+
 - **Ollama**: Dynamic, context-aware questions tailored to topics
 - **Fallback**: Curated question bank with 8 questions per topic across 20+ topics
 
 ### Speech Analysis
+
 - **Ollama**: Advanced NLP analysis with context understanding
 - **Fallback**: Rule-based analysis checking for:
   - Relevance to question
@@ -68,6 +74,7 @@ graph TD
   - Speaking pace and filler words
 
 ### Feedback Generation
+
 - **Ollama**: Detailed, personalized feedback with specific suggestions
 - **Fallback**: Structured feedback covering:
   - Content Quality Evaluation
@@ -75,6 +82,7 @@ graph TD
   - Overall Performance Assessment
 
 ### Scoring System
+
 - **Ollama**: AI-powered scoring with nuanced understanding
 - **Fallback**: Heuristic-based scoring using:
   - Relevance analysis (40% weight)
@@ -104,11 +112,13 @@ await controller.generateScores();
 ## User Experience
 
 ### When Ollama is Available
+
 - Users get advanced AI features
 - Status shows "Using Ollama AI (Advanced)"
 - Full feature set available
 
 ### When Ollama is Not Available
+
 - App continues to work with basic features
 - Status shows "Using Offline Mode (Basic)"
 - Users can still practice public speaking
@@ -132,7 +142,7 @@ await controller.generateScores();
 
 ## Files Structure
 
-```
+``` python
 lib/src/ai-integration/
 ├── README.md                           # This documentation
 ├── ollama_service.dart                 # Direct Ollama integration

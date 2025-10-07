@@ -34,7 +34,6 @@ dependencies:
   record: ^6.1.2
   permission_handler: ^11.1.0
   path_provider: ^2.1.1
-  http: ^1.1.0
 
   logger: ^2.3.0
   just_audio: ^0.9.36
