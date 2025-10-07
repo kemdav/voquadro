@@ -6,7 +6,7 @@ import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 
 enum PublicSpeakingState {
-  home,
+  home, //0 
   status,
   micTest,
   readying,
