@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
+import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 
 enum PublicSpeakingState {
   home,
@@ -23,52 +24,15 @@ enum FeedbackStep {
 
 class PublicSpeakingController with ChangeNotifier {
   PublicSpeakingState _currentState = PublicSpeakingState.home;
-  final OllamaService _ollamaService = OllamaService.instance;
+  final HybridAIService _aiService = HybridAIService.instance;
 
-  // List of topics for impromptu speaking
-  static const List<String> _topics = [
-    'Technology',
-    'Environment',
-    'Education',
-    'Health',
-    'Travel',
-    'Food',
-    'Sports',
-    'Art',
-    'Music',
-    'Science',
-    'Business',
-    'Politics',
-    'Social Media',
-    'Climate Change',
-    'Artificial Intelligence',
-    'Space Exploration',
-    'Mental Health',
-    'Remote Work',
-    'Sustainable Living',
-    'Digital Privacy',
-    'LGBT',
-    'Jews',
-    'Nazi',
-    'Palestine',
-    'Israel',
-    'Pedophilia',
-    'Abortion',
-    'Gun Control',
-    'Marxism',
-    'Communism',
-    'Capitalism',
-    'Socialism',
-    'Anarchism',
-    'Fascism',
-    'Nazism',
-    'Human Rights',
-  ];
+  // Get topics from the hybrid AI service
+  List<String> get availableTopics => _aiService.getAvailableTopics();
 
   PublicSpeakingState get currentState => _currentState;
-  SpeechSession? get currentSession => _ollamaService.currentSession;
-  String? get currentTopic => _ollamaService.currentTopic;
-  String? get currentQuestion => _ollamaService.currentQuestion;
+  SpeechSession? get currentSession => _aiService.currentSession;
+  String? get currentTopic => _aiService.currentTopic;
+  String? get currentQuestion => _aiService.currentQuestion;
 
   Timer? _readyingTimer;
   Timer? _speakingTimer;
@@ -91,7 +55,13 @@ class PublicSpeakingController with ChangeNotifier {
   int? get overallScore => _overallScore;
   int? get contentQualityScore => _contentQualityScore;
   int? get clarityStructureScore => _clarityStructureScore;
-  bool get hasScores => overallScore != null;
+
+  //getters for AI service status
+  bool get isOllamaAvailable => _aiService.isOllamaAvailable;
+  bool get isUsingFallback => _aiService.isUsingFallback;
+  String get aiServiceStatus => _aiService.getServiceStatus();
+  String get aiServiceMessage => _aiService.getServiceMessage();
+  String get estimatedResponseTime => _aiService.getEstimatedResponseTime();
 
   void setUserTranscript(String transcript) {
     _userTranscript = transcript;
@@ -134,7 +104,8 @@ class PublicSpeakingController with ChangeNotifier {
 
   String _getRandomTopic() {
     final random = Random();
-    return _topics[random.nextInt(_topics.length)];
+    final topics = availableTopics;
+    return topics[random.nextInt(topics.length)];
   }
 
   void startMicTest() {
@@ -162,22 +133,26 @@ class PublicSpeakingController with ChangeNotifier {
   //? Connect to ollama and generate question.
   Future<void> generateQuestionAndStart(String topic) async {
     try {
-      debugPrint('Calling OllamaService.generateQuestion...');
+      debugPrint('Generating question with AI service...');
       // Reset previous session data to avoid stale feedback/transcript
       _aiFeedback = null;
       _userTranscript = null;
       // Clear any previous scores so a new session will regenerate them
       clearScores();
       notifyListeners();
+      debugPrint('Previous session cleared.');
 
-      await _ollamaService.generateQuestion(topic);
+      // Pre-warm connection for faster response
+      await _aiService.preWarmConnection();
 
-      debugPrint('Session created: ${_ollamaService.hasActiveSession}');
-      debugPrint('Current question: ${_ollamaService.currentQuestion}');
-      debugPrint('Current topic: ${_ollamaService.currentTopic}');
+      await _aiService.generateQuestion(topic);
+
+      debugPrint('Session created: ${_aiService.hasActiveSession}');
+      debugPrint('Current question: ${_aiService.currentQuestion}');
+      debugPrint('Current topic: ${_aiService.currentTopic}');
 
       // Check if session actually started before starting gameplay
-      if (_ollamaService.hasActiveSession) {
+      if (_aiService.hasActiveSession) {
         debugPrint('Starting gameplay sequence...');
         startGameplaySequence();
       }
@@ -213,14 +188,14 @@ class PublicSpeakingController with ChangeNotifier {
     showFeedback();
   }
 
-  Future<void> debugOllamaConnection() async {
-    bool isConnected = await _ollamaService.checkOllamaConnection();
-    debugPrint('Ollama connection: $isConnected');
+  Future<void> debugAIConnection() async {
+    bool isConnected = await _aiService.checkOllamaAvailability();
+    debugPrint('AI service connection: $isConnected');
 
     if (isConnected) {
       debugPrint('Ollama is running and accessible');
     } else {
-      debugPrint('Ollama is NOT running or not accessible');
+      debugPrint('Using fallback AI service');
     }
   }
 
@@ -230,7 +205,7 @@ class PublicSpeakingController with ChangeNotifier {
     int fillerCount = 0,
     int durationSeconds = 60,
   }) async {
-    if (_userTranscript == null || _ollamaService.currentSession == null) {
+    if (_userTranscript == null || _aiService.currentSession == null) {
       debugPrint('No transcript or session available for scoring.');
       return;
     }
@@ -242,9 +217,9 @@ class PublicSpeakingController with ChangeNotifier {
       _clarityStructureScore = null;
       notifyListeners();
 
-      final result = await _ollamaService.getPublicSpeakingFeedbackWithScores(
+      final result = await _aiService.getPublicSpeakingFeedbackWithScores(
         _userTranscript!,
-        _ollamaService.currentSession!,
+        _aiService.currentSession!,
         wordCount: wordCount,
         fillerCount: fillerCount,
         durationSeconds: durationSeconds,
@@ -286,13 +261,7 @@ class PublicSpeakingController with ChangeNotifier {
   }
 
   void loadSampleTranscript() {
-    _userTranscript = '''
-        I believe that artificial intelligence is transforming our world in profound ways. 
-        From healthcare to education, AI systems are helping us solve complex problems 
-        more efficiently. However, we must also consider the ethical implications and 
-        ensure that AI development aligns with human values. The future will likely see 
-        even more integration of AI into our daily lives, so it's crucial that we 
-        establish proper guidelines and regulations now.
+    _userTranscript = '''no way uh yes
         ''';
 
     notifyListeners();
@@ -301,17 +270,15 @@ class PublicSpeakingController with ChangeNotifier {
 
   //? Get AI feedback for the user transcript
   Future<void> generateAIFeedback() async {
-    // Ensure we have a transcript (use sample for now)
-
-    if (_userTranscript == null || _ollamaService.currentSession == null) {
+    if (_userTranscript == null || _aiService.currentSession == null) {
       _aiFeedback = 'No transcript or session available for feedback.';
     }
 
     // Ensure we have a session/question for context
-    if (_ollamaService.currentSession == null) {
+    if (_aiService.currentSession == null) {
       try {
         final topic = _getRandomTopic();
-        await _ollamaService.generateQuestion(topic);
+        await _aiService.generateQuestion(topic);
       } catch (e) {
         _aiFeedback = 'Error creating session for feedback: $e';
         notifyListeners();
@@ -329,9 +296,9 @@ class PublicSpeakingController with ChangeNotifier {
       _aiFeedback = "Generating feedback...";
       notifyListeners();
 
-      final feedback = await _ollamaService.getPublicSpeakingFeedback(
+      final feedback = await _aiService.getPublicSpeakingFeedback(
         _userTranscript!,
-        _ollamaService.currentSession!,
+        _aiService.currentSession!,
       );
 
       _aiFeedback = feedback;

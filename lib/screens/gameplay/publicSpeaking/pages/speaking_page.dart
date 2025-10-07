@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/src/hex_color.dart';
-import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
 
 // 1. Changed from StatefulWidget to StatelessWidget
