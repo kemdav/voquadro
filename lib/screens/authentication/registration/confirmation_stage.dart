@@ -13,13 +13,17 @@ class RegistrationConfirmationStage extends StatelessWidget {
   Future<void> _completeRegistration(BuildContext context) async {
     final registrationController = context.read<RegistrationController>();
     final appFlowController = context.read<AppFlowController>();
+    
     await registrationController.completeRegistration();
 
     if (context.mounted) {
+      // Check if registration was successful (no error message)
+      if (registrationController.errorMessage == null) {
         appFlowController.login(
-            registrationController.username!, 
-            registrationController.password!
+          registrationController.username!, 
+          registrationController.password!
         );
+      }
     }
   }
 
@@ -107,6 +111,32 @@ class RegistrationConfirmationStage extends StatelessWidget {
           ),
 
           const Spacer(),
+
+          // Error message display
+          Consumer<RegistrationController>(
+            builder: (context, controller, child) {
+              if (controller.errorMessage != null) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Text(
+                    controller.errorMessage!,
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
 
           const SizedBox(height: 24),
 
