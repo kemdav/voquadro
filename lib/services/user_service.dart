@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 import 'package:bcrypt/bcrypt.dart';
 
+// Import custom exception class
 import 'package:voquadro/utils/exceptions.dart';
 
 class User {
@@ -19,7 +20,10 @@ class User {
 class UserService {
   static final SupabaseClient _supabase = Supabase.instance.client;
 
-  /// Creates a new user in the database using secure password hashing
+  static const String _kPostgrestErrorNoExactRow = 'PGRST116';
+  static const String _kPostgresErrorUniqueViolation = '23505';
+
+  /// Creates a new user in database using secure password hashing
   static Future<User> createUser({
     required String username,
     required String email,
@@ -42,8 +46,8 @@ class UserService {
 
       return User.fromMap(response);
     } on PostgrestException catch (e) {
-      if (e.code == '23505') {
-        // Unique constraint violation
+      //USE CONSTANT INSTEAD OF MAGIC STRING
+      if (e.code == _kPostgresErrorUniqueViolation) {
         if (e.message.contains('users_username_key')) {
           throw AuthException('Username is already taken.');
         }
@@ -82,8 +86,7 @@ class UserService {
 
       return User.fromMap(userMap);
     } on PostgrestException catch (e) {
-      if (e.code == 'PGRST116') {
-        // This code means ".single()" found 0 rows
+      if (e.code == _kPostgrestErrorNoExactRow) {
         throw AuthException('Invalid username or password.');
       }
       throw AuthException('A database error occurred. Please try again.');
@@ -105,7 +108,7 @@ class UserService {
         await _supabase.from('user_skills').insert(userSkills);
       }
     } catch (e) {
-      debugPrint('Failed to create initial user skills: ${e.toString()}');
+      debugPrint('Failed to create initial user skills');
     }
   }
 
@@ -119,7 +122,7 @@ class UserService {
 
       return response != null;
     } catch (e) {
-      throw Exception('Failed to check username availability: ${e.toString()}');
+      throw Exception('Failed to check username availability');
     }
   }
 
@@ -133,7 +136,7 @@ class UserService {
 
       return response != null;
     } catch (e) {
-      throw Exception('Failed to check email availability: ${e.toString()}');
+      throw Exception('Failed to check email availability');
     }
   }
 
@@ -147,7 +150,7 @@ class UserService {
 
       return response;
     } catch (e) {
-      throw Exception('Failed to get user: ${e.toString()}');
+      throw Exception('Failed to get user');
     }
   }
 }
