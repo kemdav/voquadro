@@ -3,27 +3,20 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
 
-// 1. Changed from StatefulWidget to StatelessWidget
-// This page no longer needs to manage any local state.
 class SpeakingPage extends StatelessWidget {
   const SpeakingPage({super.key});
 
-  // 2. REMOVED the entire State class and the GlobalKey.
-  // final GlobalKey<State<GameplayActions>> _gameplayActionsKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<PublicSpeakingController>(context);
-    final session = controller.currentSession;
-    // This page doesn't need its own Scaffold because the PublicSpeakingHub provides it.
-    // It is now just a content widget.
+     final controller = context.watch<PublicSpeakingController>();
+     final session = controller.currentSession;
     return Center(
       child: Column(
-        // Use MainAxisAlignment.spaceEvenly or similar to position items
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           LinearProgressIndicator(
-            value: 0.3,
+            value: 1.0 - controller.speakingProgress,
             minHeight: 10,
             backgroundColor: Colors.grey[300],
             color: "6CCC51".toColor(),
@@ -58,7 +51,6 @@ class SpeakingPage extends StatelessWidget {
               ),
             ),
           ),
-          // Ensure your asset path is correct
           Image.asset('assets/images/tempCharacter.png'),
         ],
       ),

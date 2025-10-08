@@ -72,11 +72,20 @@ class PublicSpeakingHub extends StatelessWidget {
   Widget build(BuildContext context) {
     const double customAppBarHeight = 80.0;
 
-    return MultiProvider(providers: [
-      ChangeNotifierProvider(create: (_) => PublicSpeakingController()),
+    return MultiProvider(
+      providers: [
         ChangeNotifierProvider(create: (_) => AudioController()),
-    ],
-    child: Scaffold(
+        ChangeNotifierProxyProvider<AudioController, PublicSpeakingController>(
+          create: (context) => PublicSpeakingController(
+            audioController: context.read<AudioController>(),
+          ),
+          update: (context, audioController, previousPublicSpeakingController) {
+            return previousPublicSpeakingController ??
+                PublicSpeakingController(audioController: audioController);
+          },
+        ),
+      ],
+      child: Scaffold(
         body: Stack(
           children: [
             // This Consumer will manage both the main content AND the bottom bar

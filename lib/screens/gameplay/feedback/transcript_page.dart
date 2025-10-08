@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
+import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
 class TranscriptPage extends StatelessWidget {
   const TranscriptPage({
@@ -14,6 +15,8 @@ class TranscriptPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final audioController = context.watch<AudioController>();
+
     return Consumer<PublicSpeakingController>(
       builder: (context, controller, child) {
         final transcript = controller.userTranscript;
@@ -47,7 +50,7 @@ class TranscriptPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  //Display the question here
+                  // Display the question here
                   if (question != null) ...[
                     Text(
                       'Question: $question',
@@ -63,7 +66,7 @@ class TranscriptPage extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
-                  //Display the actual transcript
+                  // Display the actual transcript
                   if (transcript != null && transcript.isNotEmpty)
                     Text(
                       transcript,
@@ -83,6 +86,30 @@ class TranscriptPage extends StatelessWidget {
                         fontStyle: FontStyle.italic,
                       ),
                     ),
+
+                  const SizedBox(height: 16),
+
+                  // Audio playback button from develop branch
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // The button's action is now to play the recording
+                      if (audioController.audioState == AudioState.playing) {
+                        context.read<AudioController>().stopPlayback();
+                      } else {
+                        context.read<AudioController>().playRecording();
+                      }
+                    },
+                    icon: Icon(
+                      audioController.audioState == AudioState.playing
+                          ? Icons.stop
+                          : Icons.play_arrow,
+                    ),
+                    label: Text(
+                      audioController.audioState == AudioState.playing
+                          ? 'Stop Playback'
+                          : 'Listen to Recording',
+                    ),
+                  ),
                 ],
               ),
             ),
