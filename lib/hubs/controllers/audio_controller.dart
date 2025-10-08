@@ -102,10 +102,9 @@ class AudioController with ChangeNotifier {
       await _audioPlayer.setFilePath(_audioPath!);
       _audioState = AudioState.playing;
       notifyListeners();
-
+      logger.d('Playing Audio: $_audioPath');
       // Start playback
       await _audioPlayer.play();
-
       // When playback is complete, automatically stop
       _audioPlayer.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {

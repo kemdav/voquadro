@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:voquadro/hubs/controllers/audio_controller.dart';
+
 enum PublicSpeakingState {
   home, //0 
   status,
@@ -19,6 +21,11 @@ enum FeedbackStep {
 }
 
 class PublicSpeakingController with ChangeNotifier {
+  final AudioController _audioController;
+
+  PublicSpeakingController({required AudioController audioController})
+      : _audioController = audioController;
+  
   PublicSpeakingState _currentState = PublicSpeakingState.home;
 
   PublicSpeakingState get currentState => _currentState;
@@ -97,6 +104,9 @@ class PublicSpeakingController with ChangeNotifier {
   void _startSpeakingCountdown() {
     _currentState = PublicSpeakingState.speaking;
     _speakingProgress = 0.0; // Reset progress
+
+    _audioController.startRecording();
+    
     int elapsedMilliseconds = 0;
     const tickInterval = Duration(milliseconds: 50); // Update 20 times per second
 
@@ -122,9 +132,10 @@ class PublicSpeakingController with ChangeNotifier {
     _speakingProgress = 0.0;
   }
 
-  void _onGameplayTimerEnd() {
+  Future<void> _onGameplayTimerEnd() async {
     // Instead of going home, start the feedback flow
     _speakingTimer?.cancel();
+    await _audioController.stopRecording();
     showFeedback();
   }
 

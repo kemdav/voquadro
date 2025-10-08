@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
 class TranscriptPage extends StatelessWidget {
   const TranscriptPage({
@@ -12,6 +14,7 @@ class TranscriptPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final audioController = context.watch<AudioController>();
     return Container(
       decoration: BoxDecoration(
         color: cardBackground,
@@ -45,6 +48,26 @@ class TranscriptPage extends StatelessWidget {
                   color: Colors.black87,
                   fontSize: 16,
                   height: 1.5,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // The button's action is now to play the recording
+                  if (audioController.audioState == AudioState.playing) {
+                    context.read<AudioController>().stopPlayback();
+                  } else {
+                    context.read<AudioController>().playRecording();
+                  }
+                },
+                icon: Icon(
+                  audioController.audioState == AudioState.playing
+                      ? Icons.stop
+                      : Icons.play_arrow,
+                ),
+                label: Text(
+                  audioController.audioState == AudioState.playing
+                      ? 'Stop Playback'
+                      : 'Listen to Recording',
                 ),
               ),
             ],
