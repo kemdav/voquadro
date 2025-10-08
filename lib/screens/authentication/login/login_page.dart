@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
+    
     context.read<AppFlowController>().login(
       _emailController.text,
       _passwordController.text,
@@ -38,6 +38,10 @@ class _LoginPageState extends State<LoginPage> {
 
   void _goToRegistration() {
     context.read<AppFlowController>().initiateRegistration();
+  }
+
+  void _goBackToLaunchPage(){
+    context.read<AppFlowController>().goBackToLaunchScreen();
   }
 
   @override
@@ -69,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
                       width: 56,
                       height: 56,
                       child: IconButton(
-                        onPressed: () => Navigator.of(context).maybePop(),
+                        onPressed: () => _goBackToLaunchPage(),
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                         style: IconButton.styleFrom(
                           backgroundColor: buttonPurple,

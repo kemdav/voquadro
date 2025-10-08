@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:voquadro/services/user_service.dart';
+import 'package:voquadro/utils/exceptions.dart';
 
 enum AppState {
   firstLaunch,
@@ -9,10 +11,7 @@ enum AppState {
   authenticated,
 }
 
-enum AppMode {
-  modeSelection,
-  publicSpeaking
-}
+enum AppMode { modeSelection, publicSpeaking }
 
 class AppFlowController with ChangeNotifier {
   AppState _appState = AppState.firstLaunch;
@@ -22,6 +21,7 @@ class AppFlowController with ChangeNotifier {
   AppMode get currentMode => _currentMode;
 
   String? loginErrorMessage;
+  User? currentUser; // Stores the custom User object from UserService
 
   void initiateRegistration() {
     _appState = AppState.registration;
@@ -38,26 +38,43 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login(String email, String password) async {
+  void goBackToLaunchScreen() {
+    _appState = AppState.firstLaunch;
+    notifyListeners();
+  }
+
+  Future<void> login(String username, String password) async {
     _appState = AppState.authenticating;
     loginErrorMessage = null;
     notifyListeners();
 
-    // --- Replace this with authentication logic ---
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network call
-    final bool success = (email == 'test' && password == 'pass');
-    // ---------------------------------------------------------
+    try {
+      // Call secure UserService to perform authentication
+      final user = await UserService.signInWithUsernameAndPassword(
+        username: username,
+        password: password,
+      );
 
-    if (success) {
+      currentUser = user; // Store the user data
       _appState = AppState.authenticated;
-    } else {
-      _appState = AppState.unauthenticated;
-      loginErrorMessage = 'Wrong, try again bucko. TEST';
+    } on AuthException catch (e) {
+      //Catch the specific, structured error type.
+      _appState = AppState.login;
+      //Assign the clean message directly
+      loginErrorMessage = e.message;
+    } catch (e) {
+      //Catch any other unexpected errors.
+      _appState = AppState.login;
+      loginErrorMessage =
+          'An unexpected error occurred. Please try again later.';
     }
+
     notifyListeners();
   }
 
   void logout() {
+    // session to clear. Just clearing the local state
+    currentUser = null;
     _appState = AppState.unauthenticated;
     notifyListeners();
   }

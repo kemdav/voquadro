@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:voquadro/services/user_service.dart';
 
 enum RegistrationStage { username, password, confirmation, submitting }
 
@@ -7,12 +8,40 @@ class RegistrationController with ChangeNotifier {
   RegistrationStage get stage => _stage;
 
   String? username;
+  String? email;
   String? password;
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
 
-  void submitUsername(String name) {
-    username = name;
-    _stage = RegistrationStage.password;
-    notifyListeners();
+  Future<void> submitUsername(String name, String emailAddress) async {
+    _errorMessage = null;
+
+    try {
+      // Check if username is already taken
+      final isUsernameTaken = await UserService.isUsernameTaken(name);
+      if (isUsernameTaken) {
+        _errorMessage = 'Username is already taken';
+        notifyListeners();
+        return;
+      }
+
+      // Check if email is already taken
+      final isEmailTaken = await UserService.isEmailTaken(emailAddress);
+      if (isEmailTaken) {
+        _errorMessage = 'Email is already taken';
+        notifyListeners();
+        return;
+      }
+
+      username = name;
+      email = emailAddress;
+      _stage = RegistrationStage.password;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage =
+          'Unable to create account. Please try again or contact support.';
+      notifyListeners();
+    }
   }
 
   void submitPassword(String pass) {
@@ -32,12 +61,22 @@ class RegistrationController with ChangeNotifier {
 
   Future<void> completeRegistration() async {
     _stage = RegistrationStage.submitting;
+    _errorMessage = null;
     notifyListeners();
 
-    // Imagine API call here...
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Create user in database
+      await UserService.createUser(
+        username: username!,
+        email: email!,
+        password: password!,
+      );
 
-    // After success, the Main App Controller takes over.
-    // The registration flow is now complete.
+      // Registration successful - the Main App Controller takes over
+    } catch (e) {
+      _errorMessage = 'Failed to create account: ${e.toString()}';
+      _stage = RegistrationStage.confirmation; // Go back to confirmation stage
+      notifyListeners();
+    }
   }
 }
