@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
@@ -25,6 +27,80 @@ class AudioController with ChangeNotifier {
 
   AudioState get audioState => _audioState;
   String? get audioPath => _audioPath;
+
+  StreamSubscription? _amplitudeSubscription;
+  double _currentAmplitude = 0.0;
+  bool _hasReachedGoodVolume = false;
+
+  double get currentAmplitude => _currentAmplitude; // Value from 0.0 to 1.0
+  bool get hasReachedGoodVolume => _hasReachedGoodVolume;
+
+   /// Starts a live stream to monitor microphone input level.
+  Future<void> startAmplitudeStream() async {
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      throw Exception('Microphone permission not granted');
+    }
+
+    // Reset state for a new test
+    _hasReachedGoodVolume = false;
+    _currentAmplitude = 0.0;
+    notifyListeners();
+
+    final stream = await _audioRecorder.startStream(const RecordConfig(
+      encoder: AudioEncoder.pcm16bits, 
+    ));
+
+    _amplitudeSubscription = stream.listen((data) {
+      // This is the core logic to calculate volume from raw audio data
+      _calculateAmplitude(data);
+    });
+  }
+
+  /// Stops the amplitude stream.
+  Future<void> stopAmplitudeStream() async {
+    await _amplitudeSubscription?.cancel();
+    _currentAmplitude = 0.0;
+    
+    // Check if the recorder is still active before stopping
+    if (await _audioRecorder.isRecording()) {
+      await _audioRecorder.stop();
+    }
+    
+    notifyListeners();
+  }
+
+  /// Calculates a normalized amplitude (0.0 - 1.0) from raw PCM data.
+  void _calculateAmplitude(Uint8List audioData) {
+    // The raw data is a series of 16-bit signed integers (PCM16)
+    int maxAmplitude = 0;
+    
+    // Create a view into the byte buffer to read 16-bit integers
+    var buffer = audioData.buffer.asByteData();
+    
+    // Iterate through the buffer, reading two bytes at a time
+    for (var i = 0; i < audioData.lengthInBytes; i += 2) {
+      // Read a 16-bit signed integer (little-endian is standard for PCM)
+      var sample = buffer.getInt16(i, Endian.little);
+      var absSample = sample.abs(); 
+      
+      if (absSample > maxAmplitude) {
+        maxAmplitude = absSample;
+      }
+    }
+    
+    // Normalize the amplitude to a value between 0.0 and 1.0
+    // The max value for a 16-bit signed integer is 32767
+    _currentAmplitude = maxAmplitude / 32767.0;
+    
+    // Check if the volume is in the "Good" range (e.g., 20% to 80%) [It could be adjusted on what volume would be suitable for the transcript]
+    if (!_hasReachedGoodVolume && _currentAmplitude > 0.2 && _currentAmplitude < 0.8) {
+      _hasReachedGoodVolume = true;
+    }
+
+    notifyListeners(); // Notify the UI to update the volume meter
+  }
+
 
   /// Starts the audio recording process.
   Future<void> startRecording() async {
