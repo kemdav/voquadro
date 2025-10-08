@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:math';
+
+import 'package:voquadro/src/ai-integration/ollama_service.dart';
+import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
@@ -27,8 +31,15 @@ class PublicSpeakingController with ChangeNotifier {
       : _audioController = audioController;
   
   PublicSpeakingState _currentState = PublicSpeakingState.home;
+  final HybridAIService _aiService = HybridAIService.instance;
+
+  // Get topics from the hybrid AI service
+  List<String> get availableTopics => _aiService.getAvailableTopics();
 
   PublicSpeakingState get currentState => _currentState;
+  SpeechSession? get currentSession => _aiService.currentSession;
+  String? get currentTopic => _aiService.currentTopic;
+  String? get currentQuestion => _aiService.currentQuestion;
 
   Timer? _readyingTimer;
   Timer? _speakingTimer;
@@ -36,6 +47,33 @@ class PublicSpeakingController with ChangeNotifier {
   FeedbackStep _currentFeedbackStep = FeedbackStep.transcript;
   FeedbackStep get currentFeedbackStep => _currentFeedbackStep;
 
+  String? _userTranscript;
+  String? get userTranscript => _userTranscript;
+
+  String? _aiFeedback;
+  String? get aiFeedback => _aiFeedback;
+
+  //scores
+  int? _overallScore;
+  int? _contentQualityScore;
+  int? _clarityStructureScore;
+
+  //getters for scores
+  int? get overallScore => _overallScore;
+  int? get contentQualityScore => _contentQualityScore;
+  int? get clarityStructureScore => _clarityStructureScore;
+
+  //getters for AI service status
+  bool get isOllamaAvailable => _aiService.isOllamaAvailable;
+  bool get isUsingFallback => _aiService.isUsingFallback;
+  String get aiServiceStatus => _aiService.getServiceStatus();
+  String get aiServiceMessage => _aiService.getServiceMessage();
+  String get estimatedResponseTime => _aiService.getEstimatedResponseTime();
+
+  void setUserTranscript(String transcript) {
+    _userTranscript = transcript;
+    notifyListeners();
+  }
   static const readyingDuration = Duration(seconds: 5);
   static const speakingDuration = Duration(seconds: 10);
 
@@ -46,6 +84,11 @@ class PublicSpeakingController with ChangeNotifier {
     _cancelGameplaySequence();
     _currentFeedbackStep = FeedbackStep.transcript; // Reset to the first step
     _currentState = PublicSpeakingState.inFeedback;
+    // Clear any previous feedback so the next generation is fresh
+    _aiFeedback = null;
+
+    onEnterFeedbackFlow(); // Trigger feedback generation
+
     notifyListeners();
   }
 
@@ -71,6 +114,12 @@ class PublicSpeakingController with ChangeNotifier {
     notifyListeners();
   }
 
+  String _getRandomTopic() {
+    final random = Random();
+    final topics = availableTopics;
+    return topics[random.nextInt(topics.length)];
+  }
+
   void startMicTest() {
     _currentState = PublicSpeakingState.micTest;
     notifyListeners();
@@ -87,6 +136,42 @@ class PublicSpeakingController with ChangeNotifier {
     notifyListeners();
   }
 
+  //? Call generateQuestionAndStart a question for a random topic and starts the gameplay sequence.
+  Future<void> generateRandomQuestionAndStart() async {
+    final topic = _getRandomTopic();
+    await generateQuestionAndStart(topic);
+  }
+
+  //? Connect to ollama and generate question.
+  Future<void> generateQuestionAndStart(String topic) async {
+    try {
+      debugPrint('Generating question with AI service...');
+      // Reset previous session data to avoid stale feedback/transcript
+      _aiFeedback = null;
+      _userTranscript = null;
+      // Clear any previous scores so a new session will regenerate them
+      clearScores();
+      notifyListeners();
+      debugPrint('Previous session cleared.');
+
+      // Pre-warm connection for faster response
+      await _aiService.preWarmConnection();
+
+      await _aiService.generateQuestion(topic);
+
+      debugPrint('Session created: ${_aiService.hasActiveSession}');
+      debugPrint('Current question: ${_aiService.currentQuestion}');
+      debugPrint('Current topic: ${_aiService.currentTopic}');
+
+      // Check if session actually started before starting gameplay
+      if (_aiService.hasActiveSession) {
+        debugPrint('Starting gameplay sequence...');
+        startGameplaySequence();
+      }
+    } catch (e) {
+      debugPrint('ERROR generating question: $e');
+    }
+  }
 
   /// Starts the entire gameplay sequence from the beginning.
   void startGameplaySequence() {
@@ -137,6 +222,154 @@ class PublicSpeakingController with ChangeNotifier {
     _speakingTimer?.cancel();
     await _audioController.stopRecording();
     showFeedback();
+  }
+
+  Future<void> debugAIConnection() async {
+    bool isConnected = await _aiService.checkOllamaAvailability();
+    debugPrint('AI service connection: $isConnected');
+
+    if (isConnected) {
+      debugPrint('Ollama is running and accessible');
+    } else {
+      debugPrint('Using fallback AI service');
+    }
+  }
+
+  // Score method
+  Future<void> generateScores({
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 60,
+  }) async {
+    if (_userTranscript == null || _aiService.currentSession == null) {
+      debugPrint('No transcript or session available for scoring.');
+      return;
+    }
+
+    try {
+      // Reset scores while generating
+      _overallScore = null;
+      _contentQualityScore = null;
+      _clarityStructureScore = null;
+      notifyListeners();
+
+      final result = await _aiService.getPublicSpeakingFeedbackWithScores(
+        _userTranscript!,
+        _aiService.currentSession!,
+        wordCount: wordCount,
+        fillerCount: fillerCount,
+        durationSeconds: durationSeconds,
+      );
+
+      final scores = result['scores'] as Map<String, dynamic>?;
+      if (scores != null) {
+        _contentQualityScore = (scores['content_quality'] as num?)?.toInt();
+        _clarityStructureScore = (scores['clarity_structure'] as num?)?.toInt();
+        _overallScore = (scores['overall'] as num?)?.toInt();
+      }
+
+      // If feedback has not been set yet, populate it from this call
+      if (_aiFeedback == null || _aiFeedback == 'Generating feedback...') {
+        final feedback = result['feedback'] as String?;
+        if (feedback != null && feedback.isNotEmpty) {
+          _aiFeedback = feedback;
+        }
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error generating scores: $e');
+      debugPrint('Error generating scores: $e');
+      // Set default scores on error
+      _overallScore = 0;
+      _contentQualityScore = 0;
+      _clarityStructureScore = 0;
+      notifyListeners();
+    }
+  }
+
+  // Method to clear (call when starting new session)
+  void clearScores() {
+    _overallScore = null;
+    _contentQualityScore = null;
+    _clarityStructureScore = null;
+    notifyListeners();
+  }
+
+  void loadSampleTranscript() {
+    _userTranscript = '''no way uh yes
+        ''';
+
+    notifyListeners();
+    debugPrint('Sample transcript loaded.');
+  }
+
+  //? Get AI feedback for the user transcript
+  Future<void> generateAIFeedback() async {
+    if (_userTranscript == null || _aiService.currentSession == null) {
+      _aiFeedback = 'No transcript or session available for feedback.';
+    }
+
+    // Ensure we have a session/question for context
+    if (_aiService.currentSession == null) {
+      try {
+        final topic = _getRandomTopic();
+        await _aiService.generateQuestion(topic);
+      } catch (e) {
+        _aiFeedback = 'Error creating session for feedback: $e';
+        notifyListeners();
+        return;
+      }
+    }
+
+    if (_userTranscript == null) {
+      _aiFeedback = 'No transcript available for feedback.';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _aiFeedback = "Generating feedback...";
+      notifyListeners();
+
+      final feedback = await _aiService.getPublicSpeakingFeedback(
+        _userTranscript!,
+        _aiService.currentSession!,
+      );
+
+      _aiFeedback = feedback;
+      notifyListeners();
+    } catch (e) {
+      _aiFeedback = 'Error generating feedback: $e';
+      notifyListeners();
+    }
+  }
+
+  //? Method to check if feedback is available
+  bool get hasFeedback => aiFeedback != null && aiFeedback!.isNotEmpty;
+
+  //? Method to get the current feedback
+  String get formattedFeedback {
+    if (_aiFeedback == null) return 'No feedback available.';
+    return _aiFeedback!;
+  }
+
+  //? Automatically generate feedback when transcript is available
+  void onEnterFeedbackFlow() {
+    loadSampleTranscript(); // For testing purposes
+    // If we have a transcript but no feedback yet, generate it
+    if (_userTranscript != null &&
+        _userTranscript!.isNotEmpty &&
+        _aiFeedback == null) {
+      generateAIFeedback();
+    }
+
+    // Generate scores when entering feedback flow
+    if (_userTranscript != null &&
+        _userTranscript!.isNotEmpty &&
+        _overallScore == null) {
+      generateScores();
+    }
   }
 
   /// Ends the gameplay and returns to the mode's home screen.
