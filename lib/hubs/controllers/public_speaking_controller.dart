@@ -29,6 +29,12 @@ class PublicSpeakingController with ChangeNotifier {
   FeedbackStep _currentFeedbackStep = FeedbackStep.transcript;
   FeedbackStep get currentFeedbackStep => _currentFeedbackStep;
 
+  static const readyingDuration = Duration(seconds: 5);
+  static const speakingDuration = Duration(seconds: 10);
+
+  double _speakingProgress = 0.0;
+  double get speakingProgress => _speakingProgress;
+
   void showFeedback() {
     _cancelGameplaySequence();
     _currentFeedbackStep = FeedbackStep.transcript; // Reset to the first step
@@ -83,11 +89,29 @@ class PublicSpeakingController with ChangeNotifier {
     notifyListeners();
 
     // After 5 seconds, transition from 'readying' to 'speaking'
-    _readyingTimer = Timer(const Duration(seconds: 5), () {
-      _currentState = PublicSpeakingState.speaking;
-      notifyListeners();
+    _readyingTimer = Timer(readyingDuration, () {
+      _startSpeakingCountdown();
+    });
+  }
 
-      _speakingTimer = Timer(const Duration(seconds: 10), _onGameplayTimerEnd);
+  void _startSpeakingCountdown() {
+    _currentState = PublicSpeakingState.speaking;
+    _speakingProgress = 0.0; // Reset progress
+    int elapsedMilliseconds = 0;
+    const tickInterval = Duration(milliseconds: 50); // Update 20 times per second
+
+    _speakingTimer = Timer.periodic(tickInterval, (timer) {
+      elapsedMilliseconds += tickInterval.inMilliseconds;
+
+      _speakingProgress = elapsedMilliseconds / speakingDuration.inMilliseconds;
+      
+      if (_speakingProgress >= 1.0) {
+        _speakingProgress = 1.0; 
+        notifyListeners();
+        _onGameplayTimerEnd(); 
+      } else {
+        notifyListeners();
+      }
     });
   }
 
@@ -95,10 +119,12 @@ class PublicSpeakingController with ChangeNotifier {
   void _cancelGameplaySequence() {
     _readyingTimer?.cancel();
     _speakingTimer?.cancel();
+    _speakingProgress = 0.0;
   }
 
   void _onGameplayTimerEnd() {
     // Instead of going home, start the feedback flow
+    _speakingTimer?.cancel();
     showFeedback();
   }
 
