@@ -1,26 +1,28 @@
-// ignore_for_file: deprecated_member_use_from_same_package
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/widgets/Profile/profile_template.dart';
 
-@Deprecated(
-  'Use PublicSpeakingProfileStage instead. This file will be removed once all imports are updated.',
-)
-class ProfileStage extends StatefulWidget {
-  const ProfileStage({super.key});
+/// PublicSpeakingProfileStage
+/// Screen tailored for the Public Speaking mode.
+///
+/// It composes the reusable `ProfileTemplate` and injects Public Speaking
+/// specific stats via `stats` (e.g., Public Speaking Level, Highest Streak).
+class PublicSpeakingProfileStage extends StatefulWidget {
+  const PublicSpeakingProfileStage({super.key});
 
   @override
-  State<ProfileStage> createState() => _ProfileStageState();
+  State<PublicSpeakingProfileStage> createState() => _PublicSpeakingProfileStageState();
 }
 
-class _ProfileStageState extends State<ProfileStage> {
+class _PublicSpeakingProfileStageState extends State<PublicSpeakingProfileStage> {
+  // Placeholder/user-provided values; will be wired to DB later.
   String username = 'Adolp';
   int level = 25;
-  int masteryLevel = 69;
-  int publicSpeakingLevel = 69;
-  int highestStreak = 23;
+  int masteryLevel = 69; // kept to show cross-mode stat alongside Public Speaking
+  int publicSpeakingLevel = 69; // Public Speaking specific stat
+  int highestStreak = 23; // Public Speaking specific stat
 
   String bio = 'Write your bio here...';
 
@@ -29,6 +31,7 @@ class _ProfileStageState extends State<ProfileStage> {
 
   @override
   Widget build(BuildContext context) {
+    // Public Speaking specific configuration: customize which stats to show.
     final stats = [
       StatTileData(
         icon: Icons.school,
@@ -37,17 +40,18 @@ class _ProfileStageState extends State<ProfileStage> {
       ),
       StatTileData(
         icon: Icons.spatial_audio_off,
-        label: 'Public Speaking Level',
+        label: 'Public Speaking Level', // PS-specific
         value: 'lvl$publicSpeakingLevel',
       ),
       StatTileData(
         icon: Icons.local_fire_department,
-        label: 'Highest Streak',
+        label: 'Highest Streak', // PS-specific
         value: '$highestStreak',
       ),
     ];
 
     return ProfileTemplate(
+      // Using `ProfileTemplate` as a reusable base; only data is PS-specific.
       username: username,
       level: level,
       bio: bio,
@@ -84,10 +88,7 @@ class _ProfileStageState extends State<ProfileStage> {
 
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
-    final result = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1024,
-    );
+    final result = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024);
     if (result == null) return;
     setState(() {
       avatarPath = result.path;
@@ -96,13 +97,12 @@ class _ProfileStageState extends State<ProfileStage> {
 
   Future<void> _pickBanner() async {
     final picker = ImagePicker();
-    final result = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 2048,
-    );
+    final result = await picker.pickImage(source: ImageSource.gallery, maxWidth: 2048);
     if (result == null) return;
     setState(() {
       bannerPath = result.path;
     });
   }
 }
+
+

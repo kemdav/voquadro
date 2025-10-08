@@ -466,17 +466,22 @@ class _RoundIconButton extends StatelessWidget {
   }
 }
 /*
-HOW TO USE THIS WIDGET ELSEWHERE:
+HOW TO USE THIS WIDGET ELSEWHERE (configurable stats per mode):
+
+final stats = [
+  StatTileData(icon: Icons.school, label: 'Mastery Level', value: 'lvl${user.masteryLevel}'),
+  StatTileData(icon: Icons.spatial_audio_off, label: 'Public Speaking Level', value: 'lvl${user.psLevel}'),
+  StatTileData(icon: Icons.local_fire_department, label: 'Highest Streak', value: '${user.highestStreak}'),
+];
 
 return ProfileTemplate(
   username: user.username,
   level: user.level,
-  masteryLevel: user.masteryLevel,
-  publicSpeakingLevel: user.psLevel,
-  highestStreak: user.highestStreak,
   bio: user.bio,
   bannerImage: NetworkImage(user.bannerUrl),  // swap in once DB ready
   avatarImage: NetworkImage(user.avatarUrl),  // swap in once DB ready
+  stats: stats, // pass any set of StatTileData for the current mode
   onBack: () => Navigator.of(context).maybePop(),
   onEdit: () { /* open edit UI or navigate to profile editor */ },
-);*/
+);
+*/
