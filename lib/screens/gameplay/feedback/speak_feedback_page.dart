@@ -29,7 +29,7 @@ class SpeakFeedbackPage extends StatelessWidget {
               ),
             ),
             Text(
-              'Rating: ${controller.overallScore ?? 0}',
+              'Rating: ${controller.overallScore ?? 'Calculating...'}',
               style: TextStyle(
                 color: primaryPurple,
                 fontSize: 25,

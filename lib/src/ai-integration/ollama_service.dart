@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SpeechSession {
   final String topic;
@@ -20,9 +21,10 @@ class OllamaService with ChangeNotifier {
   OllamaService._();
   static final OllamaService instance = OllamaService._();
 
-  final String _baseUrl = 'http://10.0.2.2:11434';
+  static String get _baseUrl =>
+      dotenv.env['OLLAMA_BASE_URL'] ?? 'http://10.0.2.2:11434';
   SpeechSession? _currentSession;
-  
+
   // Cache for model availability to avoid repeated checks
   final Map<String, bool> _modelCache = {};
   DateTime? _lastModelCheck;
@@ -336,20 +338,17 @@ class OllamaService with ChangeNotifier {
               'model': 'qwen2.5:0.5b',
               'prompt':
                   '''
-                Question: ${_currentSession?.generatedQuestion}
-                
-                Please evaluate rigorously how the "$transcript" relates to the "${_currentSession?.generatedQuestion}" in this format:
+                Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
+
+                Strictly analyze if the $transcript responds to "${_currentSession?.generatedQuestion}" appropriately. If not, penalize heavily in relevance.
+
+                Keep it in this format:
     
                 • Content Quality Evaluation: An assessment of the substance and relevance of the user's speech. 
                 • Clarity & Structure Evaluation: An analysis of the organization and coherence of the user's message. 
                 • Overall Evaluation: A summary of the user's performance, combining all feedback components. 
-
-                Example:
-                • Content Quality Evaluation: The speech was highly relevant to the question, providing in-depth insights and original perspectives.
-                • Clarity & Structure Evaluation: The speech was well-organized with clear transitions, maintaining audience engagement.
-                • Overall Evaluation: An excellent performance with strong content and clear delivery. 
                 
-                Keep the evaluation to one simple, short, and understandable.
+                Keep each evaluation concise, ideally within 1 sentence each.
                 ''',
               'stream': false,
             }),
@@ -387,39 +386,41 @@ class OllamaService with ChangeNotifier {
   Future<SpeechSession> generateQuestion(String topic) async {
     try {
       // First, ensure the model exists (with timeout)
-      final modelExists = await ensureModelExists('qwen2:0.5b').timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => false,
-      );
-      
+      final modelExists = await ensureModelExists(
+        'qwen2:0.5b',
+      ).timeout(const Duration(seconds: 10), onTimeout: () => false);
+
       if (!modelExists) {
         throw 'Model qwen2:0.5b is not available';
       }
 
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/generate'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Connection': 'keep-alive',
-        },
-        body: jsonEncode({
-          'model': 'qwen2:0.5b',
-          'prompt':
-              '''
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/generate'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Connection': 'keep-alive',
+            },
+            body: jsonEncode({
+              'model': 'qwen2:0.5b',
+              'prompt':
+                  '''
                 Generate one SHORT maximum of 10 words question that is engaging but critical about the following topic: $topic
                 Don't enclose it in quotes, and ensure it is only 1 question.
               ''',
-          'stream': false,
-          'options': {
-            'temperature': 0.7,
-            'top_p': 0.9,
-            'max_tokens': 50, // Limit response length for faster generation
-          },
-        }),
-      ).timeout(
-        const Duration(seconds: 15), // Add timeout for generation
-        onTimeout: () => throw 'Request timeout: Ollama took too long to respond',
-      );
+              'stream': false,
+              'options': {
+                'temperature': 0.7,
+                'top_p': 0.9,
+                'max_tokens': 50, // Limit response length for faster generation
+              },
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 15), // Add timeout for generation
+            onTimeout: () =>
+                throw 'Request timeout: Ollama took too long to respond',
+          );
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
@@ -446,13 +447,15 @@ class OllamaService with ChangeNotifier {
   // to check if ollama is running and models are available (optimized)
   Future<bool> checkOllamaConnection() async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/tags'),
-        headers: {'Connection': 'keep-alive'},
-      ).timeout(
-        const Duration(seconds: 3), // Quick timeout for connection check
-        onTimeout: () => throw 'Connection timeout',
-      );
+      final response = await http
+          .get(
+            Uri.parse('$_baseUrl/api/tags'),
+            headers: {'Connection': 'keep-alive'},
+          )
+          .timeout(
+            const Duration(seconds: 3), // Quick timeout for connection check
+            onTimeout: () => throw 'Connection timeout',
+          );
       return response.statusCode == 200;
     } catch (e) {
       debugPrint('Ollama connection check failed: $e');
@@ -464,21 +467,23 @@ class OllamaService with ChangeNotifier {
   Future<bool> ensureModelExists(String modelName) async {
     try {
       // Check cache first
-      if (_modelCache.containsKey(modelName) && 
-          _lastModelCheck != null && 
+      if (_modelCache.containsKey(modelName) &&
+          _lastModelCheck != null &&
           DateTime.now().difference(_lastModelCheck!) < _cacheExpiry) {
         return _modelCache[modelName]!;
       }
 
       // Quick connection check with timeout
-      final tagsResponse = await http.get(
-        Uri.parse('$_baseUrl/api/tags'),
-        headers: {'Connection': 'keep-alive'},
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => throw 'Connection timeout',
-      );
-      
+      final tagsResponse = await http
+          .get(
+            Uri.parse('$_baseUrl/api/tags'),
+            headers: {'Connection': 'keep-alive'},
+          )
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw 'Connection timeout',
+          );
+
       if (tagsResponse.statusCode == 200) {
         final tagsBody = jsonDecode(tagsResponse.body);
         final models = tagsBody['models'] as List;
@@ -492,18 +497,20 @@ class OllamaService with ChangeNotifier {
 
         if (!modelExists) {
           debugPrint('Model $modelName not found, attempting to pull...');
-          final pullResponse = await http.post(
-            Uri.parse('$_baseUrl/api/pull'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Connection': 'keep-alive',
-            },
-            body: jsonEncode({'name': modelName}),
-          ).timeout(
-            const Duration(minutes: 2), // Longer timeout for model pulling
-            onTimeout: () => throw 'Model pull timeout',
-          );
-          
+          final pullResponse = await http
+              .post(
+                Uri.parse('$_baseUrl/api/pull'),
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Connection': 'keep-alive',
+                },
+                body: jsonEncode({'name': modelName}),
+              )
+              .timeout(
+                const Duration(minutes: 2), // Longer timeout for model pulling
+                onTimeout: () => throw 'Model pull timeout',
+              );
+
           final success = pullResponse.statusCode == 200;
           _modelCache[modelName] = success;
           return success;
