@@ -4,11 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/widgets/Profile/profile_template.dart';
 
-/// ProfileStage
-/// Screen wrapper that demonstrates how to use the reusable ProfileTemplate
-/// with local placeholder data and opens the reusable ProfileEditSheet.
-import 'package:voquadro/widgets/Profile/profile_template.dart';
-
 class ProfileStage extends StatefulWidget {
   const ProfileStage({super.key});
 
@@ -31,9 +26,21 @@ class _ProfileStageState extends State<ProfileStage> {
   @override
   Widget build(BuildContext context) {
     final stats = [
-      StatTileData(icon: Icons.school, label: 'Mastery Level', value: 'lvl$masteryLevel'),
-      StatTileData(icon: Icons.spatial_audio_off, label: 'Public Speaking Level', value: 'lvl$publicSpeakingLevel'),
-      StatTileData(icon: Icons.local_fire_department, label: 'Highest Streak', value: '$highestStreak'),
+      StatTileData(
+        icon: Icons.school,
+        label: 'Mastery Level',
+        value: 'lvl$masteryLevel',
+      ),
+      StatTileData(
+        icon: Icons.spatial_audio_off,
+        label: 'Public Speaking Level',
+        value: 'lvl$publicSpeakingLevel',
+      ),
+      StatTileData(
+        icon: Icons.local_fire_department,
+        label: 'Highest Streak',
+        value: '$highestStreak',
+      ),
     ];
 
     return ProfileTemplate(
@@ -351,7 +358,10 @@ class _ProfileStageState extends State<ProfileStage> {
 
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
-    final result = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024);
+    final result = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+    );
     if (result == null) return;
     setState(() {
       avatarPath = result.path;
@@ -360,7 +370,10 @@ class _ProfileStageState extends State<ProfileStage> {
 
   Future<void> _pickBanner() async {
     final picker = ImagePicker();
-    final result = await picker.pickImage(source: ImageSource.gallery, maxWidth: 2048);
+    final result = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2048,
+    );
     if (result == null) return;
     setState(() {
       bannerPath = result.path;

@@ -38,8 +38,10 @@ class ProfileTemplate extends StatelessWidget {
 
   /// Display name of the user
   final String username;
+
   /// Overall user level (displayed next to the name)
   final int level;
+
   /// Bio text rendered in the lower card
   final String bio;
 
@@ -49,6 +51,7 @@ class ProfileTemplate extends StatelessWidget {
 
   final VoidCallback? onEdit;
   final VoidCallback? onBack;
+
   /// Optional list of stats. If null/empty, a default placeholder set is used.
   final List<StatTileData>? stats; // if null, a default set will be built
 
