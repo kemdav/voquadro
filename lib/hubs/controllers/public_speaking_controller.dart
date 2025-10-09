@@ -9,6 +9,7 @@ import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
 enum PublicSpeakingState {
   home, //0 
+  profile,
   status,
   micTest,
   readying,
