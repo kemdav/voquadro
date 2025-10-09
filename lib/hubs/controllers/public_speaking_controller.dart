@@ -279,9 +279,44 @@ class PublicSpeakingController with ChangeNotifier {
 
       // If feedback has not been set yet, populate it from this call
       if (_aiFeedback == null || _aiFeedback == 'Generating feedback...') {
-        final feedback = result['feedback'] as String?;
-        if (feedback != null && feedback.isNotEmpty) {
-          _aiFeedback = feedback;
+        final rawFeedback = result['feedback'];
+        String? feedbackStr;
+
+        if (rawFeedback == null) {
+          feedbackStr = null;
+        } else if (rawFeedback is String) {
+          feedbackStr = rawFeedback;
+        } else if (rawFeedback is Map) {
+          // Friendly formatting for structured feedback maps coming from the
+          // single-call comprehensive endpoint.
+          final contentEval =
+              rawFeedback['content_quality_eval']?.toString() ??
+              rawFeedback['content_quality']?.toString() ??
+              '';
+          final clarityEval =
+              rawFeedback['clarity_structure_eval']?.toString() ??
+              rawFeedback['clarity_structure']?.toString() ??
+              '';
+          final overallEval =
+              rawFeedback['overall_eval']?.toString() ??
+              rawFeedback['overall']?.toString() ??
+              '';
+
+          final parts = <String>[];
+          if (contentEval.isNotEmpty)
+            parts.add('• Content Quality: $contentEval');
+          if (clarityEval.isNotEmpty)
+            parts.add('• Clarity & Structure: $clarityEval');
+          if (overallEval.isNotEmpty) parts.add('• Overall: $overallEval');
+
+          feedbackStr = parts.isNotEmpty ? parts.join('\n') : null;
+        } else {
+          // Fallback to string coercion
+          feedbackStr = rawFeedback.toString();
+        }
+
+        if (feedbackStr != null && feedbackStr.isNotEmpty) {
+          _aiFeedback = feedbackStr;
         }
       }
 

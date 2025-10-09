@@ -156,23 +156,27 @@ class HybridAIService with ChangeNotifier {
       if (isOllamaAvailable) {
         debugPrint('Using optimized combined scores generation');
         try {
-          // Use the combined scores method for Ollama
-          final scores = await _ollamaService.getCombinedScores(
+          // Use the new single-call comprehensive endpoint to get both
+          // structured feedback and scores in one request.
+          final comprehensive = await _ollamaService.getComprehensiveFeedback(
             transcript,
+            session: session,
             wordCount: wordCount,
             fillerCount: fillerCount,
             durationSeconds: durationSeconds,
           );
 
-          // Get feedback separately or use a simplified prompt
-          final feedback = await _getQuickFeedback(transcript, session);
+          final feedbackText = comprehensive['feedback_text'];
+          final scores = comprehensive['scores'] as Map<String, dynamic>?;
 
           return {
-            'feedback': feedback,
+            'feedback': feedbackText,
             'scores': {
-              'overall': scores['overall']!.round(),
-              'content_quality': scores['content_quality']!.round(),
-              'clarity_structure': scores['clarity_structure']!.round(),
+              'overall': (scores?['overall'] as num?)?.round() ?? 0,
+              'content_quality':
+                  (scores?['content_quality'] as num?)?.round() ?? 0,
+              'clarity_structure':
+                  (scores?['clarity_structure'] as num?)?.round() ?? 0,
             },
           };
         } catch (e) {
@@ -227,23 +231,6 @@ class HybridAIService with ChangeNotifier {
         fillerCount: fillerCount,
         durationSeconds: durationSeconds,
       );
-    }
-  }
-
-  Future<String> _getQuickFeedback(
-    String transcript,
-    SpeechSession session,
-  ) async {
-    // Reuse the existing OllamaService feedback generator but keep it short via timeout.
-    try {
-      return await _ollamaService
-          .getPublicSpeakingFeedback(transcript, session)
-          .timeout(
-            const Duration(seconds: 15),
-            onTimeout: () => 'Good effort! Keep practicing.',
-          );
-    } catch (e) {
-      return 'Good effort! Keep practicing.';
     }
   }
 

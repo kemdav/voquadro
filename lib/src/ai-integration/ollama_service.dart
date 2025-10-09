@@ -307,8 +307,8 @@ class OllamaService with ChangeNotifier {
     try {
       // Check cache first
       final key =
-          transcript.hashCode.toString() +
-          '_${wordCount}_${fillerCount}_${durationSeconds}';
+          '$transcript.$hashCode.$toString()'
+          '$wordCount $fillerCount $durationSeconds';
       final cachedAt = _scoreCacheTimestamps[key];
       if (cachedAt != null &&
           DateTime.now().difference(cachedAt) < _scoreCacheTtl) {
@@ -365,8 +365,8 @@ class OllamaService with ChangeNotifier {
   }) async {
     // Check cache first (same key logic as parallel)
     final key =
-        transcript.hashCode.toString() +
-        '_${wordCount}_${fillerCount}_${durationSeconds}';
+        '$transcript.$hashCode.$toString()'
+        '$wordCount $fillerCount $durationSeconds';
     final cachedAt = _scoreCacheTimestamps[key];
     if (cachedAt != null &&
         DateTime.now().difference(cachedAt) < _scoreCacheTtl) {
@@ -500,36 +500,183 @@ class OllamaService with ChangeNotifier {
     int fillerCount = 0,
     int durationSeconds = 1,
   }) async {
+    // Use the new single-call JSON-based feedback generator to get robust,
+    // consistent results (scores + concise feedback) from a single API call.
     try {
-      //Get text feedback
-      final String feedback = await getPublicSpeakingFeedback(
+      final result = await getComprehensiveFeedback(
         transcript,
-        session,
-      );
-
-      // Get component scores once to avoid duplicate calculations/logs
-      final double contentQuality = await contentQualityScore(transcript);
-      final double clarityStructure = await clarityStructureScore(
-        transcript,
+        session: session,
         wordCount: wordCount,
         fillerCount: fillerCount,
         durationSeconds: durationSeconds,
       );
-      // Overall = 0.6 * content + 0.4 * clarity (keep a single log)
-      final double overall = (contentQuality * 0.6) + (clarityStructure * 0.4);
-      debugPrint('Overall Score: $overall');
 
+      // result contains 'feedback_text' and 'scores' already rounded/structured
       return {
-        'feedback': feedback,
-        'scores': {
-          'overall': overall.round(),
-          'content_quality': contentQuality.round(),
-          'clarity_structure': clarityStructure.round(),
-        },
+        'feedback': result['feedback_text'] ?? 'No feedback',
+        'scores':
+            result['scores'] ??
+            {'overall': 0, 'content_quality': 0, 'clarity_structure': 0},
       };
     } catch (e) {
       return {
         'feedback': 'Error generating feedback: $e',
+        'scores': {'overall': 0, 'content_quality': 0, 'clarity_structure': 0},
+      };
+    }
+  }
+
+  /// Build a unified prompt that instructs the model to return a single JSON
+  /// object containing scores and short feedback strings. This mirrors the
+  /// guidance in the provided `wow.html` reference and enforces `format: 'json'`.
+  String _createComprehensiveAnalysisPrompt(
+    String transcript,
+    SpeechSession session,
+  ) {
+    return '''
+    You are an expert public speaking coach. Analyze the provided speech transcript.
+    Respond with ONLY a single, valid JSON object and nothing else. Do not include any extra text or markdown.
+
+    Context:
+    - Topic: "${session.topic}"
+    - Question: "${session.generatedQuestion}"
+
+    Transcript:
+    """
+    $transcript
+    """
+
+    The JSON object MUST have this exact structure:
+    {
+      "scores": {
+        "content_quality": {
+          "relevance": <number 0-100>,
+          "depth": <number 0-100>,
+          "originality": <number 0-100>
+        },
+        "clarity_structure": {
+          "logical_flow": <number 0-100>
+        }
+      },
+      "feedback": {
+        "content_quality_eval": "<string, 1-2 sentences>",
+        "clarity_structure_eval": "<string, 1-2 sentences>",
+        "overall_eval": "<string, 1-2 sentences>"
+      }
+    }
+
+    Scoring guidance:
+    - relevance: How on-topic was the user and did they answer the question?
+    - depth: Level of detail and evidence provided.
+    - originality: Novel perspectives vs common knowledge.
+    - logical_flow: Structure, coherence, transitions.
+
+    Keep each evaluation concise (1-2 sentences). Return only the JSON object.
+    ''';
+  }
+
+  /// Single-call method: requests a JSON response from Ollama containing
+  /// scores and concise feedback, then computes derived scores (pacing,
+  /// conciseness) locally and returns a stable structure used by the app.
+  Future<Map<String, dynamic>> getComprehensiveFeedback(
+    String transcript, {
+    required SpeechSession session,
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 1,
+  }) async {
+    try {
+      final prompt = _createComprehensiveAnalysisPrompt(transcript, session);
+
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/generate'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': _modelName,
+              'format': 'json', // enforce JSON output from the server/model
+              'prompt': prompt,
+              'stream': false,
+              'options': _optimizedOptions,
+            }),
+          )
+          .timeout(const Duration(seconds: 60));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Ollama returns a top-level 'response' field which itself may be
+        // a JSON string. Guard against both cases.
+        dynamic aiResp = responseBody['response'];
+        if (aiResp is String) {
+          aiResp = aiResp.trim();
+          // Try to decode JSON string
+          try {
+            aiResp = jsonDecode(aiResp);
+          } catch (_) {
+            // If decoding fails, fallback to parsing heuristics
+            debugPrint('Failed to jsonDecode model response; falling back.');
+          }
+        }
+
+        // At this point aiResp should be a Map if everything went well.
+        final Map<String, dynamic> aiJson = (aiResp is Map)
+            ? Map<String, dynamic>.from(aiResp)
+            : {};
+
+        // Extract scores with safe defaults
+        final scores = aiJson['scores'] as Map<String, dynamic>? ?? {};
+        final content =
+            scores['content_quality'] as Map<String, dynamic>? ?? {};
+        final clarity =
+            scores['clarity_structure'] as Map<String, dynamic>? ?? {};
+
+        final double relevance =
+            (content['relevance'] as num?)?.toDouble() ?? 50.0;
+        final double depth = (content['depth'] as num?)?.toDouble() ?? 50.0;
+        final double originality =
+            (content['originality'] as num?)?.toDouble() ?? 50.0;
+        final double logicalFlow =
+            (clarity['logical_flow'] as num?)?.toDouble() ?? 50.0;
+
+        // Local derived metrics
+        final double contentQuality = (relevance + depth + originality) / 3.0;
+        final double pacingScore = _calculatePacingScore(
+          wordCount,
+          durationSeconds,
+        );
+        final double concisenessScore = _calculateConcisenessScore(fillerCount);
+        final double clarityStructure =
+            (logicalFlow * 0.5) +
+            (pacingScore * 0.25) +
+            (concisenessScore * 0.25);
+        final double overall =
+            (contentQuality * 0.6) + (clarityStructure * 0.4);
+
+        final feedback = aiJson['feedback'] ?? {};
+
+        return {
+          'feedback_text': feedback,
+          'scores': {
+            'overall': overall.round(),
+            'content_quality': contentQuality.round(),
+            'clarity_structure': clarityStructure.round(),
+            // include raw breakdown too for debugging/inspection
+            'breakdown': {
+              'relevance': relevance.round(),
+              'depth': depth.round(),
+              'originality': originality.round(),
+              'logical_flow': logicalFlow.round(),
+            },
+          },
+        };
+      } else {
+        throw 'API error: ${response.statusCode}';
+      }
+    } catch (e) {
+      debugPrint('Error in getComprehensiveFeedback: $e');
+      return {
+        'feedback_text': {'error': 'Failed to generate feedback: $e'},
         'scores': {'overall': 0, 'content_quality': 0, 'clarity_structure': 0},
       };
     }
@@ -549,9 +696,9 @@ class OllamaService with ChangeNotifier {
               'model': _modelName,
               'prompt':
                   '''
-                Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
+                Context: The speech is about "${session.topic}" and responds to: "${session.generatedQuestion}"
 
-                Strictly analyze if the $transcript responds to "${_currentSession?.generatedQuestion}" appropriately. If not, penalize heavily in relevance.
+                Strictly analyze if the $transcript responds to "${session.generatedQuestion}" appropriately. If not, penalize heavily in relevance.
 
                 Keep it in this format:
     
