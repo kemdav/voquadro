@@ -66,12 +66,12 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              EditButton(
+              editButton(
                 icon: Icons.photo_camera,
                 label: 'Change Avatar',
                 onPressed: widget.onPickAvatar,
               ),
-              EditButton(
+              editButton(
                 icon: Icons.wallpaper,
                 label: 'Change Banner',
                 onPressed: widget.onPickBanner,
@@ -101,7 +101,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: PrimaryButton(
+            child: primaryButton(
               onPressed: () {
                 widget.onSaveBio(_bioController.text);
                 Navigator.of(context).pop();
@@ -114,7 +114,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
     );
   }
 
-  Widget EditButton({
+  Widget editButton({
     required IconData icon,
     required String label,
     required VoidCallback onPressed,
@@ -131,7 +131,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
     );
   }
 
-  Widget PrimaryButton({
+  Widget primaryButton({
     required VoidCallback onPressed,
     required Widget child,
   }) {
