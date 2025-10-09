@@ -8,10 +8,11 @@ import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dar
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/readying_prompt_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/speaking_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/status_page.dart';
+import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/widgets/AppBar/empty_actions.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
 import 'package:voquadro/widgets/AppBar/default_actions.dart';
-import 'package:voquadro/widgets/BottomBar/feedback_progress_actions.dart';
+import 'package:voquadro/widgets/BottomBar/empty_actions.dart';
 import 'package:voquadro/widgets/BottomBar/gameplay_actions.dart';
 import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
 import 'package:voquadro/widgets/BottomBar/main_hub_actions.dart';
@@ -26,13 +27,16 @@ class PublicSpeakingHub extends StatelessWidget {
         // For home and status, show the main navigation buttons.
         return const MainHubActions();
 
+      case PublicSpeakingState.profile:
+        return EmptyNavigationActions();
+
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
         // For any gameplay state, show the gameplay-specific buttons.
         return const GameplayActions();
       case PublicSpeakingState.inFeedback:
-        return FeedbackProgressActions();
+        return EmptyNavigationActions();
     }
   }
 
@@ -42,6 +46,9 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.status:
         // For home and status, show the main navigation buttons.
         return const DefaultActions();
+
+      case PublicSpeakingState.profile:
+        return const DefaultActions(); // make this empty
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
@@ -58,6 +65,9 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
         return [140, 180];
+
+      case PublicSpeakingState.profile:
+        return [0, 180];
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
@@ -99,6 +109,7 @@ class PublicSpeakingHub extends StatelessWidget {
                         index: controller.currentState.index,
                         children: const [
                           PublicSpeakingHomePage(),
+                          PublicSpeakingProfileStage(), // Might change to a general profile stage later on, depends
                           PublicSpeakingStatusPage(),
                           MicTestPage(),
                           ReadyingPromptPage(),

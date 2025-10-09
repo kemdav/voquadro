@@ -9,11 +9,28 @@ class User {
   final String id;
   final String username;
   final String email;
+  final String? bio;
+  final String? profileAvatarUrl;
+  final String? profileBannerUrl;
 
-  User({required this.id, required this.username, required this.email});
+  User({
+    required this.id,
+    required this.username,
+    required this.email,
+    this.bio,
+    this.profileAvatarUrl,
+    this.profileBannerUrl,
+  });
 
   factory User.fromMap(Map<String, dynamic> map) {
-    return User(id: map['id'], username: map['username'], email: map['email']);
+    return User(
+      id: map['id'],
+      username: map['username'],
+      email: map['email'],
+      bio: map['bio'],
+      profileAvatarUrl: map['profile_avatar_url'],
+      profileBannerUrl: map['profile_banner_url'],
+    );
   }
 }
 
