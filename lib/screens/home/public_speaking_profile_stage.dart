@@ -76,7 +76,6 @@ class _PublicSpeakingProfileStageState
         if (snapshot.hasData) {
           final userProfile = snapshot.data!;
 
-          // TODO: Replace these hardcoded values by fetching them from the DB
           // For now, they can stay as placeholders.
           final int level = 1;
           final int masteryLevel = 5;
@@ -178,7 +177,14 @@ class _PublicSpeakingProfileStageState
   /// Handles picking an image from the gallery and uploading it.
   Future<void> _handleImagePickAndUpload({required bool isAvatar}) async {
     final user = context.read<AppFlowController>().currentUser;
-    if (user == null) return;
+    if (user == null) {
+      print('DEBUG: FAILED! User is null, cannot upload image.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: You are not logged in!')),
+      );
+      return;
+    }
+    print('DEBUG: User ID is: ${user.id}');
 
     // 1. Pick the image
     final result = await _picker.pickImage(

@@ -150,8 +150,6 @@ class UserService {
       // The path format 'user_id/image_type.ext' is crucial for security policies.
       final path = '$userId/$imageType.$fileExtension';
 
-      print('Attempting to upload to storage path: $path');
-
       await _supabase.storage
           .from('profile-assets')
           .upload(
