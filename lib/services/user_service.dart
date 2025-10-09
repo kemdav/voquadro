@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 import 'package:bcrypt/bcrypt.dart';
+import 'dart:io';
 
 // Import custom exception class
 import 'package:voquadro/utils/exceptions.dart';
@@ -111,6 +112,73 @@ class UserService {
       throw AuthException(
         'An unexpected error occurred. Please try again later.',
       );
+    }
+  }
+
+  /// Fetches the full profile for a given user ID.
+  static Future<User> getFullUserProfile(String userId) async {
+    try {
+      final response = await _supabase
+          .from('users')
+          .select() // Select all columns
+          .eq('id', userId)
+          .single();
+      return User.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to fetch user profile: $e');
+    }
+  }
+
+  /// Updates the user's bio text in the database.
+  static Future<void> updateBio(String userId, String newBio) async {
+    try {
+      await _supabase.from('users').update({'bio': newBio}).eq('id', userId);
+    } catch (e) {
+      throw Exception('Failed to update bio: $e');
+    }
+  }
+
+  /// Uploads an image file to the 'profile-assets' storage bucket.
+  /// Returns the public URL of the uploaded file.
+  static Future<String> uploadProfileImage(
+    String userId,
+    File file,
+    String imageType,
+  ) async {
+    try {
+      final fileExtension = file.path.split('.').last.toLowerCase();
+      // The path format 'user_id/image_type.ext' is crucial for security policies.
+      final path = '$userId/$imageType.$fileExtension';
+
+      print('Attempting to upload to storage path: $path');
+
+      await _supabase.storage
+          .from('profile-assets')
+          .upload(
+            path,
+            file,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+
+      return _supabase.storage.from('profile-assets').getPublicUrl(path);
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
+  }
+
+  /// Updates the user's profile_avatar_url or profile_banner_url in the database.
+  static Future<void> updateProfileImageUrl(
+    String userId,
+    String url,
+    String imageType,
+  ) async {
+    try {
+      final column = imageType == 'avatar'
+          ? 'profile_avatar_url'
+          : 'profile_banner_url';
+      await _supabase.from('users').update({column: url}).eq('id', userId);
+    } catch (e) {
+      throw Exception('Failed to update image URL: $e');
     }
   }
 
