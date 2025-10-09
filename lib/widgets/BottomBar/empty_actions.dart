@@ -3,8 +3,8 @@ import 'package:logger/logger.dart';
 
 var logger = Logger();
 
-class FeedbackProgressActions extends StatelessWidget {
-  const FeedbackProgressActions({super.key});
+class EmptyNavigationActions extends StatelessWidget {
+  const EmptyNavigationActions({super.key});
 
   @override
   Widget build(BuildContext context) {
