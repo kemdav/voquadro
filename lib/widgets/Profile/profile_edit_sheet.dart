@@ -7,6 +7,7 @@ import 'package:voquadro/src/hex_color.dart';
 /// Parent responsibilities:
 /// - Provide `onPickAvatar` / `onPickBanner` to open pickers
 /// - Persist/save the `onSaveBio` result where desired
+///
 /// asked ai to add comments for the things kay gikapoy nako
 class ProfileEditSheet extends StatefulWidget {
   const ProfileEditSheet({

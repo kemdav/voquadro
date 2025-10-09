@@ -25,9 +25,9 @@ class _PublicSpeakingProfileStageState
   // Local-only values; will be replaced by DB values later
   String username = 'Player';
   int level = 1;
-  int masteryLevel = 1; // cross-mode stat
-  int publicSpeakingLevel = 1; // PS-specific
-  int highestStreak = 0; // PS-specific
+  int masteryLevel = 1;
+  int publicSpeakingLevel = 1;
+  int highestStreak = 0;
 
   String bio = 'Write your bio here...';
 
@@ -39,7 +39,6 @@ class _PublicSpeakingProfileStageState
   @override
   void initState() {
     super.initState();
-    // If authenticated, use the username from the current session
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final flow = Provider.of<AppFlowController>(context, listen: false);
       final u = flow.currentUser;
@@ -53,7 +52,7 @@ class _PublicSpeakingProfileStageState
 
   @override
   Widget build(BuildContext context) {
-    // Public Speaking specific configuration: customize which stats to show.
+    // customize which stats to show.
     final stats = [
       StatTileData(
         icon: Icons.school,

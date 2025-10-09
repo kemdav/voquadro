@@ -21,9 +21,8 @@ class ProfileActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Constants to control the layout, same as in your OnlyBackActions
     const double buttonSize = 60.0;
-    const double topMargin = 16.0; // Standard safe area margin
+    const double topMargin = 16.0;
 
     return Positioned(
       top: topMargin,
