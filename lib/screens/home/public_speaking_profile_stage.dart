@@ -12,6 +12,9 @@ import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 ///
 /// It composes the reusable `ProfileTemplate` and injects Public Speaking
 /// specific stats via `stats` (e.g., Public Speaking Level, Highest Streak).
+/// 
+/// 
+/// Later on it should be renamed to a general profile stage depending on the verdict if this is only specific to public speaking
 class PublicSpeakingProfileStage extends StatefulWidget {
   const PublicSpeakingProfileStage({super.key});
 
