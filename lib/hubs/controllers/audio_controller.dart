@@ -8,16 +8,12 @@ import 'package:record/record.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:voquadro/src/ai-integration/assemblyai_service.dart';
 
 var logger = Logger();
 
 // An enum to represent the different states of our recorder
-enum AudioState {
-  uninitialized,
-  recording,
-  stopped,
-  playing
-}
+enum AudioState { uninitialized, recording, stopped, playing }
 
 class AudioController with ChangeNotifier {
   final AudioRecorder _audioRecorder = AudioRecorder();
@@ -35,7 +31,7 @@ class AudioController with ChangeNotifier {
   double get currentAmplitude => _currentAmplitude; // Value from 0.0 to 1.0
   bool get hasReachedGoodVolume => _hasReachedGoodVolume;
 
-   /// Starts a live stream to monitor microphone input level.
+  /// Starts a live stream to monitor microphone input level.
   Future<void> startAmplitudeStream() async {
     final status = await Permission.microphone.request();
     if (!status.isGranted) {
@@ -47,9 +43,9 @@ class AudioController with ChangeNotifier {
     _currentAmplitude = 0.0;
     notifyListeners();
 
-    final stream = await _audioRecorder.startStream(const RecordConfig(
-      encoder: AudioEncoder.pcm16bits, 
-    ));
+    final stream = await _audioRecorder.startStream(
+      const RecordConfig(encoder: AudioEncoder.pcm16bits),
+    );
 
     _amplitudeSubscription = stream.listen((data) {
       // This is the core logic to calculate volume from raw audio data
@@ -61,12 +57,12 @@ class AudioController with ChangeNotifier {
   Future<void> stopAmplitudeStream() async {
     await _amplitudeSubscription?.cancel();
     _currentAmplitude = 0.0;
-    
+
     // Check if the recorder is still active before stopping
     if (await _audioRecorder.isRecording()) {
       await _audioRecorder.stop();
     }
-    
+
     notifyListeners();
   }
 
@@ -74,33 +70,34 @@ class AudioController with ChangeNotifier {
   void _calculateAmplitude(Uint8List audioData) {
     // The raw data is a series of 16-bit signed integers (PCM16)
     int maxAmplitude = 0;
-    
+
     // Create a view into the byte buffer to read 16-bit integers
     var buffer = audioData.buffer.asByteData();
-    
+
     // Iterate through the buffer, reading two bytes at a time
     for (var i = 0; i < audioData.lengthInBytes; i += 2) {
       // Read a 16-bit signed integer (little-endian is standard for PCM)
       var sample = buffer.getInt16(i, Endian.little);
-      var absSample = sample.abs(); 
-      
+      var absSample = sample.abs();
+
       if (absSample > maxAmplitude) {
         maxAmplitude = absSample;
       }
     }
-    
+
     // Normalize the amplitude to a value between 0.0 and 1.0
     // The max value for a 16-bit signed integer is 32767
     _currentAmplitude = maxAmplitude / 32767.0;
-    
+
     // Check if the volume is in the "Good" range (e.g., 20% to 80%) [It could be adjusted on what volume would be suitable for the transcript]
-    if (!_hasReachedGoodVolume && _currentAmplitude > 0.2 && _currentAmplitude < 0.8) {
+    if (!_hasReachedGoodVolume &&
+        _currentAmplitude > 0.2 &&
+        _currentAmplitude < 0.8) {
       _hasReachedGoodVolume = true;
     }
 
     notifyListeners(); // Notify the UI to update the volume meter
   }
-
 
   /// Starts the audio recording process.
   Future<void> startRecording() async {
@@ -112,12 +109,12 @@ class AudioController with ChangeNotifier {
 
     // 2. Find a temporary directory to save the file
     final Directory tempDir = await getTemporaryDirectory();
-    _audioPath = '${tempDir.path}/myaudio.m4a'; 
+    _audioPath = '${tempDir.path}/myaudio.m4a';
 
     // 3. Start recording
-    const config = RecordConfig(encoder: AudioEncoder.aacLc); 
+    const config = RecordConfig(encoder: AudioEncoder.aacLc);
     await _audioRecorder.start(config, path: _audioPath!);
-    
+
     _audioState = AudioState.recording;
     logger.d('Saving audio to: $_audioPath');
     notifyListeners();
@@ -166,7 +163,22 @@ class AudioController with ChangeNotifier {
     }
   }
 
-    /// Plays the last recorded audio file.
+  /// Transcribe the last recorded audio file using AssemblyAI.
+  ///
+  /// Returns the transcription text on success.
+  /// Throws an exception on error or if no audio is available.
+  Future<String> transcribeWithAssemblyAI({String? apiKey}) async {
+    if (_audioPath == null || !File(_audioPath!).existsSync()) {
+      throw Exception('No audio file available to transcribe.');
+    }
+    // Delegate to the shared AssemblyAIService for upload + transcription
+    return AssemblyAIService.instance.transcribeFile(
+      _audioPath!,
+      apiKey: apiKey,
+    );
+  }
+
+  /// Plays the last recorded audio file.
   Future<void> playRecording() async {
     if (_audioPath == null || !File(_audioPath!).existsSync()) {
       logger.d('Error: Audio file not found at $_audioPath');
@@ -191,7 +203,7 @@ class AudioController with ChangeNotifier {
       logger.d("Error playing audio: $e");
     }
   }
-  
+
   /// Stops the audio playback.
   Future<void> stopPlayback() async {
     await _audioPlayer.stop();

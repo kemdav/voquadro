@@ -289,6 +289,16 @@ class FallbackFeedbackService {
 
     // Pacing (20% weight)
     final wpm = (analysis['wpm'] as num).toDouble();
+    // Adjust score slightly based on pacing (wpm)
+    if (wpm > 0) {
+      if (wpm >= 110 && wpm <= 160) {
+        score += 20; // good pacing
+      } else if ((wpm >= 100 && wpm < 110) || (wpm > 160 && wpm <= 180)) {
+        score += 10; // acceptable pacing
+      } else {
+        score += 0; // no bonus
+      }
+    }
     // Filler words (20% weight)
     final fillerCount = (analysis['fillerCount'] as num).toInt();
     if (fillerCount <= 2) {

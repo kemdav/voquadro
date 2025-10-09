@@ -21,6 +21,8 @@ class HybridAIService with ChangeNotifier {
   bool get isOllamaAvailable => _isOllamaAvailable;
   bool get isUsingFallback => !_isOllamaAvailable;
 
+  final String _modelName = "qwen2.5:0.5b"; // model used for generation
+
   /// Checks if Ollama is available and caches the result
   Future<bool> checkOllamaAvailability() async {
     if (!_hasCheckedConnection) {
@@ -140,7 +142,7 @@ class HybridAIService with ChangeNotifier {
     }
   }
 
-  //? Gets feedback with scores using Ollama if available, otherwise uses fallback
+  /// Gets feedback with scores using Ollama if available, otherwise uses fallback
   Future<Map<String, dynamic>> getPublicSpeakingFeedbackWithScores(
     String transcript,
     SpeechSession session, {
@@ -152,51 +154,44 @@ class HybridAIService with ChangeNotifier {
       final isOllamaAvailable = await checkOllamaAvailability();
 
       if (isOllamaAvailable) {
-        debugPrint('Using Ollama for feedback and scores generation');
+        debugPrint('Using optimized combined scores generation');
         try {
-          return await _ollamaService.getPublicSpeakingFeedbackWithScores(
+          // Use the combined scores method for Ollama
+          final scores = await _ollamaService.getCombinedScores(
             transcript,
-            session,
             wordCount: wordCount,
             fillerCount: fillerCount,
             durationSeconds: durationSeconds,
           );
+
+          // Get feedback separately or use a simplified prompt
+          final feedback = await _getQuickFeedback(transcript, session);
+
+          return {
+            'feedback': feedback,
+            'scores': {
+              'overall': scores['overall']!.round(),
+              'content_quality': scores['content_quality']!.round(),
+              'clarity_structure': scores['clarity_structure']!.round(),
+            },
+          };
         } catch (e) {
-          debugPrint('Ollama failed, falling back to rule-based feedback: $e');
+          debugPrint('Optimized Ollama failed: $e');
           _isOllamaAvailable = false;
           notifyListeners();
         }
       }
 
-      // Use fallback service
-      debugPrint('Using fallback service for feedback and scores generation');
-      final result = FallbackFeedbackService.generateFeedbackWithScores(
+      // Fallback to existing method
+      return await _getFallbackFeedbackWithScores(
         transcript,
-        session.generatedQuestion,
+        session,
         wordCount: wordCount,
         fillerCount: fillerCount,
         durationSeconds: durationSeconds,
       );
-
-      // FIX: Ensure all scores in the result are doubles
-      final scores = result['scores'] as Map<String, dynamic>?;
-      if (scores != null) {
-        final fixedScores = <String, double>{};
-        scores.forEach((key, value) {
-          if (value is int) {
-            fixedScores[key] = value.toDouble();
-          } else if (value is double) {
-            fixedScores[key] = value;
-          } else {
-            fixedScores[key] = 50.0;
-          }
-        });
-        result['scores'] = fixedScores;
-      }
-
-      return result;
     } catch (e) {
-      debugPrint('Error in getPublicSpeakingFeedbackWithScores: $e');
+      debugPrint('Error in optimized feedback with scores: $e');
       return FallbackFeedbackService.generateFeedbackWithScores(
         transcript,
         session.generatedQuestion,
@@ -204,6 +199,51 @@ class HybridAIService with ChangeNotifier {
         fillerCount: fillerCount,
         durationSeconds: durationSeconds,
       );
+    }
+  }
+
+  /// Fallback helper that delegates to FallbackFeedbackService
+  Future<Map<String, dynamic>> _getFallbackFeedbackWithScores(
+    String transcript,
+    SpeechSession session, {
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 0,
+  }) async {
+    try {
+      return FallbackFeedbackService.generateFeedbackWithScores(
+        transcript,
+        session.generatedQuestion,
+        wordCount: wordCount,
+        fillerCount: fillerCount,
+        durationSeconds: durationSeconds,
+      );
+    } catch (e) {
+      debugPrint('Error in fallback feedback with scores: $e');
+      return FallbackFeedbackService.generateFeedbackWithScores(
+        transcript,
+        session.generatedQuestion,
+        wordCount: wordCount,
+        fillerCount: fillerCount,
+        durationSeconds: durationSeconds,
+      );
+    }
+  }
+
+  Future<String> _getQuickFeedback(
+    String transcript,
+    SpeechSession session,
+  ) async {
+    // Reuse the existing OllamaService feedback generator but keep it short via timeout.
+    try {
+      return await _ollamaService
+          .getPublicSpeakingFeedback(transcript, session)
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => 'Good effort! Keep practicing.',
+          );
+    } catch (e) {
+      return 'Good effort! Keep practicing.';
     }
   }
 
@@ -360,7 +400,7 @@ class HybridAIService with ChangeNotifier {
       await checkOllamaAvailability();
       if (_isOllamaAvailable) {
         // Pre-check model availability
-        await _ollamaService.ensureModelExists('qwen2:0.5b');
+        await _ollamaService.ensureModelExists(_modelName);
       }
     } catch (e) {
       debugPrint('Pre-warm connection failed: $e');

@@ -25,10 +25,17 @@ class OllamaService with ChangeNotifier {
       dotenv.env['OLLAMA_BASE_URL'] ?? 'http://10.0.2.2:11434';
   SpeechSession? _currentSession;
 
+  final String _modelName = "qwen2.5:0.5b"; // model used for generation
+
   // Cache for model availability to avoid repeated checks
   final Map<String, bool> _modelCache = {};
   DateTime? _lastModelCheck;
   static const Duration _cacheExpiry = Duration(minutes: 5);
+
+  // Simple in-memory cache for recent transcript combined scores
+  final Map<String, Map<String, dynamic>> _scoreCache = {};
+  final Map<String, DateTime> _scoreCacheTimestamps = {};
+  static const Duration _scoreCacheTtl = Duration(minutes: 2);
 
   // Getters for state
   SpeechSession? get currentSession => _currentSession;
@@ -47,6 +54,15 @@ class OllamaService with ChangeNotifier {
     notifyListeners();
   }
 
+  //optimized options for faster, more reliable responses
+  Map<String, dynamic> get _optimizedOptions => {
+    'temperature': 0.1, // Lower for more consistent, faster responses
+    'top_k': 20, // Limit vocabulary choices
+    'top_p': 0.9,
+    'max_tokens': 150, // Strict limit on response length
+    'num_predict': 100, // Alternative to max_tokens for some models
+  };
+
   //? A. Content Quality
   Future<double> contentQualityScore(String transcript) async {
     try {
@@ -55,7 +71,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': 'qwen2.5:0.5b',
+              'model': _modelName,
               'prompt':
                   '''
                 Analyze this speech transcript and provide ONLY three numerical scores (0-100) in this exact format:
@@ -201,7 +217,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': 'qwen2.5:0.5b',
+              'model': _modelName,
               'prompt':
                   '''
                 Analyze the logical flow and structure of this speech transcript and provide ONLY a single numerical score (0-100) in this exact format:
@@ -281,6 +297,201 @@ class OllamaService with ChangeNotifier {
     }
   }
 
+  //? Calculate Scores in Parallel
+  Future<Map<String, double>> getAllScoresParallel(
+    String transcript, {
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 0,
+  }) async {
+    try {
+      // Check cache first
+      final key =
+          transcript.hashCode.toString() +
+          '_${wordCount}_${fillerCount}_${durationSeconds}';
+      final cachedAt = _scoreCacheTimestamps[key];
+      if (cachedAt != null &&
+          DateTime.now().difference(cachedAt) < _scoreCacheTtl) {
+        final cached = _scoreCache[key];
+        if (cached != null) {
+          return {
+            'content_quality': (cached['content_quality'] as num).toDouble(),
+            'clarity_structure': (cached['clarity_structure'] as num)
+                .toDouble(),
+            'overall': (cached['overall'] as num).toDouble(),
+          };
+        }
+      }
+      // Run both score calculations in parallel
+      final scores = await Future.wait([
+        contentQualityScore(transcript),
+        clarityStructureScore(
+          transcript,
+          wordCount: wordCount,
+          fillerCount: fillerCount,
+          durationSeconds: durationSeconds,
+        ),
+      ]);
+
+      final double overall = (scores[0] * 0.6) + (scores[1] * 0.4);
+
+      final result = {
+        'content_quality': scores[0],
+        'clarity_structure': scores[1],
+        'overall': overall,
+      };
+
+      // Cache result
+      _scoreCache[key] = result.map((k, v) => MapEntry(k, v));
+      _scoreCacheTimestamps[key] = DateTime.now();
+
+      return result;
+    } catch (e) {
+      debugPrint('Error in parallel score calculation: $e');
+      return {
+        'content_quality': 50.0,
+        'clarity_structure': 50.0,
+        'overall': 50.0,
+      };
+    }
+  }
+
+  //? Single API call for both content quality and logical flow
+  Future<Map<String, double>> getCombinedScores(
+    String transcript, {
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 0,
+  }) async {
+    // Check cache first (same key logic as parallel)
+    final key =
+        transcript.hashCode.toString() +
+        '_${wordCount}_${fillerCount}_${durationSeconds}';
+    final cachedAt = _scoreCacheTimestamps[key];
+    if (cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _scoreCacheTtl) {
+      final cached = _scoreCache[key];
+      if (cached != null) {
+        return {
+          'content_quality': (cached['content_quality'] as num).toDouble(),
+          'clarity_structure': (cached['clarity_structure'] as num).toDouble(),
+          'overall': (cached['overall'] as num).toDouble(),
+        };
+      }
+    }
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/generate'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': _modelName,
+              'prompt':
+                  '''
+                  Analyze this speech transcript and provide ONLY numerical scores in this exact format:
+                  "relevance: X, depth: Y, originality: Z, logical_flow: W"
+
+                  Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
+
+                  Transcript: $transcript
+
+                  Scoring criteria:
+                  - Relevance (0-100): How on-topic was the user? Keyword alignment with the prompt.
+                  - Depth & Substance (0-100): Detail, evidence, or just surface-level comments?
+                  - Originality (0-100): Unique perspective or common knowledge?
+                  - Logical Flow (0-100): Structure, coherence, transitions, organization.
+
+                  Provide ONLY the four numbers in the exact format: "relevance: X, depth: Y, originality: Z, logical_flow: W"
+                  ''',
+              'stream': false,
+              'options': {
+                'temperature':
+                    0.1, // Lower temperature for more consistent formatting
+                'max_tokens': 100, // Limit response length
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        String scoresText = responseBody['response']?.toString().trim() ?? '';
+
+        final scores = _parseCombinedScores(scoresText);
+
+        // Calculate pacing and conciseness scores locally
+        final double pacingScore = _calculatePacingScore(
+          wordCount,
+          durationSeconds,
+        );
+        final double concisenessScore = _calculateConcisenessScore(fillerCount);
+
+        // Calculate final scores
+        final double contentQuality =
+            (scores['relevance']! + scores['depth']! + scores['originality']!) /
+            3.0;
+        final double clarityStructure =
+            (scores['logical_flow']! * 0.5) +
+            (pacingScore * 0.25) +
+            (concisenessScore * 0.25);
+        final double overall =
+            (contentQuality * 0.6) + (clarityStructure * 0.4);
+
+        debugPrint('Combined scores calculated in single call');
+
+        final result = {
+          'content_quality': contentQuality,
+          'clarity_structure': clarityStructure,
+          'overall': overall,
+        };
+
+        // Cache the result
+        _scoreCache[key] = result.map((k, v) => MapEntry(k, v));
+        _scoreCacheTimestamps[key] = DateTime.now();
+
+        return result;
+      } else {
+        throw 'API error: ${response.statusCode}';
+      }
+    } catch (e) {
+      debugPrint('Error in combined scores: $e');
+      return {
+        'content_quality': 50.0,
+        'clarity_structure': 50.0,
+        'overall': 50.0,
+      };
+    }
+  }
+
+  //? Parse combined scores
+  Map<String, double> _parseCombinedScores(String response) {
+    final Map<String, double> scores = {
+      'relevance': 50.0,
+      'depth': 50.0,
+      'originality': 50.0,
+      'logical_flow': 50.0,
+    };
+
+    try {
+      final regex = RegExp(
+        r'relevance:\s*(\d+\.?\d*),\s*depth:\s*(\d+\.?\d*),\s*originality:\s*(\d+\.?\d*),\s*logical_flow:\s*(\d+\.?\d*)',
+        caseSensitive: false,
+      );
+      final match = regex.firstMatch(response);
+
+      if (match != null) {
+        scores['relevance'] = double.tryParse(match.group(1)!) ?? 50.0;
+        scores['depth'] = double.tryParse(match.group(2)!) ?? 50.0;
+        scores['originality'] = double.tryParse(match.group(3)!) ?? 50.0;
+        scores['logical_flow'] = double.tryParse(match.group(4)!) ?? 50.0;
+      }
+    } catch (e) {
+      debugPrint('Error parsing combined scores: $e');
+    }
+
+    return scores;
+  }
+
   //Updated getPublicSpeakingFeedback to  include scores
   Future<Map<String, dynamic>> getPublicSpeakingFeedbackWithScores(
     String transcript,
@@ -335,7 +546,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': 'qwen2.5:0.5b',
+              'model': _modelName,
               'prompt':
                   '''
                 Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
@@ -351,6 +562,7 @@ class OllamaService with ChangeNotifier {
                 Keep each evaluation concise, ideally within 1 sentence each.
                 ''',
               'stream': false,
+              'options': _optimizedOptions,
             }),
           )
           .timeout(const Duration(minutes: 5));
@@ -387,11 +599,11 @@ class OllamaService with ChangeNotifier {
     try {
       // First, ensure the model exists (with timeout)
       final modelExists = await ensureModelExists(
-        'qwen2:0.5b',
+        _modelName,
       ).timeout(const Duration(seconds: 10), onTimeout: () => false);
 
       if (!modelExists) {
-        throw 'Model qwen2:0.5b is not available';
+        throw 'Model $_modelName is not available';
       }
 
       final response = await http
@@ -402,18 +614,13 @@ class OllamaService with ChangeNotifier {
               'Connection': 'keep-alive',
             },
             body: jsonEncode({
-              'model': 'qwen2:0.5b',
+              'model': _modelName,
               'prompt':
                   '''
-                Generate one SHORT maximum of 10 words question that is engaging but critical about the following topic: $topic
-                Don't enclose it in quotes, and ensure it is only 1 question.
+                Generate one engaging short question about this $topic
               ''',
               'stream': false,
-              'options': {
-                'temperature': 0.7,
-                'top_p': 0.9,
-                'max_tokens': 50, // Limit response length for faster generation
-              },
+              'options': _optimizedOptions,
             }),
           )
           .timeout(

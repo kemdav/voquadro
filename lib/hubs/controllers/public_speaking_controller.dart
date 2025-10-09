@@ -8,7 +8,7 @@ import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
 enum PublicSpeakingState {
-  home, //0 
+  home, //0
   status,
   micTest,
   readying,
@@ -28,8 +28,8 @@ class PublicSpeakingController with ChangeNotifier {
   final AudioController _audioController;
 
   PublicSpeakingController({required AudioController audioController})
-      : _audioController = audioController;
-  
+    : _audioController = audioController;
+
   PublicSpeakingState _currentState = PublicSpeakingState.home;
   final HybridAIService _aiService = HybridAIService.instance;
 
@@ -49,6 +49,12 @@ class PublicSpeakingController with ChangeNotifier {
 
   String? _userTranscript;
   String? get userTranscript => _userTranscript;
+
+  bool _isTranscribing = false;
+  bool get isTranscribing => _isTranscribing;
+
+  String? _transcriptionError;
+  String? get transcriptionError => _transcriptionError;
 
   String? _aiFeedback;
   String? get aiFeedback => _aiFeedback;
@@ -74,6 +80,7 @@ class PublicSpeakingController with ChangeNotifier {
     _userTranscript = transcript;
     notifyListeners();
   }
+
   static const readyingDuration = Duration(seconds: 5);
   static const speakingDuration = Duration(seconds: 10);
 
@@ -191,19 +198,21 @@ class PublicSpeakingController with ChangeNotifier {
     _speakingProgress = 0.0; // Reset progress
 
     _audioController.startRecording();
-    
+
     int elapsedMilliseconds = 0;
-    const tickInterval = Duration(milliseconds: 50); // Update 20 times per second
+    const tickInterval = Duration(
+      milliseconds: 50,
+    ); // Update 20 times per second
 
     _speakingTimer = Timer.periodic(tickInterval, (timer) {
       elapsedMilliseconds += tickInterval.inMilliseconds;
 
       _speakingProgress = elapsedMilliseconds / speakingDuration.inMilliseconds;
-      
+
       if (_speakingProgress >= 1.0) {
-        _speakingProgress = 1.0; 
+        _speakingProgress = 1.0;
         notifyListeners();
-        _onGameplayTimerEnd(); 
+        _onGameplayTimerEnd();
       } else {
         notifyListeners();
       }
@@ -356,20 +365,48 @@ class PublicSpeakingController with ChangeNotifier {
 
   //? Automatically generate feedback when transcript is available
   void onEnterFeedbackFlow() {
-    loadSampleTranscript(); // For testing purposes
-    // If we have a transcript but no feedback yet, generate it
-    if (_userTranscript != null &&
-        _userTranscript!.isNotEmpty &&
-        _aiFeedback == null) {
-      generateAIFeedback();
+    // Try to use a real transcription if available. Fall back to sample for testing.
+    Future<void> ensureTranscriptAndGenerate() async {
+      // If we already have a transcript, skip transcription
+      if (_userTranscript == null || _userTranscript!.isEmpty) {
+        _isTranscribing = true;
+        _transcriptionError = null;
+        notifyListeners();
+
+        try {
+          // Attempt transcription from the last recorded audio
+          final transcribed = await _audioController.transcribeWithAssemblyAI();
+          if (transcribed.isNotEmpty) {
+            _userTranscript = transcribed;
+          } else {
+            // Empty transcription -- set an explicit error
+            _transcriptionError = 'Transcription returned empty text.';
+          }
+        } catch (e) {
+          debugPrint('Transcription error: $e');
+          _transcriptionError = e.toString();
+        } finally {
+          _isTranscribing = false;
+          notifyListeners();
+        }
+      }
+
+      // If we have a valid transcript, generate feedback and scores
+      if (_userTranscript != null &&
+          _userTranscript!.isNotEmpty &&
+          _aiFeedback == null) {
+        await generateAIFeedback();
+      }
+
+      if (_userTranscript != null &&
+          _userTranscript!.isNotEmpty &&
+          _overallScore == null) {
+        await generateScores();
+      }
     }
 
-    // Generate scores when entering feedback flow
-    if (_userTranscript != null &&
-        _userTranscript!.isNotEmpty &&
-        _overallScore == null) {
-      generateScores();
-    }
+    // Kick off the flow (async but don't block caller)
+    ensureTranscriptAndGenerate();
   }
 
   /// Ends the gameplay and returns to the mode's home screen.

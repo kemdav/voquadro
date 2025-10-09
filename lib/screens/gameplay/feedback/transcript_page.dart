@@ -66,8 +66,36 @@ class TranscriptPage extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
-                  // Display the actual transcript
-                  if (transcript != null && transcript.isNotEmpty)
+                  // Display transcription state / transcript / error
+                  if (controller.isTranscribing) ...[
+                    Center(child: CircularProgressIndicator()),
+                    const SizedBox(height: 12),
+                    const Text('Transcribing your recording...'),
+                  ] else if (controller.transcriptionError != null) ...[
+                    Text(
+                      'Transcription Error:',
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      controller.transcriptionError!,
+                      style: const TextStyle(color: Colors.black87),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Retry transcription & feedback generation
+                        context
+                            .read<PublicSpeakingController>()
+                            .onEnterFeedbackFlow();
+                      },
+                      child: const Text('Retry Transcription'),
+                    ),
+                  ] else if (transcript != null && transcript.isNotEmpty)
                     Text(
                       transcript,
                       style: TextStyle(
