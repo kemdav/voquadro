@@ -49,6 +49,112 @@ class OllamaService with ChangeNotifier {
     notifyListeners(); // Notify listeners about state change
   }
 
+  /// Attempts to find the first balanced JSON object in [text]. Returns the
+  /// substring (including braces) or null if none found. This scanner is
+  /// careful to respect quoted strings and escape sequences.
+  String? _extractBalancedJson(String text) {
+    final start = text.indexOf('{');
+    if (start == -1) return null;
+    int depth = 0;
+    bool inString = false;
+    bool escaped = false;
+    for (int i = start; i < text.length; i++) {
+      final ch = text.codeUnitAt(i);
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch == 92) {
+        // backslash '\'
+        escaped = true;
+        continue;
+      }
+      if (ch == 34) {
+        // double quote '"'
+        inString = !inString;
+        continue;
+      }
+      if (!inString) {
+        if (ch == 123) {
+          // '{'
+          depth++;
+        } else if (ch == 125) {
+          // '}'
+          depth--;
+          if (depth == 0) {
+            return text.substring(start, i + 1);
+          }
+        }
+      }
+    }
+    return null; // no complete JSON object found
+  }
+
+  /// Sends a single retry request to the model providing the raw previous
+  /// response and asking for a corrected valid JSON object. Returns decoded
+  /// Map if successful, otherwise null.
+  Future<Map<String, dynamic>?> _retryForValidJson(
+    String originalPrompt,
+    String rawResponse,
+  ) async {
+    try {
+      final repairPrompt =
+          '''
+      The previous response the model returned was not valid JSON. Here is the original instruction and the raw output. Please return ONLY a single valid JSON object (no explanation) that matches the required structure.
+
+      Original instruction:
+      $originalPrompt
+
+      Raw output:
+      """
+      $rawResponse
+      """
+
+      Return only the corrected JSON object.
+      ''';
+
+      final resp = await http
+          .post(
+            Uri.parse('$_baseUrl/api/generate'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': _modelName,
+              'format': 'json',
+              'prompt': repairPrompt,
+              'stream': false,
+              'options': {'temperature': 0.1, 'max_tokens': 200},
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (resp.statusCode == 200) {
+        final body = jsonDecode(resp.body);
+        dynamic r = body['response'];
+        if (r is String) {
+          final trimmed = r.trim();
+          try {
+            final decoded = jsonDecode(trimmed);
+            if (decoded is Map) return Map<String, dynamic>.from(decoded);
+          } catch (_) {
+            // try balanced extraction
+            final cand = _extractBalancedJson(trimmed);
+            if (cand != null) {
+              try {
+                final decoded2 = jsonDecode(cand);
+                if (decoded2 is Map) return Map<String, dynamic>.from(decoded2);
+              } catch (_) {}
+            }
+          }
+        } else if (r is Map) {
+          return Map<String, dynamic>.from(r);
+        }
+      }
+    } catch (e) {
+      debugPrint('Retry for valid JSON failed: $e');
+    }
+    return null;
+  }
+
   void clearSession() {
     _currentSession = null;
     notifyListeners();
@@ -56,14 +162,14 @@ class OllamaService with ChangeNotifier {
 
   //optimized options for faster, more reliable responses
   Map<String, dynamic> get _optimizedOptions => {
-    'temperature': 0.1, // Lower for more consistent, faster responses
+    'temperature': 0.2, // Lower for more consistent, faster responses
     'top_k': 20, // Limit vocabulary choices
     'top_p': 0.9,
     'max_tokens': 150, // Strict limit on response length
     'num_predict': 100, // Alternative to max_tokens for some models
   };
 
-  //? A. Content Quality
+  //! A. Content Quality (old implementation)
   Future<double> contentQualityScore(String transcript) async {
     try {
       final response = await http
@@ -147,7 +253,7 @@ class OllamaService with ChangeNotifier {
     return scores;
   }
 
-  //? B. Clarity and Structure
+  //! B. Clarity and Structure (old implementation)
   Future<double> clarityStructureScore(
     String transcript, {
     int wordCount = 0,
@@ -297,7 +403,7 @@ class OllamaService with ChangeNotifier {
     }
   }
 
-  //? Calculate Scores in Parallel
+  //! Calculate Scores in Parallel (old implementation)
   Future<Map<String, double>> getAllScoresParallel(
     String transcript, {
     int wordCount = 0,
@@ -356,7 +462,7 @@ class OllamaService with ChangeNotifier {
     }
   }
 
-  //? Single API call for both content quality and logical flow
+  //! Single API call for both content quality and logical flow (old implementation)
   Future<Map<String, double>> getCombinedScores(
     String transcript, {
     int wordCount = 0,
@@ -463,7 +569,7 @@ class OllamaService with ChangeNotifier {
     }
   }
 
-  //? Parse combined scores
+  //! Parse combined scores (old implementation )
   Map<String, double> _parseCombinedScores(String response) {
     final Map<String, double> scores = {
       'relevance': 50.0,
@@ -606,16 +712,64 @@ class OllamaService with ChangeNotifier {
         final responseBody = jsonDecode(response.body);
 
         // Ollama returns a top-level 'response' field which itself may be
-        // a JSON string. Guard against both cases.
+        // a JSON string or plain text. We try multiple robust decoding
+        // strategies so the app doesn't rely on brittle formatting.
         dynamic aiResp = responseBody['response'];
+
         if (aiResp is String) {
-          aiResp = aiResp.trim();
-          // Try to decode JSON string
+          final raw = aiResp.trim();
+
+          // 1) Try direct JSON decode
           try {
-            aiResp = jsonDecode(aiResp);
-          } catch (_) {
-            // If decoding fails, fallback to parsing heuristics
-            debugPrint('Failed to jsonDecode model response; falling back.');
+            aiResp = jsonDecode(raw);
+          } catch (e) {
+            debugPrint(
+              'Direct jsonDecode failed (${e.toString()}). Trying to extract balanced JSON substring...',
+            );
+
+            // 2) Try to extract a balanced JSON object substring using a robust scanner
+            try {
+              final jsonCandidate = _extractBalancedJson(raw);
+              if (jsonCandidate != null) {
+                try {
+                  aiResp = jsonDecode(jsonCandidate);
+                  debugPrint(
+                    'Successfully decoded JSON from balanced substring.',
+                  );
+                } catch (e2) {
+                  debugPrint(
+                    'jsonDecode on extracted balanced substring failed: ${e2.toString()}',
+                  );
+                }
+              } else {
+                debugPrint(
+                  'No balanced JSON substring found in model response.',
+                );
+              }
+            } catch (e3) {
+              debugPrint(
+                'Error while extracting balanced JSON substring: ${e3.toString()}',
+              );
+            }
+
+            // 3) If still not parsed, attempt a single retry asking the model to correct and return only valid JSON
+            if ((aiResp is! Map)) {
+              try {
+                final repaired = await _retryForValidJson(prompt, raw);
+                if (repaired != null) {
+                  aiResp = repaired;
+                  debugPrint('Successfully obtained repaired JSON from retry.');
+                } else {
+                  debugPrint(
+                    'Retry for repaired JSON did not return a valid JSON object.',
+                  );
+                }
+              } catch (retryErr) {
+                debugPrint(
+                  'Error during retry for valid JSON: ${retryErr.toString()}',
+                );
+              }
+            }
           }
         }
 
@@ -624,12 +778,30 @@ class OllamaService with ChangeNotifier {
             ? Map<String, dynamic>.from(aiResp)
             : {};
 
-        // Extract scores with safe defaults
-        final scores = aiJson['scores'] as Map<String, dynamic>? ?? {};
-        final content =
-            scores['content_quality'] as Map<String, dynamic>? ?? {};
-        final clarity =
-            scores['clarity_structure'] as Map<String, dynamic>? ?? {};
+        // Defensive extraction: the model may still return unexpected types
+        // (e.g., numbers or strings) so check before casting to Map.
+        final dynamic rawScores = aiJson['scores'];
+        final Map<String, dynamic> scores = (rawScores is Map)
+            ? Map<String, dynamic>.from(rawScores)
+            : {};
+
+        final dynamic rawContent =
+            scores['content_quality'] ?? aiJson['content_quality'];
+        final Map<String, dynamic> content = (rawContent is Map)
+            ? Map<String, dynamic>.from(rawContent)
+            : {};
+
+        final dynamic rawClarity =
+            scores['clarity_structure'] ?? aiJson['clarity_structure'];
+        final Map<String, dynamic> clarity = (rawClarity is Map)
+            ? Map<String, dynamic>.from(rawClarity)
+            : {};
+
+        if (rawScores != null && rawScores is! Map) {
+          debugPrint(
+            'Warning: expected `scores` to be an object but got ${rawScores.runtimeType}',
+          );
+        }
 
         final double relevance =
             (content['relevance'] as num?)?.toDouble() ?? 50.0;
@@ -753,6 +925,9 @@ class OllamaService with ChangeNotifier {
         throw 'Model $_modelName is not available';
       }
 
+      // Use JSON mode to request a structured response: { "question": "..." }
+      final prompt = _createQuestionPrompt(topic);
+
       final response = await http
           .post(
             Uri.parse('$_baseUrl/api/generate'),
@@ -762,10 +937,8 @@ class OllamaService with ChangeNotifier {
             },
             body: jsonEncode({
               'model': _modelName,
-              'prompt':
-                  '''
-                Generate one engaging short question about this $topic
-              ''',
+              'format': 'json', // ask model/adapter to return JSON
+              'prompt': prompt,
               'stream': false,
               'options': _optimizedOptions,
             }),
@@ -778,13 +951,39 @@ class OllamaService with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-        final question =
-            responseBody['response']?.toString().trim() ??
-            'No question generated';
+
+        dynamic aiResp = responseBody['response'];
+        String questionText = 'No question generated';
+
+        if (aiResp is String) {
+          // sometimes the adapter wraps JSON in a string
+          final trimmed = aiResp.trim();
+          try {
+            final decoded = jsonDecode(trimmed);
+            if (decoded is Map && decoded['question'] != null) {
+              questionText = decoded['question'].toString().trim();
+            } else if (decoded is String) {
+              questionText = decoded.trim();
+            }
+          } catch (_) {
+            // Fallback: treat the string as raw question
+            questionText = trimmed;
+          }
+        } else if (aiResp is Map) {
+          // direct map response
+          if (aiResp['question'] != null) {
+            questionText = aiResp['question'].toString().trim();
+          } else if (aiResp['response'] != null) {
+            questionText = aiResp['response'].toString().trim();
+          }
+        }
+
+        // Final cleanup: ensure not empty
+        if (questionText.isEmpty) questionText = 'No question generated';
 
         final session = SpeechSession(
           topic: topic,
-          generatedQuestion: question,
+          generatedQuestion: questionText,
           timestamp: DateTime.now(),
         );
 
@@ -796,6 +995,18 @@ class OllamaService with ChangeNotifier {
     } catch (e) {
       throw 'Error connecting to Ollama: $e';
     }
+  }
+
+  /// Build a small JSON-enforcing prompt for question generation
+  String _createQuestionPrompt(String topic) {
+    return '''
+    You are a concise assistant. Respond with ONLY a single valid JSON object and nothing else.
+    The object must have the shape: {"question": "<one short, engaging question about the topic>"}
+
+    Topic: $topic
+
+    Keep the question short (under 20 words) and engaging.
+    ''';
   }
 
   // to check if ollama is running and models are available (optimized)
