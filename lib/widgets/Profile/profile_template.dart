@@ -12,6 +12,61 @@ import 'package:voquadro/src/hex_color.dart';
 /// - Wiring [onEdit] to open a profile editor or a route
 
 /// Simple value object for a single stat tile on the header card.
+
+class ProfileActions extends StatelessWidget {
+  const ProfileActions({super.key, this.onBack, this.onEdit});
+
+  final VoidCallback? onBack;
+  final VoidCallback? onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    // Constants to control the layout, same as in your OnlyBackActions
+    const double buttonSize = 60.0;
+    const double topMargin = 16.0; // Standard safe area margin
+
+    return Positioned(
+      top: topMargin,
+      left: 20,
+      right: 20,
+      height: buttonSize,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Back Button
+          IconButton.filled(
+            onPressed:
+                onBack ??
+                () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+            icon: const Icon(Icons.arrow_back),
+            iconSize: 40,
+            style: IconButton.styleFrom(
+              backgroundColor: "7962A5".toColor(),
+              foregroundColor: Colors.white,
+            ),
+          ),
+
+          // Edit Button
+          IconButton.filled(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit),
+            iconSize: 40,
+            style: IconButton.styleFrom(
+              backgroundColor: "7962A5".toColor(),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class StatTileData {
   const StatTileData({
     required this.icon,
@@ -31,6 +86,9 @@ class ProfileTemplate extends StatelessWidget {
     required this.bio,
     required this.bannerImage,
     required this.avatarImage,
+    this.badge,
+    this.onTapAvatar,
+    this.onTapBanner,
     this.onEdit,
     this.onBack,
     this.stats,
@@ -48,6 +106,13 @@ class ProfileTemplate extends StatelessWidget {
   /// Banner and avatar accept any ImageProvider (Asset/Network/File)
   final ImageProvider bannerImage;
   final ImageProvider avatarImage;
+
+  /// Optional badge widget shown on the avatar (e.g., rank/emblem)
+  final Widget? badge;
+
+  /// Optional tap handlers for avatar and banner
+  final VoidCallback? onTapAvatar;
+  final VoidCallback? onTapBanner;
 
   final VoidCallback? onEdit;
   final VoidCallback? onBack;
@@ -71,13 +136,16 @@ class ProfileTemplate extends StatelessWidget {
               top: 0,
               child: Align(
                 alignment: Alignment.topCenter,
-                child: Container(
-                  height: 220,
-                  decoration: BoxDecoration(
-                    color: purpleMid,
-                    image: DecorationImage(
-                      image: bannerImage,
-                      fit: BoxFit.cover,
+                child: InkWell(
+                  onTap: onTapBanner,
+                  child: Container(
+                    height: 220,
+                    decoration: BoxDecoration(
+                      color: purpleMid,
+                      image: DecorationImage(
+                        image: bannerImage,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
@@ -99,6 +167,8 @@ class ProfileTemplate extends StatelessWidget {
                         titleColor: purpleDark,
                         cardBg: cardBg,
                         avatarImage: avatarImage,
+                        badge: badge,
+                        onTapAvatar: onTapAvatar,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -114,26 +184,7 @@ class ProfileTemplate extends StatelessWidget {
                 ),
               ),
             ),
-
-            Positioned(
-              top: 16,
-              left: 16,
-              child: _RoundIconButton(
-                icon: Icons.arrow_back,
-                background: purpleMid,
-                onPressed: onBack ?? () => Navigator.of(context).maybePop(),
-              ),
-            ),
-
-            Positioned(
-              top: 16,
-              right: 16,
-              child: _RoundIconButton(
-                icon: Icons.edit,
-                background: purpleMid,
-                onPressed: onEdit,
-              ),
-            ),
+            ProfileActions(onBack: onBack, onEdit: onEdit),
           ],
         ),
       ),
@@ -150,6 +201,8 @@ class _ProfileHeaderCard extends StatelessWidget {
     required this.titleColor,
     required this.cardBg,
     required this.avatarImage,
+    this.badge,
+    this.onTapAvatar,
   });
 
   final String username;
@@ -158,6 +211,8 @@ class _ProfileHeaderCard extends StatelessWidget {
   final Color titleColor;
   final Color cardBg;
   final ImageProvider avatarImage;
+  final Widget? badge;
+  final VoidCallback? onTapAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -234,50 +289,31 @@ class _ProfileHeaderCard extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 6),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                      image: DecorationImage(
-                        image: avatarImage,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    //placeholder btw
-                    right: -2,
-                    bottom: 8,
+                  InkWell(
+                    onTap: onTapAvatar,
+                    customBorder: const CircleBorder(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Rank\nEmblem',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11,
-                          height: 1.0,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 10,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                        image: DecorationImage(
+                          image: avatarImage,
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
                   ),
+                  if (badge != null)
+                    Positioned(right: -2, bottom: 8, child: badge!),
                 ],
               ),
             ),
@@ -426,45 +462,6 @@ class _BioCard extends StatelessWidget {
     );
   }
 }
-
-class _RoundIconButton extends StatelessWidget {
-  const _RoundIconButton({
-    required this.icon,
-    required this.background,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final Color background;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(28),
-        onTap: onPressed,
-        child: Ink(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: background,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
 /*
 HOW TO USE THIS WIDGET ELSEWHERE (configurable stats per mode):
 
@@ -480,6 +477,7 @@ return ProfileTemplate(
   bio: user.bio,
   bannerImage: NetworkImage(user.bannerUrl),  // swap in once DB ready
   avatarImage: NetworkImage(user.avatarUrl),  // swap in once DB ready
+  badge: YourBadgeWidget(), // optional, pass only if you want to show a badge
   stats: stats, // pass any set of StatTileData for the current mode
   onBack: () => Navigator.of(context).maybePop(),
   onEdit: () { /* open edit UI or navigate to profile editor */ },
