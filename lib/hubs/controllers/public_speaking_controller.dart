@@ -8,7 +8,8 @@ import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
 enum PublicSpeakingState {
-  home, //0
+  home, //0 
+  profile,
   status,
   micTest,
   readying,
