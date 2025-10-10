@@ -35,6 +35,28 @@ class User {
   }
 }
 
+class ProfileData {
+  final String username;
+  final String? bio;
+  final String? avatarUrl;
+  final String? bannerUrl;
+  final int level;
+  final int masteryLevel;
+  final int publicSpeakingLevel; // Can be distinguished later if needed
+  final int highestStreak;
+
+  ProfileData({
+    required this.username,
+    this.bio,
+    this.avatarUrl,
+    this.bannerUrl,
+    required this.level,
+    required this.masteryLevel,
+    required this.publicSpeakingLevel,
+    required this.highestStreak,
+  });
+}
+
 class UserService {
   static final SupabaseClient _supabase = Supabase.instance.client;
 
@@ -89,7 +111,7 @@ class UserService {
     try {
       final response = await _supabase
           .from('users')
-          .select('id, username, email, password_hash')
+          .select()
           .eq('username', username)
           .single();
 
@@ -115,6 +137,48 @@ class UserService {
     }
   }
 
+  static Future<ProfileData> getProfileData(String userId) async {
+    try {
+      // 1. Fetch core user data (including new level and streak columns).
+      final userResponse = await _supabase
+          .from('users')
+          .select(
+            'username, bio, profile_avatar_url, profile_banner_url, level, highest_streak',
+          )
+          .eq('id', userId)
+          .single();
+
+      // 2. Fetch all skill data for that user.
+      final skillsResponse = await _supabase
+          .from('user_skills')
+          .select('total_mxp')
+          .eq('user_id', userId);
+
+      // 3. Calculate total Mastery XP and convert to a level.
+      int totalMxp = skillsResponse.fold(
+        0,
+        (sum, skill) => sum + (skill['total_mxp'] as int? ?? 0),
+      );
+      final masteryLevel =
+          (totalMxp / 100).floor() + 1; // Example: 100 MXP per level
+
+      // 4. Assemble and return the complete ProfileData object.
+      return ProfileData(
+        username: userResponse['username'],
+        bio: userResponse['bio'],
+        avatarUrl: userResponse['profile_avatar_url'],
+        bannerUrl: userResponse['profile_banner_url'],
+        level: userResponse['level'],
+        masteryLevel: masteryLevel,
+        publicSpeakingLevel:
+            masteryLevel, // For now, this is the same as mastery level
+        highestStreak: userResponse['highest_streak'],
+      );
+    } catch (e) {
+      throw Exception('Failed to fetch profile data: $e');
+    }
+  }
+
   /// Fetches the full profile for a given user ID.
   static Future<User> getFullUserProfile(String userId) async {
     try {
@@ -130,11 +194,36 @@ class UserService {
   }
 
   /// Updates the user's bio text in the database.
-  static Future<void> updateBio(String userId, String newBio) async {
+  static Future<ProfileData> updateBio(String userId, String newBio) async {
     try {
       await _supabase.from('users').update({'bio': newBio}).eq('id', userId);
+      // After updating, return the fresh data.
+      return getProfileData(userId);
     } catch (e) {
       throw Exception('Failed to update bio: $e');
+    }
+  }
+
+  static Future<ProfileData> replaceProfileImage({
+    required String userId,
+    required File newImageFile,
+    required String imageType,
+    required String? oldImageUrl,
+  }) async {
+    try {
+      final newImageUrl = await uploadProfileImage(
+        userId,
+        newImageFile,
+        imageType,
+      );
+      await updateProfileImageUrl(userId, newImageUrl, imageType);
+      if (oldImageUrl != null) {
+        _deleteOldImage(oldImageUrl); // No need to await
+      }
+      // After all operations, return the fresh data.
+      return getProfileData(userId);
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -177,6 +266,26 @@ class UserService {
       await _supabase.from('users').update({column: url}).eq('id', userId);
     } catch (e) {
       throw Exception('Failed to update image URL: $e');
+    }
+  }
+
+  static Future<void> _deleteOldImage(String oldImageUrl) async {
+    // We only want to delete if it's a Supabase storage URL, not a default asset.
+    if (!oldImageUrl.contains('supabase.co')) return;
+
+    try {
+      // The path is the part of the URL after the bucket name
+      final bucketName = 'profile_assets';
+      final oldImagePath = oldImageUrl.split('$bucketName/').last;
+
+      // Don't try to delete if the path is invalid or is the same as the bucket name
+      if (oldImagePath.isNotEmpty && oldImagePath != bucketName) {
+        await _supabase.storage.from(bucketName).remove([oldImagePath]);
+      }
+    } catch (e) {
+      // It's okay if this fails. The main goal was uploading the new image.
+      // We don't want to show an error to the user for this.
+      debugPrint("Failed to delete old image, but that's okay. Error: $e");
     }
   }
 

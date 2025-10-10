@@ -6,7 +6,7 @@ import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/widgets/Profile/profile_template.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-import 'package:voquadro/services/user_service.dart'; // CHANGE: Import the user service
+import 'package:voquadro/services/user_service.dart';
 
 class PublicSpeakingProfileStage extends StatefulWidget {
   const PublicSpeakingProfileStage({super.key});
@@ -18,29 +18,27 @@ class PublicSpeakingProfileStage extends StatefulWidget {
 
 class _PublicSpeakingProfileStageState
     extends State<PublicSpeakingProfileStage> {
-  // CHANGE: Instead of individual variables, we use a Future to hold our user data.
-  late Future<User> _profileDataFuture;
+  // FIX: This now correctly expects a Future of ProfileData.
+  late Future<ProfileData> _profileDataFuture;
   final ImagePicker _picker = ImagePicker();
 
-  // CHANGE: These will hold temporary local images for instant preview after picking.
   ImageProvider? _localAvatarImage;
   ImageProvider? _localBannerImage;
 
   @override
   void initState() {
     super.initState();
-    // CHANGE: When the widget is created, start fetching the profile data.
     _profileDataFuture = _fetchProfileData();
   }
 
   /// Fetches the user's profile data from the UserService.
-  Future<User> _fetchProfileData() {
+  // FIX: The return type is now Future<ProfileData> and it calls the correct service method.
+  Future<ProfileData> _fetchProfileData() {
     final user = context.read<AppFlowController>().currentUser;
     if (user == null) {
-      // This case should be rare if your app flow is correct.
       return Future.error('User not logged in. Cannot fetch profile.');
     }
-    return UserService.getFullUserProfile(user.id);
+    return UserService.getProfileData(user.id);
   }
 
   /// Call this to refetch all data from the server and rebuild the widget.
@@ -54,81 +52,71 @@ class _PublicSpeakingProfileStageState
 
   @override
   Widget build(BuildContext context) {
-    // CHANGE: We wrap the entire screen in a FutureBuilder.
-    return FutureBuilder<User>(
+    // FIX: The FutureBuilder now correctly expects ProfileData.
+    return FutureBuilder<ProfileData>(
       future: _profileDataFuture,
       builder: (context, snapshot) {
-        // STATE 1: Data is still loading
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // STATE 2: An error occurred
         if (snapshot.hasError) {
           return Scaffold(
             body: Center(child: Text('Error: ${snapshot.error}')),
           );
         }
 
-        // STATE 3: Data has been successfully loaded
         if (snapshot.hasData) {
-          final userProfile = snapshot.data!;
+          // FIX: The variable name is now consistent.
+          final profileData = snapshot.data!;
 
-          // For now, they can stay as placeholders.
-          final int level = 1;
-          final int masteryLevel = 5;
-          final int publicSpeakingLevel = 1;
-          final int highestStreak = 0;
-
+          // The hardcoded values are gone, and we use the real data from profileData.
           final stats = [
             StatTileData(
               icon: Icons.school,
               label: 'Mastery Level',
-              value: 'lvl$masteryLevel',
+              value: 'lvl${profileData.masteryLevel}',
             ),
             StatTileData(
               icon: Icons.spatial_audio_off,
               label: 'Public Speaking Level',
-              value: 'lvl$publicSpeakingLevel',
+              value: 'lvl${profileData.publicSpeakingLevel}',
             ),
             StatTileData(
               icon: Icons.local_fire_department,
               label: 'Highest Streak',
-              value: '$highestStreak',
+              value: '${profileData.highestStreak}',
             ),
           ];
 
-          // Determine which image to show: a local preview, the network image, or the default.
           final avatarImage =
               _localAvatarImage ??
-              (userProfile.profileAvatarUrl != null
-                      ? NetworkImage(userProfile.profileAvatarUrl!)
+              (profileData.avatarUrl != null
+                      ? NetworkImage(profileData.avatarUrl!)
                       : const AssetImage('assets/images/tempCharacter.png'))
                   as ImageProvider;
 
           final bannerImage =
               _localBannerImage ??
-              (userProfile.profileBannerUrl != null
-                      ? NetworkImage(userProfile.profileBannerUrl!)
+              (profileData.bannerUrl != null
+                      ? NetworkImage(profileData.bannerUrl!)
                       : const AssetImage('assets/images/defaultbg.png'))
                   as ImageProvider;
 
           return ProfileTemplate(
-            username: userProfile.username,
-            level: level, // Using placeholder level
-            bio: userProfile.bio ?? 'Write your bio here...',
+            username: profileData.username,
+            level: profileData.level,
+            bio: profileData.bio ?? 'Write your bio here...',
             bannerImage: bannerImage,
             avatarImage: avatarImage,
             stats: stats,
             onBack: () => Navigator.of(context).maybePop(),
-            onEdit: () => _openEditSheet(userProfile.bio ?? ''),
-            // onTapAvatar and onTapBanner are now handled by the edit sheet
+            onEdit: () => _openEditSheet(profileData),
           );
         }
 
-        // Fallback state
         return const Scaffold(
           body: Center(child: Text('No profile data found.')),
         );
@@ -136,7 +124,8 @@ class _PublicSpeakingProfileStageState
     );
   }
 
-  void _openEditSheet(String currentBio) {
+  /// Opens the bottom sheet for editing the profile.
+  void _openEditSheet(ProfileData profileData) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -146,10 +135,15 @@ class _PublicSpeakingProfileStageState
       ),
       builder: (context) {
         return ProfileEditSheet(
-          initialBio: currentBio,
-          // CHANGE: Connect buttons to the new handler methods
-          onPickAvatar: () => _handleImagePickAndUpload(isAvatar: true),
-          onPickBanner: () => _handleImagePickAndUpload(isAvatar: false),
+          initialBio: profileData.bio ?? '',
+          onPickAvatar: () => _handleImagePickAndUpload(
+            profileData: profileData,
+            isAvatar: true,
+          ),
+          onPickBanner: () => _handleImagePickAndUpload(
+            profileData: profileData,
+            isAvatar: false,
+          ),
           onSaveBio: _handleBioSave,
         );
       },
@@ -161,12 +155,11 @@ class _PublicSpeakingProfileStageState
     final user = context.read<AppFlowController>().currentUser;
     if (user == null) return;
 
-    // Close the bottom sheet
     Navigator.of(context).pop();
 
     try {
       await UserService.updateBio(user.id, newBio);
-      _refreshProfile(); // Refetch data to show the update
+      _refreshProfile();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -174,19 +167,14 @@ class _PublicSpeakingProfileStageState
     }
   }
 
-  /// Handles picking an image from the gallery and uploading it.
-  Future<void> _handleImagePickAndUpload({required bool isAvatar}) async {
+  /// Handles picking an image, showing a preview, and calling the replacement service.
+  Future<void> _handleImagePickAndUpload({
+    required ProfileData profileData,
+    required bool isAvatar,
+  }) async {
     final user = context.read<AppFlowController>().currentUser;
-    if (user == null) {
-      print('DEBUG: FAILED! User is null, cannot upload image.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: You are not logged in!')),
-      );
-      return;
-    }
-    print('DEBUG: User ID is: ${user.id}');
+    if (user == null) return;
 
-    // 1. Pick the image
     final result = await _picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: isAvatar ? 1024 : 2048,
@@ -195,11 +183,12 @@ class _PublicSpeakingProfileStageState
 
     final imageFile = File(result.path);
     final imageType = isAvatar ? 'avatar' : 'banner';
+    final oldImageUrl = isAvatar
+        ? profileData.avatarUrl
+        : profileData.bannerUrl;
 
-    // Close the bottom sheet
     Navigator.of(context).pop();
 
-    // 2. Set local state for an instant preview
     setState(() {
       if (isAvatar) {
         _localAvatarImage = FileImage(imageFile);
@@ -209,22 +198,18 @@ class _PublicSpeakingProfileStageState
     });
 
     try {
-      // 3. Upload image and get URL
-      final imageUrl = await UserService.uploadProfileImage(
-        user.id,
-        imageFile,
-        imageType,
+      await UserService.replaceProfileImage(
+        userId: user.id,
+        newImageFile: imageFile,
+        imageType: imageType,
+        oldImageUrl: oldImageUrl,
       );
-
-      // 4. Save the new URL to the user's record in the database
-      await UserService.updateProfileImageUrl(user.id, imageUrl, imageType);
-
-      // 5. Refresh the entire profile to confirm the change from the server
       _refreshProfile();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+      ).showSnackBar(SnackBar(content: Text('Failed to update image: $e')));
+      _refreshProfile();
     }
   }
 }
