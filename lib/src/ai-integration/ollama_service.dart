@@ -25,7 +25,9 @@ class OllamaService with ChangeNotifier {
       dotenv.env['OLLAMA_BASE_URL'] ?? 'http://10.0.2.2:11434';
   SpeechSession? _currentSession;
 
-  final String _modelName = "qwen2.5:0.5b"; // model used for generation
+  /// Public accessor for callers that need to know which model is used.
+  static String get modelName =>
+      dotenv.env['OLLAMA_MODEL_NAME'] ?? 'qwen2.5:0.5b'; //default model
 
   // Cache for model availability to avoid repeated checks
   final Map<String, bool> _modelCache = {};
@@ -118,7 +120,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': _modelName,
+              'model': modelName,
               'format': 'json',
               'prompt': repairPrompt,
               'stream': false,
@@ -177,7 +179,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': _modelName,
+              'model': modelName,
               'prompt':
                   '''
                 Analyze this speech transcript and provide ONLY three numerical scores (0-100) in this exact format:
@@ -323,7 +325,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': _modelName,
+              'model': modelName,
               'prompt':
                   '''
                 Analyze the logical flow and structure of this speech transcript and provide ONLY a single numerical score (0-100) in this exact format:
@@ -491,7 +493,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': _modelName,
+              'model': modelName,
               'prompt':
                   '''
                   Analyze this speech transcript and provide ONLY numerical scores in this exact format:
@@ -699,7 +701,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': _modelName,
+              'model': modelName,
               'format': 'json', // enforce JSON output from the server/model
               'prompt': prompt,
               'stream': false,
@@ -865,7 +867,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': _modelName,
+              'model': modelName,
               'prompt':
                   '''
                 Context: The speech is about "${session.topic}" and responds to: "${session.generatedQuestion}"
@@ -918,11 +920,11 @@ class OllamaService with ChangeNotifier {
     try {
       // First, ensure the model exists (with timeout)
       final modelExists = await ensureModelExists(
-        _modelName,
+        modelName,
       ).timeout(const Duration(seconds: 10), onTimeout: () => false);
 
       if (!modelExists) {
-        throw 'Model $_modelName is not available';
+        throw 'Model $modelName is not available';
       }
 
       // Use JSON mode to request a structured response: { "question": "..." }
@@ -936,7 +938,7 @@ class OllamaService with ChangeNotifier {
               'Connection': 'keep-alive',
             },
             body: jsonEncode({
-              'model': _modelName,
+              'model': modelName,
               'format': 'json', // ask model/adapter to return JSON
               'prompt': prompt,
               'stream': false,

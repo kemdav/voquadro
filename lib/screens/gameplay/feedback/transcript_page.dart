@@ -68,7 +68,7 @@ class TranscriptPage extends StatelessWidget {
 
                   // Display transcription state / transcript / error
                   if (controller.isTranscribing) ...[
-                    Center(child: CircularProgressIndicator()),
+                    Center(child: const CircularProgressIndicator()),
                     const SizedBox(height: 12),
                     const Text('Transcribing your recording...'),
                   ] else if (controller.transcriptionError != null) ...[

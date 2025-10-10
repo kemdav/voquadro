@@ -21,7 +21,8 @@ class HybridAIService with ChangeNotifier {
   bool get isOllamaAvailable => _isOllamaAvailable;
   bool get isUsingFallback => !_isOllamaAvailable;
 
-  final String _modelName = "qwen2.5:0.5b"; // model used for generation
+  static String get _modelName =>
+      OllamaService.modelName; // Consistent model name access
 
   /// Checks if Ollama is available and caches the result
   Future<bool> checkOllamaAvailability() async {
