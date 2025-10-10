@@ -143,7 +143,7 @@ class UserService {
       final userResponse = await _supabase
           .from('users')
           .select(
-            'username, bio, profile_avatar_url, profile_banner_url, level, highest_streak',
+            'username, bio, profile_avatar_url, profile_banner_url, level, highest_streak, MasteryLevel, PubSpeakLvl',
           )
           .eq('id', userId)
           .single();
@@ -169,9 +169,9 @@ class UserService {
         avatarUrl: userResponse['profile_avatar_url'],
         bannerUrl: userResponse['profile_banner_url'],
         level: userResponse['level'],
-        masteryLevel: masteryLevel,
+        masteryLevel: userResponse['MasteryLevel'],
         publicSpeakingLevel:
-            masteryLevel, // For now, this is the same as mastery level
+            userResponse['PubSpeakLvl'], // For now, this is the same as mastery level
         highestStreak: userResponse['highest_streak'],
       );
     } catch (e) {
@@ -275,7 +275,7 @@ class UserService {
 
     try {
       // The path is the part of the URL after the bucket name
-      final bucketName = 'profile_assets';
+      final bucketName = 'profile-assets';
       final oldImagePath = oldImageUrl.split('$bucketName/').last;
 
       // Don't try to delete if the path is invalid or is the same as the bucket name
