@@ -8,7 +8,7 @@ import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
 enum PublicSpeakingState {
-  home, //0 
+  home, //0
   profile,
   status,
   micTest,
@@ -304,10 +304,12 @@ class PublicSpeakingController with ChangeNotifier {
               '';
 
           final parts = <String>[];
-          if (contentEval.isNotEmpty)
+          if (contentEval.isNotEmpty) {
             parts.add('• Content Quality: $contentEval');
-          if (clarityEval.isNotEmpty)
+          }
+          if (clarityEval.isNotEmpty) {
             parts.add('• Clarity & Structure: $clarityEval');
+          }
           if (overallEval.isNotEmpty) parts.add('• Overall: $overallEval');
 
           feedbackStr = parts.isNotEmpty ? parts.join('\n') : null;
