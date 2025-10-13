@@ -72,7 +72,7 @@ class _PublicSpeakingProfileStageState
           // FIX: The variable name is now consistent.
           final profileData = snapshot.data!;
 
-          // The hardcoded values are gone, and we use the real data from profileData.
+          // cleanup hardcoded datas
           final stats = [
             StatTileData(
               icon: Icons.school,
