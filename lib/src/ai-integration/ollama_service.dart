@@ -25,10 +25,19 @@ class OllamaService with ChangeNotifier {
       dotenv.env['OLLAMA_BASE_URL'] ?? 'http://10.0.2.2:11434';
   SpeechSession? _currentSession;
 
+  /// Public accessor for callers that need to know which model is used.
+  static String get modelName =>
+      dotenv.env['OLLAMA_MODEL_NAME'] ?? 'qwen2.5:0.5b'; //default model
+
   // Cache for model availability to avoid repeated checks
   final Map<String, bool> _modelCache = {};
   DateTime? _lastModelCheck;
   static const Duration _cacheExpiry = Duration(minutes: 5);
+
+  // Simple in-memory cache for recent transcript combined scores
+  final Map<String, Map<String, dynamic>> _scoreCache = {};
+  final Map<String, DateTime> _scoreCacheTimestamps = {};
+  static const Duration _scoreCacheTtl = Duration(minutes: 2);
 
   // Getters for state
   SpeechSession? get currentSession => _currentSession;
@@ -42,12 +51,127 @@ class OllamaService with ChangeNotifier {
     notifyListeners(); // Notify listeners about state change
   }
 
+  /// Attempts to find the first balanced JSON object in [text]. Returns the
+  /// substring (including braces) or null if none found. This scanner is
+  /// careful to respect quoted strings and escape sequences.
+  String? _extractBalancedJson(String text) {
+    final start = text.indexOf('{');
+    if (start == -1) return null;
+    int depth = 0;
+    bool inString = false;
+    bool escaped = false;
+    for (int i = start; i < text.length; i++) {
+      final ch = text.codeUnitAt(i);
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch == 92) {
+        // backslash '\'
+        escaped = true;
+        continue;
+      }
+      if (ch == 34) {
+        // double quote '"'
+        inString = !inString;
+        continue;
+      }
+      if (!inString) {
+        if (ch == 123) {
+          // '{'
+          depth++;
+        } else if (ch == 125) {
+          // '}'
+          depth--;
+          if (depth == 0) {
+            return text.substring(start, i + 1);
+          }
+        }
+      }
+    }
+    return null; // no complete JSON object found
+  }
+
+  /// Sends a single retry request to the model providing the raw previous
+  /// response and asking for a corrected valid JSON object. Returns decoded
+  /// Map if successful, otherwise null.
+  Future<Map<String, dynamic>?> _retryForValidJson(
+    String originalPrompt,
+    String rawResponse,
+  ) async {
+    try {
+      final repairPrompt =
+          '''
+      The previous response the model returned was not valid JSON. Here is the original instruction and the raw output. Please return ONLY a single valid JSON object (no explanation) that matches the required structure.
+
+      Original instruction:
+      $originalPrompt
+
+      Raw output:
+      """
+      $rawResponse
+      """
+
+      Return only the corrected JSON object.
+      ''';
+
+      final resp = await http
+          .post(
+            Uri.parse('$_baseUrl/api/generate'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': modelName,
+              'format': 'json',
+              'prompt': repairPrompt,
+              'stream': false,
+              'options': {'temperature': 0.1, 'max_tokens': 200},
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (resp.statusCode == 200) {
+        final body = jsonDecode(resp.body);
+        dynamic r = body['response'];
+        if (r is String) {
+          final trimmed = r.trim();
+          try {
+            final decoded = jsonDecode(trimmed);
+            if (decoded is Map) return Map<String, dynamic>.from(decoded);
+          } catch (_) {
+            // try balanced extraction
+            final cand = _extractBalancedJson(trimmed);
+            if (cand != null) {
+              try {
+                final decoded2 = jsonDecode(cand);
+                if (decoded2 is Map) return Map<String, dynamic>.from(decoded2);
+              } catch (_) {}
+            }
+          }
+        } else if (r is Map) {
+          return Map<String, dynamic>.from(r);
+        }
+      }
+    } catch (e) {
+      debugPrint('Retry for valid JSON failed: $e');
+    }
+    return null;
+  }
+
   void clearSession() {
     _currentSession = null;
     notifyListeners();
   }
 
-  //? A. Content Quality
+  //optimized options for faster, more reliable responses
+  Map<String, dynamic> get _optimizedOptions => {
+    'temperature': 0.2, // Lower for more consistent, faster responses
+    'top_k': 20, // Limit vocabulary choices
+    'top_p': 0.9,
+    'max_tokens': 150, // Strict limit on response length
+    'num_predict': 100, // Alternative to max_tokens for some models
+  };
+
+  //! A. Content Quality (old implementation)
   Future<double> contentQualityScore(String transcript) async {
     try {
       final response = await http
@@ -55,7 +179,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': 'qwen2.5:0.5b',
+              'model': modelName,
               'prompt':
                   '''
                 Analyze this speech transcript and provide ONLY three numerical scores (0-100) in this exact format:
@@ -131,7 +255,7 @@ class OllamaService with ChangeNotifier {
     return scores;
   }
 
-  //? B. Clarity and Structure
+  //! B. Clarity and Structure (old implementation)
   Future<double> clarityStructureScore(
     String transcript, {
     int wordCount = 0,
@@ -201,7 +325,7 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': 'qwen2.5:0.5b',
+              'model': modelName,
               'prompt':
                   '''
                 Analyze the logical flow and structure of this speech transcript and provide ONLY a single numerical score (0-100) in this exact format:
@@ -281,6 +405,201 @@ class OllamaService with ChangeNotifier {
     }
   }
 
+  //! Calculate Scores in Parallel (old implementation)
+  Future<Map<String, double>> getAllScoresParallel(
+    String transcript, {
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 0,
+  }) async {
+    try {
+      // Check cache first
+      final key =
+          '$transcript.$hashCode.$toString()'
+          '$wordCount $fillerCount $durationSeconds';
+      final cachedAt = _scoreCacheTimestamps[key];
+      if (cachedAt != null &&
+          DateTime.now().difference(cachedAt) < _scoreCacheTtl) {
+        final cached = _scoreCache[key];
+        if (cached != null) {
+          return {
+            'content_quality': (cached['content_quality'] as num).toDouble(),
+            'clarity_structure': (cached['clarity_structure'] as num)
+                .toDouble(),
+            'overall': (cached['overall'] as num).toDouble(),
+          };
+        }
+      }
+      // Run both score calculations in parallel
+      final scores = await Future.wait([
+        contentQualityScore(transcript),
+        clarityStructureScore(
+          transcript,
+          wordCount: wordCount,
+          fillerCount: fillerCount,
+          durationSeconds: durationSeconds,
+        ),
+      ]);
+
+      final double overall = (scores[0] * 0.6) + (scores[1] * 0.4);
+
+      final result = {
+        'content_quality': scores[0],
+        'clarity_structure': scores[1],
+        'overall': overall,
+      };
+
+      // Cache result
+      _scoreCache[key] = result.map((k, v) => MapEntry(k, v));
+      _scoreCacheTimestamps[key] = DateTime.now();
+
+      return result;
+    } catch (e) {
+      debugPrint('Error in parallel score calculation: $e');
+      return {
+        'content_quality': 50.0,
+        'clarity_structure': 50.0,
+        'overall': 50.0,
+      };
+    }
+  }
+
+  //! Single API call for both content quality and logical flow (old implementation)
+  Future<Map<String, double>> getCombinedScores(
+    String transcript, {
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 0,
+  }) async {
+    // Check cache first (same key logic as parallel)
+    final key =
+        '$transcript.$hashCode.$toString()'
+        '$wordCount $fillerCount $durationSeconds';
+    final cachedAt = _scoreCacheTimestamps[key];
+    if (cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _scoreCacheTtl) {
+      final cached = _scoreCache[key];
+      if (cached != null) {
+        return {
+          'content_quality': (cached['content_quality'] as num).toDouble(),
+          'clarity_structure': (cached['clarity_structure'] as num).toDouble(),
+          'overall': (cached['overall'] as num).toDouble(),
+        };
+      }
+    }
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/generate'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': modelName,
+              'prompt':
+                  '''
+                  Analyze this speech transcript and provide ONLY numerical scores in this exact format:
+                  "relevance: X, depth: Y, originality: Z, logical_flow: W"
+
+                  Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
+
+                  Transcript: $transcript
+
+                  Scoring criteria:
+                  - Relevance (0-100): How on-topic was the user? Keyword alignment with the prompt.
+                  - Depth & Substance (0-100): Detail, evidence, or just surface-level comments?
+                  - Originality (0-100): Unique perspective or common knowledge?
+                  - Logical Flow (0-100): Structure, coherence, transitions, organization.
+
+                  Provide ONLY the four numbers in the exact format: "relevance: X, depth: Y, originality: Z, logical_flow: W"
+                  ''',
+              'stream': false,
+              'options': {
+                'temperature':
+                    0.1, // Lower temperature for more consistent formatting
+                'max_tokens': 100, // Limit response length
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        String scoresText = responseBody['response']?.toString().trim() ?? '';
+
+        final scores = _parseCombinedScores(scoresText);
+
+        // Calculate pacing and conciseness scores locally
+        final double pacingScore = _calculatePacingScore(
+          wordCount,
+          durationSeconds,
+        );
+        final double concisenessScore = _calculateConcisenessScore(fillerCount);
+
+        // Calculate final scores
+        final double contentQuality =
+            (scores['relevance']! + scores['depth']! + scores['originality']!) /
+            3.0;
+        final double clarityStructure =
+            (scores['logical_flow']! * 0.5) +
+            (pacingScore * 0.25) +
+            (concisenessScore * 0.25);
+        final double overall =
+            (contentQuality * 0.6) + (clarityStructure * 0.4);
+
+        debugPrint('Combined scores calculated in single call');
+
+        final result = {
+          'content_quality': contentQuality,
+          'clarity_structure': clarityStructure,
+          'overall': overall,
+        };
+
+        // Cache the result
+        _scoreCache[key] = result.map((k, v) => MapEntry(k, v));
+        _scoreCacheTimestamps[key] = DateTime.now();
+
+        return result;
+      } else {
+        throw 'API error: ${response.statusCode}';
+      }
+    } catch (e) {
+      debugPrint('Error in combined scores: $e');
+      return {
+        'content_quality': 50.0,
+        'clarity_structure': 50.0,
+        'overall': 50.0,
+      };
+    }
+  }
+
+  //! Parse combined scores (old implementation )
+  Map<String, double> _parseCombinedScores(String response) {
+    final Map<String, double> scores = {
+      'relevance': 50.0,
+      'depth': 50.0,
+      'originality': 50.0,
+      'logical_flow': 50.0,
+    };
+
+    try {
+      final regex = RegExp(
+        r'relevance:\s*(\d+\.?\d*),\s*depth:\s*(\d+\.?\d*),\s*originality:\s*(\d+\.?\d*),\s*logical_flow:\s*(\d+\.?\d*)',
+        caseSensitive: false,
+      );
+      final match = regex.firstMatch(response);
+
+      if (match != null) {
+        scores['relevance'] = double.tryParse(match.group(1)!) ?? 50.0;
+        scores['depth'] = double.tryParse(match.group(2)!) ?? 50.0;
+        scores['originality'] = double.tryParse(match.group(3)!) ?? 50.0;
+        scores['logical_flow'] = double.tryParse(match.group(4)!) ?? 50.0;
+      }
+    } catch (e) {
+      debugPrint('Error parsing combined scores: $e');
+    }
+
+    return scores;
+  }
+
   //Updated getPublicSpeakingFeedback to  include scores
   Future<Map<String, dynamic>> getPublicSpeakingFeedbackWithScores(
     String transcript,
@@ -289,36 +608,249 @@ class OllamaService with ChangeNotifier {
     int fillerCount = 0,
     int durationSeconds = 1,
   }) async {
+    // Use the new single-call JSON-based feedback generator to get robust,
+    // consistent results (scores + concise feedback) from a single API call.
     try {
-      //Get text feedback
-      final String feedback = await getPublicSpeakingFeedback(
+      final result = await getComprehensiveFeedback(
         transcript,
-        session,
-      );
-
-      // Get component scores once to avoid duplicate calculations/logs
-      final double contentQuality = await contentQualityScore(transcript);
-      final double clarityStructure = await clarityStructureScore(
-        transcript,
+        session: session,
         wordCount: wordCount,
         fillerCount: fillerCount,
         durationSeconds: durationSeconds,
       );
-      // Overall = 0.6 * content + 0.4 * clarity (keep a single log)
-      final double overall = (contentQuality * 0.6) + (clarityStructure * 0.4);
-      debugPrint('Overall Score: $overall');
 
+      // result contains 'feedback_text' and 'scores' already rounded/structured
       return {
-        'feedback': feedback,
-        'scores': {
-          'overall': overall.round(),
-          'content_quality': contentQuality.round(),
-          'clarity_structure': clarityStructure.round(),
-        },
+        'feedback': result['feedback_text'] ?? 'No feedback',
+        'scores':
+            result['scores'] ??
+            {'overall': 0, 'content_quality': 0, 'clarity_structure': 0},
       };
     } catch (e) {
       return {
         'feedback': 'Error generating feedback: $e',
+        'scores': {'overall': 0, 'content_quality': 0, 'clarity_structure': 0},
+      };
+    }
+  }
+
+  /// Build a unified prompt that instructs the model to return a single JSON
+  /// object containing scores and short feedback strings. This mirrors the
+  /// guidance in the provided `wow.html` reference and enforces `format: 'json'`.
+  String _createComprehensiveAnalysisPrompt(
+    String transcript,
+    SpeechSession session,
+  ) {
+    return '''
+    You are an expert public speaking coach. Analyze the provided speech transcript.
+    Respond with ONLY a single, valid JSON object and nothing else. Do not include any extra text or markdown.
+
+    Context:
+    - Topic: "${session.topic}"
+    - Question: "${session.generatedQuestion}"
+
+    Transcript:
+    """
+    $transcript
+    """
+
+    The JSON object MUST have this exact structure:
+    {
+      "scores": {
+        "content_quality": {
+          "relevance": <number 0-100>,
+          "depth": <number 0-100>,
+          "originality": <number 0-100>
+        },
+        "clarity_structure": {
+          "logical_flow": <number 0-100>
+        }
+      },
+      "feedback": {
+        "content_quality_eval": "<string, 1-2 sentences>",
+        "clarity_structure_eval": "<string, 1-2 sentences>",
+        "overall_eval": "<string, 1-2 sentences>"
+      }
+    }
+
+    Scoring guidance:
+    - relevance: How on-topic was the user and did they answer the question?
+    - depth: Level of detail and evidence provided.
+    - originality: Novel perspectives vs common knowledge.
+    - logical_flow: Structure, coherence, transitions.
+
+    Keep each evaluation concise (1-2 sentences). Return only the JSON object.
+    ''';
+  }
+
+  /// Single-call method: requests a JSON response from Ollama containing
+  /// scores and concise feedback, then computes derived scores (pacing,
+  /// conciseness) locally and returns a stable structure used by the app.
+  Future<Map<String, dynamic>> getComprehensiveFeedback(
+    String transcript, {
+    required SpeechSession session,
+    int wordCount = 0,
+    int fillerCount = 0,
+    int durationSeconds = 1,
+  }) async {
+    try {
+      final prompt = _createComprehensiveAnalysisPrompt(transcript, session);
+
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/generate'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': modelName,
+              'format': 'json', // enforce JSON output from the server/model
+              'prompt': prompt,
+              'stream': false,
+              'options': _optimizedOptions,
+            }),
+          )
+          .timeout(const Duration(seconds: 60));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Ollama returns a top-level 'response' field which itself may be
+        // a JSON string or plain text. We try multiple robust decoding
+        // strategies so the app doesn't rely on brittle formatting.
+        dynamic aiResp = responseBody['response'];
+
+        if (aiResp is String) {
+          final raw = aiResp.trim();
+
+          // 1) Try direct JSON decode
+          try {
+            aiResp = jsonDecode(raw);
+          } catch (e) {
+            debugPrint(
+              'Direct jsonDecode failed (${e.toString()}). Trying to extract balanced JSON substring...',
+            );
+
+            // 2) Try to extract a balanced JSON object substring using a robust scanner
+            try {
+              final jsonCandidate = _extractBalancedJson(raw);
+              if (jsonCandidate != null) {
+                try {
+                  aiResp = jsonDecode(jsonCandidate);
+                  debugPrint(
+                    'Successfully decoded JSON from balanced substring.',
+                  );
+                } catch (e2) {
+                  debugPrint(
+                    'jsonDecode on extracted balanced substring failed: ${e2.toString()}',
+                  );
+                }
+              } else {
+                debugPrint(
+                  'No balanced JSON substring found in model response.',
+                );
+              }
+            } catch (e3) {
+              debugPrint(
+                'Error while extracting balanced JSON substring: ${e3.toString()}',
+              );
+            }
+
+            // 3) If still not parsed, attempt a single retry asking the model to correct and return only valid JSON
+            if ((aiResp is! Map)) {
+              try {
+                final repaired = await _retryForValidJson(prompt, raw);
+                if (repaired != null) {
+                  aiResp = repaired;
+                  debugPrint('Successfully obtained repaired JSON from retry.');
+                } else {
+                  debugPrint(
+                    'Retry for repaired JSON did not return a valid JSON object.',
+                  );
+                }
+              } catch (retryErr) {
+                debugPrint(
+                  'Error during retry for valid JSON: ${retryErr.toString()}',
+                );
+              }
+            }
+          }
+        }
+
+        // At this point aiResp should be a Map if everything went well.
+        final Map<String, dynamic> aiJson = (aiResp is Map)
+            ? Map<String, dynamic>.from(aiResp)
+            : {};
+
+        // Defensive extraction: the model may still return unexpected types
+        // (e.g., numbers or strings) so check before casting to Map.
+        final dynamic rawScores = aiJson['scores'];
+        final Map<String, dynamic> scores = (rawScores is Map)
+            ? Map<String, dynamic>.from(rawScores)
+            : {};
+
+        final dynamic rawContent =
+            scores['content_quality'] ?? aiJson['content_quality'];
+        final Map<String, dynamic> content = (rawContent is Map)
+            ? Map<String, dynamic>.from(rawContent)
+            : {};
+
+        final dynamic rawClarity =
+            scores['clarity_structure'] ?? aiJson['clarity_structure'];
+        final Map<String, dynamic> clarity = (rawClarity is Map)
+            ? Map<String, dynamic>.from(rawClarity)
+            : {};
+
+        if (rawScores != null && rawScores is! Map) {
+          debugPrint(
+            'Warning: expected `scores` to be an object but got ${rawScores.runtimeType}',
+          );
+        }
+
+        final double relevance =
+            (content['relevance'] as num?)?.toDouble() ?? 50.0;
+        final double depth = (content['depth'] as num?)?.toDouble() ?? 50.0;
+        final double originality =
+            (content['originality'] as num?)?.toDouble() ?? 50.0;
+        final double logicalFlow =
+            (clarity['logical_flow'] as num?)?.toDouble() ?? 50.0;
+
+        // Local derived metrics
+        final double contentQuality = (relevance + depth + originality) / 3.0;
+        final double pacingScore = _calculatePacingScore(
+          wordCount,
+          durationSeconds,
+        );
+        final double concisenessScore = _calculateConcisenessScore(fillerCount);
+        final double clarityStructure =
+            (logicalFlow * 0.5) +
+            (pacingScore * 0.25) +
+            (concisenessScore * 0.25);
+        final double overall =
+            (contentQuality * 0.6) + (clarityStructure * 0.4);
+
+        final feedback = aiJson['feedback'] ?? {};
+
+        return {
+          'feedback_text': feedback,
+          'scores': {
+            'overall': overall.round(),
+            'content_quality': contentQuality.round(),
+            'clarity_structure': clarityStructure.round(),
+            // include raw breakdown too for debugging/inspection
+            'breakdown': {
+              'relevance': relevance.round(),
+              'depth': depth.round(),
+              'originality': originality.round(),
+              'logical_flow': logicalFlow.round(),
+            },
+          },
+        };
+      } else {
+        throw 'API error: ${response.statusCode}';
+      }
+    } catch (e) {
+      debugPrint('Error in getComprehensiveFeedback: $e');
+      return {
+        'feedback_text': {'error': 'Failed to generate feedback: $e'},
         'scores': {'overall': 0, 'content_quality': 0, 'clarity_structure': 0},
       };
     }
@@ -335,12 +867,12 @@ class OllamaService with ChangeNotifier {
             Uri.parse('$_baseUrl/api/generate'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'model': 'qwen2.5:0.5b',
+              'model': modelName,
               'prompt':
                   '''
-                Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
+                Context: The speech is about "${session.topic}" and responds to: "${session.generatedQuestion}"
 
-                Strictly analyze if the $transcript responds to "${_currentSession?.generatedQuestion}" appropriately. If not, penalize heavily in relevance.
+                Strictly analyze if the $transcript responds to "${session.generatedQuestion}" appropriately. If not, penalize heavily in relevance.
 
                 Keep it in this format:
     
@@ -351,6 +883,7 @@ class OllamaService with ChangeNotifier {
                 Keep each evaluation concise, ideally within 1 sentence each.
                 ''',
               'stream': false,
+              'options': _optimizedOptions,
             }),
           )
           .timeout(const Duration(minutes: 5));
@@ -387,12 +920,15 @@ class OllamaService with ChangeNotifier {
     try {
       // First, ensure the model exists (with timeout)
       final modelExists = await ensureModelExists(
-        'qwen2:0.5b',
+        modelName,
       ).timeout(const Duration(seconds: 10), onTimeout: () => false);
 
       if (!modelExists) {
-        throw 'Model qwen2:0.5b is not available';
+        throw 'Model $modelName is not available';
       }
+
+      // Use JSON mode to request a structured response: { "question": "..." }
+      final prompt = _createQuestionPrompt(topic);
 
       final response = await http
           .post(
@@ -402,18 +938,11 @@ class OllamaService with ChangeNotifier {
               'Connection': 'keep-alive',
             },
             body: jsonEncode({
-              'model': 'qwen2:0.5b',
-              'prompt':
-                  '''
-                Generate one SHORT maximum of 10 words question that is engaging but critical about the following topic: $topic
-                Don't enclose it in quotes, and ensure it is only 1 question.
-              ''',
+              'model': modelName,
+              'format': 'json', // ask model/adapter to return JSON
+              'prompt': prompt,
               'stream': false,
-              'options': {
-                'temperature': 0.7,
-                'top_p': 0.9,
-                'max_tokens': 50, // Limit response length for faster generation
-              },
+              'options': _optimizedOptions,
             }),
           )
           .timeout(
@@ -424,13 +953,39 @@ class OllamaService with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-        final question =
-            responseBody['response']?.toString().trim() ??
-            'No question generated';
+
+        dynamic aiResp = responseBody['response'];
+        String questionText = 'No question generated';
+
+        if (aiResp is String) {
+          // sometimes the adapter wraps JSON in a string
+          final trimmed = aiResp.trim();
+          try {
+            final decoded = jsonDecode(trimmed);
+            if (decoded is Map && decoded['question'] != null) {
+              questionText = decoded['question'].toString().trim();
+            } else if (decoded is String) {
+              questionText = decoded.trim();
+            }
+          } catch (_) {
+            // Fallback: treat the string as raw question
+            questionText = trimmed;
+          }
+        } else if (aiResp is Map) {
+          // direct map response
+          if (aiResp['question'] != null) {
+            questionText = aiResp['question'].toString().trim();
+          } else if (aiResp['response'] != null) {
+            questionText = aiResp['response'].toString().trim();
+          }
+        }
+
+        // Final cleanup: ensure not empty
+        if (questionText.isEmpty) questionText = 'No question generated';
 
         final session = SpeechSession(
           topic: topic,
-          generatedQuestion: question,
+          generatedQuestion: questionText,
           timestamp: DateTime.now(),
         );
 
@@ -442,6 +997,18 @@ class OllamaService with ChangeNotifier {
     } catch (e) {
       throw 'Error connecting to Ollama: $e';
     }
+  }
+
+  /// Build a small JSON-enforcing prompt for question generation
+  String _createQuestionPrompt(String topic) {
+    return '''
+    You are a concise assistant. Respond with ONLY a single valid JSON object and nothing else.
+    The object must have the shape: {"question": "<one short, engaging question about the topic>"}
+
+    Topic: $topic
+
+    Keep the question short (under 20 words) and engaging.
+    ''';
   }
 
   // to check if ollama is running and models are available (optimized)

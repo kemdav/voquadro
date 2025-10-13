@@ -24,12 +24,11 @@ class _MicTestPageState extends State<MicTestPage> {
     });
   }
 
-   @override
+  @override
   void dispose() {
     context.read<AudioController>().stopAmplitudeStream();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +62,7 @@ class _MicTestPageState extends State<MicTestPage> {
             style: TextStyle(fontSize: 20, color: progressColor),
           ),
           const SizedBox(height: 30),
-          
+
           // The visual volume meter
           SizedBox(
             width: 250,
@@ -74,7 +73,7 @@ class _MicTestPageState extends State<MicTestPage> {
               valueColor: AlwaysStoppedAnimation<Color>(progressColor),
             ),
           ),
-          
+
           const SizedBox(height: 60),
 
           // The Continue button, enabled only after good volume is detected
@@ -84,10 +83,14 @@ class _MicTestPageState extends State<MicTestPage> {
             ),
             // Use the property from the controller to enable/disable the button
             onPressed: audioController.hasReachedGoodVolume
-                ? () {
-                    // When continue is pressed, stop the test and start the actual game
+                ? () async {
+                    // When continue is pressed, stop the test and request a question
+                    // from the AI service and start the actual game. This ensures
+                    // the speaking page has a question to display instead of
+                    // showing "Waiting for question...".
                     audioController.stopAmplitudeStream();
-                    publicSpeakingController.startGameplaySequence();
+                    await publicSpeakingController
+                        .generateRandomQuestionAndStart();
                   }
                 : null, // null disables the button
             child: const Text('Continue', style: TextStyle(fontSize: 20)),
