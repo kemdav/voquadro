@@ -63,6 +63,88 @@ class UserService {
   static const String _kPostgrestErrorNoExactRow = 'PGRST116';
   static const String _kPostgresErrorUniqueViolation = '23505';
 
+  static Future<void> addExp(
+    String userId, {
+    int practiceExp = 0,
+    int paceControlExp = 0,
+    int fillerControlExp = 0,
+    Map<String, int>? modeExpGains,
+  }) async {
+    // Do nothing if no XP is being added.
+    if (practiceExp <= 0 &&
+        paceControlExp <= 0 &&
+        fillerControlExp <= 0 &&
+        (modeExpGains == null || modeExpGains.isEmpty)) {
+      return;
+    }
+
+    try {
+      final currentXP = await _getUserXP(userId);
+      
+      final Map<String, dynamic> updatePayload = {};
+
+      // --- Handle General and Mastery XP ---
+
+      // NOTE: the braces indicated the column name < 3 :)
+      if (practiceExp > 0) {
+        updatePayload['practice_xp'] = currentXP['practice_xp']! + practiceExp;
+      }
+      if (paceControlExp > 0) {
+        updatePayload['pace_control'] = currentXP['pace_control']! + paceControlExp;
+      }
+      if (fillerControlExp > 0) {
+        updatePayload['filler_control'] = currentXP['filler_control']! + fillerControlExp;
+      }
+
+      if (modeExpGains != null) {
+        for (var entry in modeExpGains.entries) {
+          final modeName = entry.key; // e.g., 'public_speaking_xp'
+          final expToAdd = entry.value;
+
+          if (expToAdd > 0) {
+            final currentModeExp = currentXP[modeName] ?? 0;
+            updatePayload[modeName] = currentModeExp + expToAdd;
+          }
+        }
+      }
+      
+      if (updatePayload.isNotEmpty) {
+        await _supabase
+            .from('users')
+            .update(updatePayload)
+            .eq('id', userId);
+      }
+
+    } catch (e) {
+      throw Exception('Failed to add user EXP: $e');
+    }
+  }
+
+  static Future<Map<String, int>> _getUserXP(String userId) async {
+    // Modify this to match the Db pweaseeee
+    try {
+      final response = await _supabase
+          .from('users')
+          // Add any new mode XP columns to this select statement.
+
+          // THIS IS THE LINE TO CHANGE THE COLUMNS <3
+          .select('practice_xp, master_xp, pace_control, filler_control, public_speaking_xp')
+          .eq('id', userId)
+          .single();
+
+      // Return all values, providing a default of 0 if they are null in the DB.
+      return {
+        'practice_xp': response['practice_xp'] as int? ?? 0,
+        'master_xp': response['master_xp'] as int? ?? 0,
+        'pace_control': response['pace_control'] as int? ?? 0,
+        'filler_control': response['filler_control'] as int? ?? 0,
+        'public_speaking_xp': response['public_speaking_xp'] as int? ?? 0,
+      };
+    } catch (e) {
+      throw Exception('Failed to get user XP data: $e');
+    }
+  }
+
   /// Creates a new user in database using secure password hashing
   static Future<User> createUser({
     required String username,

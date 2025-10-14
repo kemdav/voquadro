@@ -304,10 +304,12 @@ class PublicSpeakingController with ChangeNotifier {
               '';
 
           final parts = <String>[];
-          if (contentEval.isNotEmpty)
+          if (contentEval.isNotEmpty) {
             parts.add('• Content Quality: $contentEval');
-          if (clarityEval.isNotEmpty)
+          }
+          if (clarityEval.isNotEmpty) {
             parts.add('• Clarity & Structure: $clarityEval');
+          }
           if (overallEval.isNotEmpty) parts.add('• Overall: $overallEval');
 
           feedbackStr = parts.isNotEmpty ? parts.join('\n') : null;
