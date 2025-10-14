@@ -139,7 +139,8 @@ class UserService {
 
   static Future<ProfileData> getProfileData(String userId) async {
     try {
-      //Fetch core user data (including new level and streak columns).
+      const int mxpPerLevel = 100;
+      // Fetch core user data (including new level and streak columns).
       final userResponse = await _supabase
           .from('users')
           .select(
@@ -148,21 +149,21 @@ class UserService {
           .eq('id', userId)
           .single();
 
-      //Fetch all skill data for that user.
+      // Fetch all skill data for that user.
       final skillsResponse = await _supabase
           .from('user_skills')
           .select('total_mxp')
           .eq('user_id', userId);
 
-      //Calculate total Mastery XP and convert to a level.
+      // Calculate total Mastery XP and convert to a level.
       int totalMxp = skillsResponse.fold(
         0,
         (sum, skill) => sum + (skill['total_mxp'] as int? ?? 0),
       );
       final masteryLevel =
-          (totalMxp / 100).floor() + 1; // Example: 100 MXP per level
+          (totalMxp / mxpPerLevel).floor() + 1; // Example: 100 MXP per level
 
-      //Assemble and return the complete ProfileData object.
+      // Assemble and return the complete ProfileData object.
       return ProfileData(
         username: userResponse['username'],
         bio: userResponse['bio'],
