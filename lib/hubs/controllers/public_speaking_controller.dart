@@ -96,7 +96,7 @@ class PublicSpeakingController with ChangeNotifier {
   }
 
   static const readyingDuration = Duration(seconds: 5);
-  static const speakingDuration = Duration(seconds: 10);
+  static const speakingDuration = Duration(seconds: 30);
 
   double _speakingProgress = 0.0;
   double get speakingProgress => _speakingProgress;
@@ -107,7 +107,6 @@ class PublicSpeakingController with ChangeNotifier {
     _currentState = PublicSpeakingState.inFeedback;
     // Clear any previous feedback so the next generation is fresh
     _aiFeedback = null;
-    _sessionResult = _createDummySessionResult();
 
     onEnterFeedbackFlow(); // Trigger feedback generation
 
@@ -122,13 +121,13 @@ class PublicSpeakingController with ChangeNotifier {
       masteryEXP: 35,
       paceControlEXP: 25,
       fillerControlEXP: 10,
-      paceControl: 145, // WPM
-      fillerControl: 3, // Filler words
-      overallRating: 85, // out of 100
-      contentClarityScore: 100,
-      clarityStructureScore: 100,
-      transcript: "This is a dummy transcript. The user spoke about the importance of clear communication and used a few filler words like 'um' and 'like'.",
-      feedback: "Great job! Your pace was excellent at 145 WPM. Try to be more mindful of using filler words to make your message even more impactful.",
+      paceControl: _wordsPerMinute!.toDouble(), // WPM
+      fillerControl: _fillerWordCount!.toDouble(), // Filler words
+      overallRating: _overallScore!.toDouble(), // out of 100
+      contentClarityScore: _contentQualityScore!.toDouble(),
+      clarityStructureScore: _clarityStructureScore!.toDouble(),
+      transcript: _userTranscript.toString(),
+      feedback: _aiFeedback.toString(),
     );
   }
 
@@ -502,6 +501,8 @@ class PublicSpeakingController with ChangeNotifier {
           _overallScore == null) {
         await generateScores();
       }
+
+      _sessionResult = _createDummySessionResult();
     }
 
     // Kick off the flow (async but don't block caller)
