@@ -14,6 +14,15 @@ class User {
   final String? profileAvatarUrl;
   final String? profileBannerUrl;
 
+  final int practiceEXP;
+  final int masteryEXP;
+  final int paceControlEXP;
+  final int fillerControlEXP;
+  final int publicSpeakingEXP;
+
+  final int practiceLevel;
+  final int masteryLevel;
+
   User({
     required this.id,
     required this.username,
@@ -21,9 +30,32 @@ class User {
     this.bio,
     this.profileAvatarUrl,
     this.profileBannerUrl,
+     required this.practiceEXP,
+    required this.masteryEXP,
+    required this.paceControlEXP,
+    required this.fillerControlEXP,
+    required this.publicSpeakingEXP,
+    required this.practiceLevel,
+    required this.masteryLevel,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
+    final totalPxp = map['practice_xp'] as int? ?? 0;
+    final totalMxp = map['master_xp'] as int? ?? 0;
+
+    final int practiceEXP = map['practice_xp'] as int? ?? 0;
+    final int masteryEXP = map['master_xp'] as int? ?? 0;
+    final int paceControlEXP = map['pace_control'] as int? ?? 0;
+    final int fillerControlEXP = map['filler_control'] as int? ?? 0;
+    final int publicSpeakingEXP = map['public_speaking_xp'] as int? ?? 0;
+
+    // Level rules, this should be changed in the future i hope we wont forget
+    const int pxpPerLevel = 500;
+    const int mxpPerLevel = 100;
+
+    final calculatedPracticeLevel = (totalPxp / pxpPerLevel).floor() + 1;
+    final calculatedMasteryLevel = (totalMxp / mxpPerLevel).floor() + 1;
+
     return User(
       id: map['id'],
       username: map['username'],
@@ -31,6 +63,13 @@ class User {
       bio: map['bio'],
       profileAvatarUrl: map['profile_avatar_url'],
       profileBannerUrl: map['profile_banner_url'],
+       practiceEXP: practiceEXP,
+      masteryEXP: masteryEXP,
+      paceControlEXP: paceControlEXP,
+      fillerControlEXP: fillerControlEXP,
+      publicSpeakingEXP: publicSpeakingEXP,
+      practiceLevel: calculatedPracticeLevel,
+      masteryLevel: calculatedMasteryLevel,
     );
   }
 }
