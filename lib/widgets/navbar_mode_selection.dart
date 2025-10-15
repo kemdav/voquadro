@@ -12,8 +12,14 @@ class NavbarModeSelectionWidget extends StatelessWidget {
       builder: (context, selectedPage, child) {
         return NavigationBar(
           destinations: [
-            NavigationDestination(icon: Icon(Icons.person_2_sharp), label: 'Speak'),
-            NavigationDestination(icon: Icon(Icons.analytics_sharp), label: 'Status'),
+            NavigationDestination(
+              icon: Icon(Icons.person_2_sharp),
+              label: 'Speak',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.analytics_sharp),
+              label: 'Status',
+            ),
           ],
           selectedIndex: selectedPage,
           onDestinationSelected: (int value) {

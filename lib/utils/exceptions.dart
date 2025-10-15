@@ -1,3 +1,4 @@
+/// A custom exception for handling authentication-related errors.
 class AuthException implements Exception {
   /// The user-friendly message to be displayed in the UI.
   final String message;
