@@ -42,7 +42,7 @@ class FeedbackFlowPage extends StatelessWidget {
                 // Pass colors and any other required data to your pages
                 TranscriptPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
                 SpeakFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
-                StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
+                StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple, fillerCount: controller.fillerWordCount, wpm: controller.wordsPerMinute),
                 ProgressionPage(),
                 NextRankPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
               ],

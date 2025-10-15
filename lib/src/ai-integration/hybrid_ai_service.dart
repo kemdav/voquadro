@@ -54,7 +54,7 @@ class HybridAIService with ChangeNotifier {
           final session = await _ollamaService
               .generateQuestion(topic)
               .timeout(
-                const Duration(seconds: 20), // Max wait time for Ollama
+                const Duration(seconds: 120), // Max wait time for Ollama
                 onTimeout: () {
                   debugPrint(
                     'Ollama generation timed out, switching to fallback',
@@ -170,8 +170,62 @@ class HybridAIService with ChangeNotifier {
           final feedbackText = comprehensive['feedback_text'];
           final scores = comprehensive['scores'] as Map<String, dynamic>?;
 
+          // Format feedback_text into a readable labeled string to avoid raw Map display
+          String formattedFeedback = 'No feedback';
+          final overallNumeric = (scores?['overall'] as num?)?.toInt();
+
+          if (feedbackText != null) {
+            if (feedbackText is String) {
+              formattedFeedback = feedbackText;
+            } else if (feedbackText is Map) {
+              final Map fb = feedbackText;
+              final contentEval =
+                  fb['content_quality_eval'] ?? fb['content_eval'] ?? '';
+              final clarityEval =
+                  fb['clarity_structure_eval'] ?? fb['clarity_eval'] ?? '';
+              final overallEval = fb['overall_eval'] ?? fb['overall'] ?? '';
+
+              final parts = <String>[];
+              final String contentStr = contentEval?.toString().trim() ?? '';
+              final String clarityStr = clarityEval?.toString().trim() ?? '';
+              final String overallStr = overallEval?.toString().trim() ?? '';
+
+              if (contentStr.isNotEmpty) {
+                parts.add('Content Quality: $contentStr');
+              } else {
+                parts.add(
+                  'Content Quality: Keep speaking up. Your speech content has a lot to offer! Your current content quality score is $overallNumeric. With more practice, you can enhance your relevance, depth, and originality.',
+                );
+              }
+
+              if (clarityStr.isNotEmpty) {
+                parts.add('Clarity & Structure: $clarityStr');
+              } else {
+                parts.add(
+                  'Clarity & Structure: Great effort! Your current clarity and structure score is $overallNumeric. Focus on improving logical flow, pacing, and conciseness to make your speeches even more engaging.',
+                );
+              }
+
+              if (overallStr.isNotEmpty) {
+                parts.add('Overall: $overallStr');
+              } else if (overallNumeric != null) {
+                parts.add(
+                  'Overall: Well done! great effort, here is a $overallNumeric. But you can always improve, there is still a lot of room for growth!',
+                );
+              }
+
+              formattedFeedback = parts.isEmpty
+                  ? 'No feedback'
+                  : parts.join('\n\n');
+            } else {
+              formattedFeedback = feedbackText.toString();
+            }
+          } else if (overallNumeric != null) {
+            formattedFeedback = 'Overall Score: $overallNumeric';
+          }
+
           return {
-            'feedback': feedbackText,
+            'feedback': formattedFeedback,
             'scores': {
               'overall': (scores?['overall'] as num?)?.round() ?? 0,
               'content_quality':

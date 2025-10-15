@@ -8,10 +8,14 @@ class StatFeedbackPage extends StatelessWidget {
     super.key,
     required this.cardBackground,
     required this.primaryPurple,
+    this.fillerCount,
+    this.wpm,
   });
 
   final Color cardBackground;
   final Color primaryPurple;
+  final int? fillerCount;
+  final double? wpm;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +61,10 @@ class StatFeedbackPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    CircularStatWidget(lowerText: 'WPM', upperText: '${result.paceControl}'),
+                    CircularStatWidget(
+                      lowerText: 'WPM',
+                      upperText: wpm?.round().toString() ?? '--',
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Filler Word Control',
@@ -67,7 +74,10 @@ class StatFeedbackPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    CircularStatWidget(lowerText: 'Fillers', upperText: '${result.fillerControl}'),
+                    CircularStatWidget(
+                      lowerText: 'Fillers',
+                      upperText: fillerCount?.toString() ?? '--',
+                    ),
                   ],
                 ),
               ),

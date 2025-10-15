@@ -127,7 +127,7 @@ class OllamaService with ChangeNotifier {
               'options': {'temperature': 0.1, 'max_tokens': 200},
             }),
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 120));
 
       if (resp.statusCode == 200) {
         final body = jsonDecode(resp.body);
@@ -171,91 +171,50 @@ class OllamaService with ChangeNotifier {
     'num_predict': 100, // Alternative to max_tokens for some models
   };
 
-  //! A. Content Quality (old implementation)
+  //! A. Content Quality - JSON-only (no regex fallback)
   Future<double> contentQualityScore(String transcript) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/api/generate'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'model': modelName,
-              'prompt':
-                  '''
-                Analyze this speech transcript and provide ONLY three numerical scores (0-100) in this exact format:
-                "relevance: X, depth: Y, originality: Z"
+      final session =
+          _currentSession ??
+          SpeechSession(
+            topic: 'General',
+            generatedQuestion: '',
+            timestamp: DateTime.now(),
+          );
 
-                Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
-
-                Strictly analyze if the $transcript responds to "${_currentSession?.generatedQuestion}" appropriately. If not, penalize heavily in relevance.
-
-                Scoring criteria:
-                - Relevance (0-100): How on-topic was the user? Keyword alignment with the prompt.
-                - Depth & Substance (0-100): Did the user provide detail, evidence, or just surface-level comments?
-                - Originality (0-100): Did the user offer a unique perspective or simply state common knowledge?
-
-                Provide ONLY the three numbers in the exact format: "relevance: X, depth: Y, originality: Z"
-              ''',
-
-              'stream': false,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        String feedback = responseBody['response']?.toString().trim() ?? '';
-
-        //Parse the scores from the response
-        final scores = _parseContentQualityScores(feedback);
-        final double relevance = scores['relevance'] ?? 50.0;
-        final double depth = scores['depth'] ?? 50.0;
-        final double originality = scores['originality'] ?? 50.0;
-
-        //Calculate the final scores
-        final double contentQuality = (relevance + depth + originality) / 3.0;
-
-        debugPrint(
-          'Content Quality Scores - Relevance: $relevance, Depth: $depth, Originality: $originality, Final: $contentQuality',
-        );
-        return contentQuality;
-      } else {
-        return 0.0;
-      }
-    } catch (e) {
-      debugPrint('Error getting content quality score: $e');
-      return 0.0;
-    }
-  }
-
-  Map<String, double> _parseContentQualityScores(String response) {
-    final Map<String, double> scores = {
-      'relevance': 50.0,
-      'depth': 50.0,
-      'originality': 50.0,
-    };
-
-    try {
-      // Look for patterns like "relevance: 85, depth: 70, originality: 90"
-      final regex = RegExp(
-        r'relevance:\s*(\d+\.?\d*),\s*depth:\s*(\d+\.?\d*),\s*originality:\s*(\d+\.?\d*)',
-        caseSensitive: false,
+      final comprehensive = await getComprehensiveFeedback(
+        transcript,
+        session: session,
+        wordCount: 0,
+        fillerCount: 0,
+        durationSeconds: 1,
       );
-      final match = regex.firstMatch(response);
 
-      if (match != null) {
-        scores['relevance'] = double.tryParse(match.group(1)!) ?? 50.0;
-        scores['depth'] = double.tryParse(match.group(2)!) ?? 50.0;
-        scores['originality'] = double.tryParse(match.group(3)!) ?? 50.0;
+      final scores = comprehensive['scores'] as Map<String, dynamic>?;
+      if (scores != null) {
+        final contentQuality = (scores['content_quality'] as num?)?.toDouble();
+        if (contentQuality != null) return contentQuality;
+
+        final breakdown = scores['breakdown'] as Map<String, dynamic>?;
+        if (breakdown != null) {
+          final double relevance =
+              (breakdown['relevance'] as num?)?.toDouble() ?? 50.0;
+          final double depth = (breakdown['depth'] as num?)?.toDouble() ?? 50.0;
+          final double originality =
+              (breakdown['originality'] as num?)?.toDouble() ?? 50.0;
+          return (relevance + depth + originality) / 3.0;
+        }
       }
-    } catch (e) {
-      debugPrint('Error parsing content quality scores: $e');
-    }
 
-    return scores;
+      debugPrint('contentQualityScore: no structured scores returned');
+      return 50.0;
+    } catch (e) {
+      debugPrint('Error getting content quality score (JSON-only): $e');
+      return 50.0;
+    }
   }
 
-  //! B. Clarity and Structure (old implementation)
+  //! Legacy regex parser removed. Score extraction is JSON-only via getComprehensiveFeedback.
   Future<double> clarityStructureScore(
     String transcript, {
     int wordCount = 0,
@@ -320,65 +279,35 @@ class OllamaService with ChangeNotifier {
 
   Future<double> _getLogicalFlowScore(String transcript) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/api/generate'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'model': modelName,
-              'prompt':
-                  '''
-                Analyze the logical flow and structure of this speech transcript and provide ONLY a single numerical score (0-100) in this exact format:
-                  "logical_flow: X"
+      // Use comprehensive JSON endpoint and extract logical_flow if present
+      final session =
+          _currentSession ??
+          SpeechSession(
+            topic: 'General',
+            generatedQuestion: '',
+            timestamp: DateTime.now(),
+          );
 
-                  Transcript: $transcript
+      final comprehensive = await getComprehensiveFeedback(
+        transcript,
+        session: session,
+        wordCount: 0,
+        fillerCount: 0,
+        durationSeconds: 1,
+      );
 
-                  Scoring criteria:
-                  - Structure: Does the speech have clear introduction, body, and conclusion?
-                  - Coherence: Do ideas logically follow from one to the next?
-                  - Transitions: Are transition words used effectively to connect ideas?
-                  - Organization: Is the information presented in a logical sequence?
-
-                  Provide ONLY the number in the exact format: "logical_flow: X"
-              ''',
-              'stream': false,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        String feedback = responseBody['response']?.toString().trim() ?? '';
-
-        //Parse the logical flow score
-        final double logicalFlow = _parseLogicalFlowScore(feedback);
-        return logicalFlow;
-      } else {
-        return 0.0;
-      }
+      final scores = comprehensive['scores'] as Map<String, dynamic>?;
+      final breakdown = scores?['breakdown'] as Map<String, dynamic>?;
+      final double logicalFlow =
+          (breakdown?['logical_flow'] as num?)?.toDouble() ?? 50.0;
+      return logicalFlow;
     } catch (e) {
-      debugPrint('Error getting logical flow score: $e');
+      debugPrint('Error getting logical flow score (JSON-only): $e');
       return 50.0;
     }
   }
 
-  double _parseLogicalFlowScore(String response) {
-    try {
-      // Look for pattern like "logical_flow: 85"
-      final regex = RegExp(
-        r'logical_flow:\s*(\d+\.?\d*)',
-        caseSensitive: false,
-      );
-      final match = regex.firstMatch(response);
-
-      if (match != null) {
-        return double.tryParse(match.group(1)!) ?? 50.0;
-      }
-    } catch (e) {
-      debugPrint('Error parsing logical flow score: $e');
-    }
-    return 0.0;
-  }
+  // Legacy logical flow text parser removed. Use getComprehensiveFeedback for structured logical_flow.
 
   Future<double> overallScore(
     String transcript, {
@@ -488,81 +417,59 @@ class OllamaService with ChangeNotifier {
       }
     }
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/api/generate'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'model': modelName,
-              'prompt':
-                  '''
-                  Analyze this speech transcript and provide ONLY numerical scores in this exact format:
-                  "relevance: X, depth: Y, originality: Z, logical_flow: W"
+      // Use JSON-first comprehensive feedback to extract scores and compute derived metrics locally.
+      final session =
+          _currentSession ??
+          SpeechSession(
+            topic: 'General',
+            generatedQuestion: '',
+            timestamp: DateTime.now(),
+          );
 
-                  Context: The speech is about "${_currentSession?.topic}" and responds to: "${_currentSession?.generatedQuestion}"
+      final comprehensive = await getComprehensiveFeedback(
+        transcript,
+        session: session,
+        wordCount: wordCount,
+        fillerCount: fillerCount,
+        durationSeconds: durationSeconds,
+      );
 
-                  Transcript: $transcript
+      final scoresMap = comprehensive['scores'] as Map<String, dynamic>?;
+      final breakdown = scoresMap?['breakdown'] as Map<String, dynamic>?;
 
-                  Scoring criteria:
-                  - Relevance (0-100): How on-topic was the user? Keyword alignment with the prompt.
-                  - Depth & Substance (0-100): Detail, evidence, or just surface-level comments?
-                  - Originality (0-100): Unique perspective or common knowledge?
-                  - Logical Flow (0-100): Structure, coherence, transitions, organization.
+      final double relevance =
+          (breakdown?['relevance'] as num?)?.toDouble() ?? 50.0;
+      final double depth = (breakdown?['depth'] as num?)?.toDouble() ?? 50.0;
+      final double originality =
+          (breakdown?['originality'] as num?)?.toDouble() ?? 50.0;
+      final double logicalFlow =
+          (breakdown?['logical_flow'] as num?)?.toDouble() ?? 50.0;
 
-                  Provide ONLY the four numbers in the exact format: "relevance: X, depth: Y, originality: Z, logical_flow: W"
-                  ''',
-              'stream': false,
-              'options': {
-                'temperature':
-                    0.1, // Lower temperature for more consistent formatting
-                'max_tokens': 100, // Limit response length
-              },
-            }),
-          )
-          .timeout(const Duration(seconds: 25));
+      final double pacingScore = _calculatePacingScore(
+        wordCount,
+        durationSeconds,
+      );
+      final double concisenessScore = _calculateConcisenessScore(fillerCount);
 
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        String scoresText = responseBody['response']?.toString().trim() ?? '';
+      final double contentQuality = (relevance + depth + originality) / 3.0;
+      final double clarityStructure =
+          (logicalFlow * 0.5) +
+          (pacingScore * 0.25) +
+          (concisenessScore * 0.25);
+      final double overall = (contentQuality * 0.6) + (clarityStructure * 0.4);
 
-        final scores = _parseCombinedScores(scoresText);
+      final result = {
+        'content_quality': contentQuality,
+        'clarity_structure': clarityStructure,
+        'overall': overall,
+      };
 
-        // Calculate pacing and conciseness scores locally
-        final double pacingScore = _calculatePacingScore(
-          wordCount,
-          durationSeconds,
-        );
-        final double concisenessScore = _calculateConcisenessScore(fillerCount);
+      _scoreCache[key] = result.map((k, v) => MapEntry(k, v));
+      _scoreCacheTimestamps[key] = DateTime.now();
 
-        // Calculate final scores
-        final double contentQuality =
-            (scores['relevance']! + scores['depth']! + scores['originality']!) /
-            3.0;
-        final double clarityStructure =
-            (scores['logical_flow']! * 0.5) +
-            (pacingScore * 0.25) +
-            (concisenessScore * 0.25);
-        final double overall =
-            (contentQuality * 0.6) + (clarityStructure * 0.4);
-
-        debugPrint('Combined scores calculated in single call');
-
-        final result = {
-          'content_quality': contentQuality,
-          'clarity_structure': clarityStructure,
-          'overall': overall,
-        };
-
-        // Cache the result
-        _scoreCache[key] = result.map((k, v) => MapEntry(k, v));
-        _scoreCacheTimestamps[key] = DateTime.now();
-
-        return result;
-      } else {
-        throw 'API error: ${response.statusCode}';
-      }
+      return result;
     } catch (e) {
-      debugPrint('Error in combined scores: $e');
+      debugPrint('Error in combined scores (JSON-only): $e');
       return {
         'content_quality': 50.0,
         'clarity_structure': 50.0,
@@ -572,33 +479,7 @@ class OllamaService with ChangeNotifier {
   }
 
   //! Parse combined scores (old implementation )
-  Map<String, double> _parseCombinedScores(String response) {
-    final Map<String, double> scores = {
-      'relevance': 50.0,
-      'depth': 50.0,
-      'originality': 50.0,
-      'logical_flow': 50.0,
-    };
-
-    try {
-      final regex = RegExp(
-        r'relevance:\s*(\d+\.?\d*),\s*depth:\s*(\d+\.?\d*),\s*originality:\s*(\d+\.?\d*),\s*logical_flow:\s*(\d+\.?\d*)',
-        caseSensitive: false,
-      );
-      final match = regex.firstMatch(response);
-
-      if (match != null) {
-        scores['relevance'] = double.tryParse(match.group(1)!) ?? 50.0;
-        scores['depth'] = double.tryParse(match.group(2)!) ?? 50.0;
-        scores['originality'] = double.tryParse(match.group(3)!) ?? 50.0;
-        scores['logical_flow'] = double.tryParse(match.group(4)!) ?? 50.0;
-      }
-    } catch (e) {
-      debugPrint('Error parsing combined scores: $e');
-    }
-
-    return scores;
-  }
+  // Legacy combined text parser removed. Use getComprehensiveFeedback for structured scores.
 
   //Updated getPublicSpeakingFeedback to  include scores
   Future<Map<String, dynamic>> getPublicSpeakingFeedbackWithScores(
@@ -619,9 +500,41 @@ class OllamaService with ChangeNotifier {
         durationSeconds: durationSeconds,
       );
 
-      // result contains 'feedback_text' and 'scores' already rounded/structured
+      // Format the structured feedback_text into readable string for UI
+      dynamic feedbackRaw = result['feedback_text'];
+      String feedbackFormatted = 'No feedback';
+      if (feedbackRaw != null) {
+        if (feedbackRaw is String) {
+          feedbackFormatted = feedbackRaw;
+        } else if (feedbackRaw is Map) {
+          final Map fb = feedbackRaw;
+          final contentEval =
+              fb['content_quality_eval'] ?? fb['content_eval'] ?? '';
+          final clarityEval =
+              fb['clarity_structure_eval'] ?? fb['clarity_eval'] ?? '';
+          final overallEval = fb['overall_eval'] ?? fb['overall'] ?? '';
+
+          final parts = <String>[];
+          if (contentEval != null && contentEval.toString().trim().isNotEmpty) {
+            parts.add(contentEval.toString().trim());
+          }
+          if (clarityEval != null && clarityEval.toString().trim().isNotEmpty) {
+            parts.add(clarityEval.toString().trim());
+          }
+          if (overallEval != null && overallEval.toString().trim().isNotEmpty) {
+            parts.add(overallEval.toString().trim());
+          }
+
+          feedbackFormatted = parts.isEmpty
+              ? 'No feedback'
+              : parts.join('\n\n');
+        } else {
+          feedbackFormatted = feedbackRaw.toString();
+        }
+      }
+
       return {
-        'feedback': result['feedback_text'] ?? 'No feedback',
+        'feedback': feedbackFormatted,
         'scores':
             result['scores'] ??
             {'overall': 0, 'content_quality': 0, 'clarity_structure': 0},
@@ -708,7 +621,7 @@ class OllamaService with ChangeNotifier {
               'options': _optimizedOptions,
             }),
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(const Duration(seconds: 120));
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
@@ -862,58 +775,79 @@ class OllamaService with ChangeNotifier {
     SpeechSession session,
   ) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/api/generate'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'model': modelName,
-              'prompt':
-                  '''
-                Context: The speech is about "${session.topic}" and responds to: "${session.generatedQuestion}"
+      // Prefer comprehensive JSON path so callers get structured feedback. We'll
+      // request the JSON analysis and return its feedback object as a stringified map for UI usage.
+      final comprehensive = await getComprehensiveFeedback(
+        transcript,
+        session: session,
+        wordCount: 0,
+        fillerCount: 0,
+        durationSeconds: 1,
+      );
 
-                Strictly analyze if the $transcript responds to "${session.generatedQuestion}" appropriately. If not, penalize heavily in relevance.
+      final feedback = comprehensive['feedback_text'];
+      final scoresMap = comprehensive['scores'] as Map<String, dynamic>?;
+      final overallNumeric = (scoresMap?['overall'] as num?)?.toInt();
+      // expose numeric component scores as fallbacks as well
+      final contentNumeric = (scoresMap?['content_quality'] as num?)?.toInt();
+      final clarityNumeric = (scoresMap?['clarity_structure'] as num?)?.toInt();
 
-                Keep it in this format:
-    
-                • Content Quality Evaluation: An assessment of the substance and relevance of the user's speech. 
-                • Clarity & Structure Evaluation: An analysis of the organization and coherence of the user's message. 
-                • Overall Evaluation: A summary of the user's performance, combining all feedback components. 
-                
-                Keep each evaluation concise, ideally within 1 sentence each.
-                ''',
-              'stream': false,
-              'options': _optimizedOptions,
-            }),
-          )
-          .timeout(const Duration(minutes: 5));
+      if (feedback != null) {
+        // If feedback is already a string, return it directly.
+        if (feedback is String) return feedback;
 
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        String feedback =
-            responseBody['response']?.toString().trim() ??
-            'No feedback generated';
-        return _cleanFeedbackResponse(feedback);
-      } else {
-        return 'Error: Received status code ${response.statusCode} from Ollama. Response: ${response.body}';
+        // If feedback is a Map (expected structured feedback), format readable output with labels.
+        if (feedback is Map) {
+          final Map fb = feedback;
+          final contentEval =
+              fb['content_quality_eval'] ?? fb['content_eval'] ?? '';
+          final clarityEval =
+              fb['clarity_structure_eval'] ?? fb['clarity_eval'] ?? '';
+          final overallEval = fb['overall_eval'] ?? fb['overall'] ?? '';
+
+          final parts = <String>[];
+          final String contentStr = contentEval?.toString().trim() ?? '';
+          final String clarityStr = clarityEval?.toString().trim() ?? '';
+          final String overallStr = overallEval?.toString().trim() ?? '';
+
+          // Prefer written evaluations; otherwise fall back to numeric component scores
+          if (contentStr.isNotEmpty) {
+            parts.add('Content Quality: $contentStr');
+          } else if (contentNumeric != null) {
+            parts.add(
+              'Content Quality: Well done forging your speech. I give it $contentNumeric. Keep speaking and keep improving!',
+            );
+          }
+
+          if (clarityStr.isNotEmpty) {
+            parts.add('Clarity & Structure: $clarityStr');
+          } else if (clarityNumeric != null) {
+            parts.add(
+              'Clarity & Structure: Structure-wise, I give it $clarityNumeric. With more practice, you can enhance your logical flow and conciseness of your speech.',
+            );
+          }
+
+          // Prefer a written overall evaluation if provided, otherwise show default overall
+          if (overallStr.isNotEmpty) {
+            parts.add('Overall: $overallStr');
+          } else if (overallNumeric != null) {
+            parts.add(
+              'Overall: Well done! great effort, here is a $overallNumeric. But you can always improve, there is still a lot of room for growth!.',
+            );
+          }
+
+          return parts.isEmpty ? 'No feedback generated' : parts.join('\n\n');
+        }
       }
+      // No structured feedback was returned; fallback message
+      if (overallNumeric != null) return 'Overall Score: $overallNumeric';
+      return 'No feedback generated';
     } catch (e) {
-      return 'Error connecting to Ollama: $e';
+      return 'Error generating structured feedback: $e';
     }
   }
 
-  String _cleanFeedbackResponse(String feedback) {
-    // streamline ai output
-    feedback = feedback.replaceAll(
-      RegExp(r'^.*(thinking|analysis|feedback).*?\n', caseSensitive: false),
-      '',
-    );
-    feedback = feedback.trim();
-
-    return feedback.isEmpty
-        ? 'Overall: Good effort! Try to speak more clearly and maintain consistent pacing.'
-        : feedback;
-  }
+  // Legacy free-text cleaning removed; prefer structured feedback via getComprehensiveFeedback.
 
   //? Generate question
   Future<SpeechSession> generateQuestion(String topic) async {
@@ -946,7 +880,7 @@ class OllamaService with ChangeNotifier {
             }),
           )
           .timeout(
-            const Duration(seconds: 15), // Add timeout for generation
+            const Duration(seconds: 120), // Add timeout for generation
             onTimeout: () =>
                 throw 'Request timeout: Ollama took too long to respond',
           );
