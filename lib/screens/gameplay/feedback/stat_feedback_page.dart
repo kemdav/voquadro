@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 class StatFeedbackPage extends StatelessWidget {
@@ -13,6 +15,11 @@ class StatFeedbackPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<PublicSpeakingController>();
+    final result = controller.sessionResult;
+    if (result == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Column(
       children: [
         Text(
@@ -50,7 +57,7 @@ class StatFeedbackPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    CircularStatWidget(lowerText: 'WPM', upperText: '124'),
+                    CircularStatWidget(lowerText: 'WPM', upperText: '${result.paceControl}'),
                     const SizedBox(height: 16),
                     Text(
                       'Filler Word Control',
@@ -60,7 +67,7 @@ class StatFeedbackPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    CircularStatWidget(lowerText: 'Fillers', upperText: '69'),
+                    CircularStatWidget(lowerText: 'Fillers', upperText: '${result.fillerControl}'),
                   ],
                 ),
               ),

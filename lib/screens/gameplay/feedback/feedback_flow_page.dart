@@ -43,7 +43,7 @@ class FeedbackFlowPage extends StatelessWidget {
                 TranscriptPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
                 SpeakFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
                 StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
-                ProgressionPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
+                ProgressionPage(),
                 NextRankPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
               ],
             ),
