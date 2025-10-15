@@ -6,9 +6,10 @@ import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
+import 'package:voquadro/src/speech-calculations/speech_metrics.dart';
 
 enum PublicSpeakingState {
-  home, //0 
+  home, //0
   profile,
   status,
   micTest,
@@ -64,11 +65,18 @@ class PublicSpeakingController with ChangeNotifier {
   int? _overallScore;
   int? _contentQualityScore;
   int? _clarityStructureScore;
+  // speech metrics
+  int? _fillerWordCount;
+  double? _wordsPerMinute;
 
   //getters for scores
   int? get overallScore => _overallScore;
   int? get contentQualityScore => _contentQualityScore;
   int? get clarityStructureScore => _clarityStructureScore;
+
+  // getters for speech metrics
+  int? get fillerWordCount => _fillerWordCount;
+  double? get wordsPerMinute => _wordsPerMinute;
 
   //getters for AI service status
   bool get isOllamaAvailable => _aiService.isOllamaAvailable;
@@ -263,12 +271,36 @@ class PublicSpeakingController with ChangeNotifier {
       _clarityStructureScore = null;
       notifyListeners();
 
+      // If caller did not provide explicit metrics, compute them from the transcript
+      final computedWordCount = (wordCount > 0)
+          ? wordCount
+          : _userTranscript!
+                .trim()
+                .split(RegExp(r'\s+'))
+                .where((w) => w.isNotEmpty)
+                .length;
+
+      final computedFillerCount = (fillerCount > 0)
+          ? fillerCount
+          : countFillerWords(_userTranscript!);
+
+      final computedDurationSeconds = (durationSeconds > 0)
+          ? durationSeconds
+          : PublicSpeakingController.speakingDuration.inSeconds;
+
+      // store metrics for UI
+      _fillerWordCount = computedFillerCount;
+      _wordsPerMinute = calculateWordsPerMinute(
+        _userTranscript!,
+        Duration(seconds: computedDurationSeconds),
+      );
+
       final result = await _aiService.getPublicSpeakingFeedbackWithScores(
         _userTranscript!,
         _aiService.currentSession!,
-        wordCount: wordCount,
-        fillerCount: fillerCount,
-        durationSeconds: durationSeconds,
+        wordCount: computedWordCount,
+        fillerCount: computedFillerCount,
+        durationSeconds: computedDurationSeconds,
       );
 
       final scores = result['scores'] as Map<String, dynamic>?;
@@ -304,11 +336,15 @@ class PublicSpeakingController with ChangeNotifier {
               '';
 
           final parts = <String>[];
-          if (contentEval.isNotEmpty)
+          if (contentEval.isNotEmpty) {
             parts.add('• Content Quality: $contentEval');
-          if (clarityEval.isNotEmpty)
+          }
+          if (clarityEval.isNotEmpty) {
             parts.add('• Clarity & Structure: $clarityEval');
-          if (overallEval.isNotEmpty) parts.add('• Overall: $overallEval');
+          }
+          if (overallEval.isNotEmpty) {
+            parts.add('• Overall: $overallEval');
+          }
 
           feedbackStr = parts.isNotEmpty ? parts.join('\n') : null;
         } else {
@@ -338,6 +374,9 @@ class PublicSpeakingController with ChangeNotifier {
     _overallScore = null;
     _contentQualityScore = null;
     _clarityStructureScore = null;
+    // Reset speech metrics when clearing scores / starting a new session
+    _fillerWordCount = null;
+    _wordsPerMinute = null;
     notifyListeners();
   }
 
