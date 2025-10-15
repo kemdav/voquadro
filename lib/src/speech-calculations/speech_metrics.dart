@@ -26,15 +26,19 @@ const List<String> _defaultFillers = [
 
 int countFillerWords(String transcript, {List<String>? fillers}) {
   final fillerWords = fillers ?? _defaultFillers;
-  final words = transcript.toLowerCase().split(RegExp(r'\s+'));
+  // Lowercase and remove punctuation from transcript
+  final cleanedTranscript = transcript.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), ' ');
   int count = 0;
 
-  for (var word in words) {
-    // Remove punctuation from the word
-    word = word.replaceAll(RegExp(r'[^\w\s]'), '');
-    if (fillerWords.contains(word)) {
-      count++;
-    }
+  for (var filler in fillerWords) {
+    // Lowercase and remove punctuation from filler phrase
+    final cleanedFiller = filler.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), ' ').trim();
+    if (cleanedFiller.isEmpty) continue;
+    // Use word boundaries for single-word fillers, and simple substring for multi-word
+    final pattern = cleanedFiller.contains(' ')
+        ? RegExp(r'\b' + RegExp.escape(cleanedFiller) + r'\b')
+        : RegExp(r'\b' + RegExp.escape(cleanedFiller) + r'\b');
+    count += pattern.allMatches(cleanedTranscript).length;
   }
 
   return count;
