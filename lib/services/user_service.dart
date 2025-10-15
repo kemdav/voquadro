@@ -80,7 +80,7 @@ class UserService {
 
     try {
       final currentXP = await _getUserXP(userId);
-      
+
       final Map<String, dynamic> updatePayload = {};
 
       // --- Handle General and Mastery XP ---
@@ -90,10 +90,12 @@ class UserService {
         updatePayload['practice_xp'] = currentXP['practice_xp']! + practiceExp;
       }
       if (paceControlExp > 0) {
-        updatePayload['pace_control'] = currentXP['pace_control']! + paceControlExp;
+        updatePayload['pace_control'] =
+            currentXP['pace_control']! + paceControlExp;
       }
       if (fillerControlExp > 0) {
-        updatePayload['filler_control'] = currentXP['filler_control']! + fillerControlExp;
+        updatePayload['filler_control'] =
+            currentXP['filler_control']! + fillerControlExp;
       }
 
       if (modeExpGains != null) {
@@ -107,14 +109,10 @@ class UserService {
           }
         }
       }
-      
-      if (updatePayload.isNotEmpty) {
-        await _supabase
-            .from('users')
-            .update(updatePayload)
-            .eq('id', userId);
-      }
 
+      if (updatePayload.isNotEmpty) {
+        await _supabase.from('users').update(updatePayload).eq('id', userId);
+      }
     } catch (e) {
       throw Exception('Failed to add user EXP: $e');
     }
@@ -126,9 +124,10 @@ class UserService {
       final response = await _supabase
           .from('users')
           // Add any new mode XP columns to this select statement.
-
           // THIS IS THE LINE TO CHANGE THE COLUMNS <3
-          .select('practice_xp, master_xp, pace_control, filler_control, public_speaking_xp')
+          .select(
+            'practice_xp, master_xp, pace_control, filler_control, public_speaking_xp',
+          )
           .eq('id', userId)
           .single();
 
