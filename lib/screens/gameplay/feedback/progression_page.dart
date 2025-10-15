@@ -1,147 +1,162 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
+import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
+import 'package:voquadro/utils/level_progress_calculator.dart';
+import 'package:voquadro/widgets/Widget/customer_progress_bar.dart';
 
 class ProgressionPage extends StatelessWidget {
-  const ProgressionPage({
-    super.key,
-    required this.cardBackground,
-    required this.primaryPurple,
-  });
-
-  final Color cardBackground;
-  final Color primaryPurple;
+  const ProgressionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          'YIPEEE',
-          style: TextStyle(
-            color: primaryPurple,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(13),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ProgressBarsWithLabelWidget(
-                    primaryPurple: primaryPurple,
-                    progressLabel: 'Practice lvl',
-                    fontSize: 10,
-                    value: 0.25,
-                    progressBarHeight: 20,
+    final publicSpeakingController = context.watch<PublicSpeakingController>();
+    final sessionController = context.watch<AppFlowController>();
+
+    final result = publicSpeakingController.sessionResult;
+    final user = sessionController.currentUser;
+
+    if (user == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final practiceLevelInfo = LevelProgress.fromTotalExp(
+      (user.practiceEXP + (result?.practiceEXP ?? 0)).toInt(),
+      200,
+    );
+
+    final masteryLevelInfo = LevelProgress.fromTotalExp(
+      (user.masteryEXP + (result?.masteryEXP ?? 0)).toInt(),
+      200,
+    );
+
+    final publicLevelInfo = LevelProgress.fromTotalExp(
+      (user.publicSpeakingEXP + (result?.modeEXP ?? 0)).toInt(),
+      200,
+    );
+
+    // --- Define Colors from the Design ---
+    final Color primaryPurple = const Color(0xFF322082);
+    final Color progressTeal = const Color(0xFF00A9A5);
+    final Color pageBackground = const Color(0xFFF0E6F6);
+
+    return Scaffold(
+      backgroundColor: pageBackground,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            // --- Practice Level Bar ---
+            CustomProgressBar(
+              title: 'Practice lvl',
+              valueText:
+                  '${practiceLevelInfo.currentLevelExp}/${practiceLevelInfo.nextLevelTargetExp}',
+              xpGainText: '+${result?.practiceEXP.toInt()} PXP',
+              progress: practiceLevelInfo.progress,
+              progressColor: progressTeal,
+              textColor: primaryPurple,
+            ),
+            const SizedBox(height: 24),
+
+            // --- Mastery Level Bars ---
+            CustomProgressBar(
+              title: 'Mastery lvl',
+              valueText:
+                  '${masteryLevelInfo.currentLevelExp}/${masteryLevelInfo.nextLevelTargetExp}',
+              xpGainText: '+${result?.masteryEXP.toInt()} MXP',
+              progress: user.masteryEXP / 200,
+              progressColor: progressTeal,
+              textColor: primaryPurple,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomProgressBar(
+                    title: 'Pace Control',
+                    valueText: '',
+                    xpGainText: '+${result?.paceControlEXP.toInt()} MXP',
+                    progress: user.paceControlEXP / 100,
+                    progressColor: progressTeal,
+                    textColor: primaryPurple,
                   ),
-                  SizedBox(height: 10),
-                  ProgressBarsWithLabelWidget(
-                    primaryPurple: primaryPurple,
-                    progressLabel: 'Mastery lvl',
-                    fontSize: 10,
-                    value: 0.5,
-                    progressBarHeight: 20,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: CustomProgressBar(
+                    title: 'Filler Word Control',
+                    valueText: '',
+                    xpGainText: '+${result?.fillerControlEXP.toInt()} MXP',
+                    progress: user.fillerControlEXP / 100,
+                    progressColor: progressTeal,
+                    textColor: primaryPurple,
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ProgressBarsWithLabelWidget(
-                          primaryPurple: primaryPurple,
-                          progressLabel: 'Pace Control',
-                          fontSize: 10,
-                          value: 0.8,
-                          progressBarHeight: 10,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: ProgressBarsWithLabelWidget(
-                          primaryPurple: primaryPurple,
-                          progressLabel: 'Filler Word Control',
-                          fontSize: 10,
-                          value: 0.2,
-                          progressBarHeight: 10,
-                        ),
-                      ),
-                    ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // --- Public Speaking Level Bar ---
+            CustomProgressBar(
+              title: 'Public Speaking lvl',
+              valueText:
+                  '${publicLevelInfo.currentLevelExp}/${publicLevelInfo.nextLevelTargetExp}',
+              xpGainText: '+${result?.modeEXP.toInt()} Public XP',
+              progress: publicLevelInfo.progress,
+              progressColor: progressTeal,
+              textColor: primaryPurple,
+            ),
+            const SizedBox(height: 40),
+
+            // --- Rank Logo ---
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                const CircleAvatar(
+                  radius: 80,
+                  backgroundColor: Color(0xFF6C6C6C),
+                  child: Text(
+                    'nxt\nrank\nlogo',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 24),
                   ),
-                  SizedBox(height: 10),
-                  ProgressBarsWithLabelWidget(
-                    primaryPurple: primaryPurple,
-                    progressLabel: 'Public Speaking lvl',
-                    fontSize: 10,
-                    value: 0.6,
-                    progressBarHeight: 20,
+                ),
+                SizedBox(
+                  width: 180,
+                  height: 180,
+                  child: CircularProgressIndicator(
+                    value: publicLevelInfo.progress,
+                    strokeWidth: 10,
+                    backgroundColor: Colors.grey.shade400,
+                    valueColor: AlwaysStoppedAnimation<Color>(progressTeal),
                   ),
-                  SizedBox(height: 20),
-                  Center(
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage('assets/images/tempRank.jpg'),
+                ),
+                Positioned(
+                  top: 0,
+                  child: Text(
+                    '+${result?.practiceEXP.toInt()}',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: primaryPurple,
                     ),
                   ),
-                  Center(
-                    child: Text(
-                      'Speaker Level',
-                      style: TextStyle(
-                        color: primaryPurple,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // --- Speaker Level Text ---
+            Text(
+              'Speaker Level',
+              style: TextStyle(
+                color: primaryPurple,
+                fontSize: 48,
+                fontWeight: FontWeight.w900,
               ),
             ),
-          ),
+          ],
         ),
-      ],
-    );
-  }
-}
-
-class ProgressBarsWithLabelWidget extends StatelessWidget {
-  const ProgressBarsWithLabelWidget({
-    super.key,
-    required this.primaryPurple,
-    required this.progressLabel,
-    required this.fontSize,
-    required this.value,
-    required this.progressBarHeight,
-  });
-
-  final Color primaryPurple;
-  final String progressLabel;
-  final double fontSize;
-  final double value;
-  final double progressBarHeight;
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          progressLabel,
-          style: TextStyle(
-            color: primaryPurple,
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        LinearProgressIndicator(value: value, minHeight: progressBarHeight),
-      ],
+      ),
     );
   }
 }

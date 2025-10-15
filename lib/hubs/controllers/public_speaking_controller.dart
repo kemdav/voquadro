@@ -6,6 +6,7 @@ import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
+import 'package:voquadro/src/models/user_feedback.dart';
 
 enum PublicSpeakingState {
   home, //0 
@@ -60,6 +61,10 @@ class PublicSpeakingController with ChangeNotifier {
   String? _aiFeedback;
   String? get aiFeedback => _aiFeedback;
 
+  // Session result
+  Level? _sessionResult;
+  Level? get sessionResult => _sessionResult;
+
   //scores
   int? _overallScore;
   int? _contentQualityScore;
@@ -94,10 +99,29 @@ class PublicSpeakingController with ChangeNotifier {
     _currentState = PublicSpeakingState.inFeedback;
     // Clear any previous feedback so the next generation is fresh
     _aiFeedback = null;
+    _sessionResult = _createDummySessionResult();
 
     onEnterFeedbackFlow(); // Trigger feedback generation
 
     notifyListeners();
+  }
+
+  Level _createDummySessionResult() {
+    return Level(
+      id: 'session_${DateTime.now().millisecondsSinceEpoch}', // A unique ID
+      modeEXP: 50,
+      practiceEXP: 100,
+      masteryEXP: 35,
+      paceControlEXP: 25,
+      fillerControlEXP: 10,
+      paceControl: 145, // WPM
+      fillerControl: 3, // Filler words
+      overallRating: 85, // out of 100
+      contentClarityScore: 100,
+      clarityStructureScore: 100,
+      transcript: "This is a dummy transcript. The user spoke about the importance of clear communication and used a few filler words like 'um' and 'like'.",
+      feedback: "Great job! Your pace was excellent at 145 WPM. Try to be more mindful of using filler words to make your message even more impactful.",
+    );
   }
 
   void goToNextFeedbackStep() {
@@ -304,10 +328,12 @@ class PublicSpeakingController with ChangeNotifier {
               '';
 
           final parts = <String>[];
-          if (contentEval.isNotEmpty)
+          if (contentEval.isNotEmpty) {
             parts.add('• Content Quality: $contentEval');
-          if (clarityEval.isNotEmpty)
+          }
+          if (clarityEval.isNotEmpty) {
             parts.add('• Clarity & Structure: $clarityEval');
+          }
           if (overallEval.isNotEmpty) parts.add('• Overall: $overallEval');
 
           feedbackStr = parts.isNotEmpty ? parts.join('\n') : null;
