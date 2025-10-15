@@ -220,43 +220,40 @@ class UserService {
 
   static Future<ProfileData> getProfileData(String userId) async {
     try {
-      const int mxpPerLevel = 100;
-      // Fetch core user data (including new level and streak columns).
       final userResponse = await _supabase
           .from('users')
           .select(
-            'username, bio, profile_avatar_url, profile_banner_url, level, highest_streak, MasteryLevel, PubSpeakLvl',
+            'username, bio, profile_avatar_url, profile_banner_url, highest_streak, practice_xp, master_xp',
           )
           .eq('id', userId)
           .single();
 
-      // Fetch all skill data for that user.
-      final skillsResponse = await _supabase
-          .from('user_skills')
-          .select('total_mxp')
-          .eq('user_id', userId);
+      // Get the raw XP values, defaulting to 0 if null.
+      final totalPxp = userResponse['practice_xp'] as int? ?? 0;
+      final totalMxp = userResponse['master_xp'] as int? ?? 0;
 
-      // Calculate total Mastery XP and convert to a level.
-      int totalMxp = skillsResponse.fold(
-        0,
-        (sum, skill) => sum + (skill['total_mxp'] as int? ?? 0),
-      );
-      final masteryLevel =
-          (totalMxp / mxpPerLevel).floor() + 1; // Example: 100 MXP per level
+      // Define level-up rules here.
+      const int pxpPerLevel = 500;
+      const int mxpPerLevel = 100;
 
-      // Assemble and return the complete ProfileData object.
+      // Calculate the levels on-the-fly.
+      final calculatedLevel = (totalPxp / pxpPerLevel).floor() + 1;
+      final calculatedMasteryLevel = (totalMxp / mxpPerLevel).floor() + 1;
+
+      // Assemble the final ProfileData object using the calculated values.
       return ProfileData(
         username: userResponse['username'],
         bio: userResponse['bio'],
         avatarUrl: userResponse['profile_avatar_url'],
         bannerUrl: userResponse['profile_banner_url'],
-        level: userResponse['level'],
-        masteryLevel: userResponse['MasteryLevel'],
-        publicSpeakingLevel: userResponse['PubSpeakLvl'],
+        level: calculatedLevel, // Use the calculated level
+        masteryLevel: calculatedMasteryLevel, // Use the calculated level
+        publicSpeakingLevel:
+            calculatedMasteryLevel, // For now, this is the same
         highestStreak: userResponse['highest_streak'],
       );
     } catch (e) {
-      throw Exception('Failed to fetch profile data: $e');
+      throw Exception('Failed to fetch user profile data: $e');
     }
   }
 
