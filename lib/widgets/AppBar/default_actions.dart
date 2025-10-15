@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
-import 'package:voquadro/screens/home/settings_stage.dart';
+import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 var logger = Logger();
@@ -32,8 +32,8 @@ class DefaultActions extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             iconSize: 50,
             style: IconButton.styleFrom(
-              backgroundColor: "F9E8FF".toColor(),
-              foregroundColor: "F9E8FF".toColor(),
+              backgroundColor: "7962A5".toColor(),
+              foregroundColor: Colors.white,
             ),
           ),
 

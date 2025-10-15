@@ -33,7 +33,7 @@ class _PublicSpeakingProfileStageState
 
   String bio = 'Write your bio here...';
 
-  ImageProvider bannerImage = const AssetImage('assets/images/defaultbg.png');
+  // Banner uses default background image from ProfileTemplate when null
   ImageProvider avatarImage = const AssetImage(
     'assets/images/tempCharacter.png',
   );
@@ -78,7 +78,7 @@ class _PublicSpeakingProfileStageState
       username: username,
       level: level,
       bio: bio,
-      bannerImage: bannerImage,
+      // bannerImage omitted to use default background
       avatarImage: avatarImage,
       stats: stats,
       onTapAvatar: _uploadAvatar,
@@ -131,9 +131,7 @@ class _PublicSpeakingProfileStageState
       maxWidth: 2048,
     );
     if (result == null) return;
-    setState(() {
-      bannerImage = FileImage(File(result.path));
-    });
+    // Placeholder: when profile storage is implemented, pass picked image to template
   }
 
   // Placeholder: Upload new avatar to storage once DB schema is ready

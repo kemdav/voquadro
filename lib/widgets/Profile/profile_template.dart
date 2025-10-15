@@ -83,7 +83,7 @@ class ProfileTemplate extends StatelessWidget {
     required this.username,
     required this.level,
     required this.bio,
-    required this.bannerImage,
+    this.bannerImage,
     required this.avatarImage,
     this.badge,
     this.onTapAvatar,
@@ -103,7 +103,8 @@ class ProfileTemplate extends StatelessWidget {
   final String bio;
 
   /// Banner and avatar accept any ImageProvider (Asset/Network/File)
-  final ImageProvider bannerImage;
+  /// If [bannerImage] is null, a default app background is used.
+  final ImageProvider? bannerImage;
   final ImageProvider avatarImage;
 
   /// Optional badge widget shown on the avatar (e.g., rank/emblem)
@@ -142,7 +143,9 @@ class ProfileTemplate extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: purpleMid,
                       image: DecorationImage(
-                        image: bannerImage,
+                        image:
+                            bannerImage ??
+                            const AssetImage('assets/images/defaultbg.png'),
                         fit: BoxFit.cover,
                       ),
                     ),

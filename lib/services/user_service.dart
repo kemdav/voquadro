@@ -170,4 +170,41 @@ class UserService {
       throw Exception('Failed to get user');
     }
   }
+
+  /// Changes a user's password by verifying the current password and then
+  /// updating the stored bcrypt hash in the `users` table.
+  static Future<void> changePassword({
+    required String userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      // Fetch existing password hash
+      final userRow = await _supabase
+          .from('users')
+          .select('password_hash')
+          .eq('id', userId)
+          .single();
+
+      final String storedHash = userRow['password_hash'] as String;
+
+      final bool matches = BCrypt.checkpw(currentPassword, storedHash);
+      if (!matches) {
+        throw AuthException('Current password is incorrect.');
+      }
+
+      // Hash the new password and update
+      final String newHash = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+      await _supabase
+          .from('users')
+          .update({'password_hash': newHash})
+          .eq('id', userId);
+    } on PostgrestException catch (_) {
+      throw AuthException('Could not change password. Please try again.');
+    } on AuthException {
+      rethrow;
+    } catch (_) {
+      throw AuthException('An unexpected error occurred. Please try again.');
+    }
+  }
 }
