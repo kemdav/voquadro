@@ -76,9 +76,7 @@ class StatFeedbackPage extends StatelessWidget {
                     ),
                     CircularStatWidget(
                       lowerText: 'Fillers',
-                      upperText: (fillerCount != null)
-                          ? fillerCount!.toString()
-                          : '--',
+                      upperText: fillerCount?.toString() ?? '--',
                     ),
                   ],
                 ),
