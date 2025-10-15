@@ -63,7 +63,7 @@ class StatFeedbackPage extends StatelessWidget {
                     ),
                     CircularStatWidget(
                       lowerText: 'WPM',
-                      upperText: (wpm != null) ? wpm!.round().toString() : '--',
+                      upperText: wpm?.round().toString() ?? '--',
                     ),
                     const SizedBox(height: 16),
                     Text(
