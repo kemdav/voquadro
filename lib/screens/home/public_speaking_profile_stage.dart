@@ -54,37 +54,82 @@ class _PublicSpeakingProfileStageState
 
   @override
   Widget build(BuildContext context) {
-    // customize which stats to show.
-    final stats = [
-      StatTileData(
-        icon: Icons.school,
-        label: 'Mastery Level',
-        value: 'lvl$masteryLevel',
-      ),
-      StatTileData(
-        icon: Icons.spatial_audio_off,
-        label: 'Public Speaking Level', // PS-specific
-        value: 'lvl$publicSpeakingLevel',
-      ),
-      StatTileData(
-        icon: Icons.local_fire_department,
-        label: 'Highest Streak', // PS-specific
-        value: '$highestStreak',
-      ),
-    ];
+// FIX: The FutureBuilder now correctly expects ProfileData.
+return FutureBuilder<ProfileData>(
+  future: _profileDataFuture,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-    return ProfileTemplate(
-      // Using `ProfileTemplate` as a reusable base; only data is PS-specific.
-      username: username,
-      level: level,
-      bio: bio,
-      // bannerImage omitted to use default background
-      avatarImage: avatarImage,
-      stats: stats,
-      onTapAvatar: _uploadAvatar,
-      onTapBanner: _uploadBanner,
-      onBack: () => Navigator.of(context).maybePop(),
-      onEdit: _openEditSheet,
+    if (snapshot.hasError) {
+      return Scaffold(
+        body: Center(child: Text('Error: ${snapshot.error}')),
+      );
+    }
+
+    if (snapshot.hasData) {
+      // FIX: The variable name is now consistent.
+      final profileData = snapshot.data!;
+
+      // cleanup hardcoded data
+      final stats = [
+        StatTileData(
+          icon: Icons.school,
+          label: 'Mastery Level',
+          value: 'lvl${profileData.masteryLevel}',
+        ),
+        StatTileData(
+          icon: Icons.spatial_audio_off,
+          label: 'Public Speaking Level',
+          value: 'lvl${profileData.publicSpeakingLevel}',
+        ),
+        StatTileData(
+          icon: Icons.local_fire_department,
+          label: 'Highest Streak',
+          value: '${profileData.highestStreak}',
+        ),
+      ];
+
+      final avatarImage =
+          _localAvatarImage ??
+          (profileData.avatarUrl != null
+                  ? NetworkImage(profileData.avatarUrl!)
+                  : const AssetImage('assets/images/tempCharacter.png'))
+              as ImageProvider;
+
+      final bannerImage =
+          _localBannerImage ??
+          (profileData.bannerUrl != null
+                  ? NetworkImage(profileData.bannerUrl!)
+                  : const AssetImage('assets/images/defaultbg.png'))
+              as ImageProvider;
+
+      return ProfileTemplate(
+        username: profileData.username,
+        level: profileData.level,
+        bio: profileData.bio ?? 'Write your bio here...',
+        bannerImage: bannerImage,
+        avatarImage: avatarImage,
+        stats: stats,
+        // *** ADDED from feature/settings-page-ui branch ***
+        onTapAvatar: _uploadAvatar,
+        onTapBanner: _uploadBanner,
+        // *************************************************
+
+        onBack: () => Navigator.of(context).maybePop(),
+        // NOTE: Keeping the version that passes `profileData` to `_openEditSheet` from develop.
+        onEdit: () => _openEditSheet(profileData),
+      );
+    }
+
+    return const Scaffold(
+      body: Center(child: Text('No profile data found.')),
+    );
+  },
+);
     );
   }
 
