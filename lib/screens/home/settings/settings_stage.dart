@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/screens/home/settings/change_password_stage.dart';
+import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});
@@ -242,6 +243,30 @@ class SwitchSettingsTile extends StatelessWidget {
       ),
     );
   }
+}
+
+//log out confirmation dialog
+// Add this method inside the _SettingsStageState class
+void showLogoutConfirmationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext dialogContext) {
+      // Return the custom dialog widget
+      return ConfirmationDialog(
+        // Pass the logout logic to the dialog
+        onConfirm: () {
+          // --- YOUR LOGOUT LOGIC GOES HERE ---
+
+          // Example of navigating to a login screen after logout:
+          // Navigator.of(context).pushAndRemoveUntil(
+          //   MaterialPageRoute(builder: (_) => const LoginScreen()),
+          //   (route) => false,
+          // );
+        },
+      );
+    },
+  );
 }
 
 class _SectionHeader extends StatelessWidget {
