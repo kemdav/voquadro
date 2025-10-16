@@ -6,6 +6,10 @@ class Level {
   final double paceControlEXP;
   final double fillerControlEXP;
 
+  final String topic;
+  final String generatedQuestion;
+  final DateTime timestamp;
+
   final double paceControl;
   final double fillerControl;
   final double overallRating;
@@ -21,6 +25,9 @@ class Level {
     required this.masteryEXP,
     required this.paceControlEXP,
     required this.fillerControlEXP,
+    required this.topic,
+    required this.generatedQuestion,
+    required this.timestamp,
     required this.paceControl,
     required this.fillerControl,
     required this.overallRating,
@@ -38,6 +45,9 @@ class Level {
       masteryEXP: map['masteryEXP'],
       paceControlEXP: map['paceControlEXP'],
       fillerControlEXP: map['fillerControlEXP'],
+      topic: map['topic'],
+      generatedQuestion: map['generatedQuestion'],
+      timestamp: map['timestamp'],
       paceControl: map['paceControl'],
       fillerControl: map['fillerControl'],
       overallRating: map['overallRating'],

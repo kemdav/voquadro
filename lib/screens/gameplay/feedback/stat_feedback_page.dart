@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
+import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 class StatFeedbackPage extends StatelessWidget {
@@ -8,14 +8,10 @@ class StatFeedbackPage extends StatelessWidget {
     super.key,
     required this.cardBackground,
     required this.primaryPurple,
-    this.fillerCount,
-    this.wpm,
   });
 
   final Color cardBackground;
   final Color primaryPurple;
-  final int? fillerCount;
-  final double? wpm;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +59,7 @@ class StatFeedbackPage extends StatelessWidget {
                     ),
                     CircularStatWidget(
                       lowerText: 'WPM',
-                      upperText: wpm?.round().toString() ?? '--',
+                      upperText: controller.sessionResult!.paceControl.round().toString(),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -76,7 +72,7 @@ class StatFeedbackPage extends StatelessWidget {
                     ),
                     CircularStatWidget(
                       lowerText: 'Fillers',
-                      upperText: fillerCount?.toString() ?? '--',
+                      upperText: controller.sessionResult!.fillerControl.toString(),
                     ),
                   ],
                 ),
