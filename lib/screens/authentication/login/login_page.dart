@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
     context.read<AppFlowController>().login(
       _emailController.text,
       _passwordController.text,
@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
     context.read<AppFlowController>().initiateRegistration();
   }
 
-  void _goBackToLaunchPage(){
+  void _goBackToLaunchPage() {
     context.read<AppFlowController>().goBackToLaunchScreen();
   }
 

@@ -6,8 +6,14 @@ import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/widgets/Profile/profile_template.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-import 'package:voquadro/services/user_service.dart';
 
+/// PublicSpeakingProfileStage
+/// Screen tailored for the Public Speaking mode.
+///
+/// It composes the reusable `ProfileTemplate` and injects Public Speaking
+/// specific stats via `stats` (e.g., Public Speaking Level, Highest Streak).
+/// 
+/// 
 class PublicSpeakingProfileStage extends StatefulWidget {
   const PublicSpeakingProfileStage({super.key});
 
@@ -18,114 +24,69 @@ class PublicSpeakingProfileStage extends StatefulWidget {
 
 class _PublicSpeakingProfileStageState
     extends State<PublicSpeakingProfileStage> {
-  // FIX: This now correctly expects a Future of ProfileData.
-  late Future<ProfileData> _profileDataFuture;
-  final ImagePicker _picker = ImagePicker();
+  // Local-only values; will be replaced by DB values later
+  String username = 'Player';
+  int level = 1;
+  int masteryLevel = 1;
+  int publicSpeakingLevel = 1;
+  int highestStreak = 0;
 
-  ImageProvider? _localAvatarImage;
-  ImageProvider? _localBannerImage;
+  String bio = 'Write your bio here...';
+
+  ImageProvider avatarImage = const AssetImage(
+    'assets/images/tempCharacter.png',
+  );
 
   @override
   void initState() {
     super.initState();
-    _profileDataFuture = _fetchProfileData();
-  }
-
-  /// Fetches the user's profile data from the UserService.
-  // FIX: The return type is now Future<ProfileData> and it calls the correct service method.
-  Future<ProfileData> _fetchProfileData() {
-    final user = context.read<AppFlowController>().currentUser;
-    if (user == null) {
-      return Future.error('User not logged in. Cannot fetch profile.');
-    }
-    return UserService.getProfileData(user.id);
-  }
-
-  /// Call this to refetch all data from the server and rebuild the widget.
-  void _refreshProfile() {
-    setState(() {
-      _localAvatarImage = null;
-      _localBannerImage = null;
-      _profileDataFuture = _fetchProfileData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final flow = Provider.of<AppFlowController>(context, listen: false);
+      final u = flow.currentUser;
+      if (u != null && u.username.isNotEmpty) {
+        setState(() {
+          username = u.username;
+        });
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // FIX: The FutureBuilder now correctly expects ProfileData.
-    return FutureBuilder<ProfileData>(
-      future: _profileDataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+    // customize which stats to show.
+    final stats = [
+      StatTileData(
+        icon: Icons.school,
+        label: 'Mastery Level',
+        value: 'lvl$masteryLevel',
+      ),
+      StatTileData(
+        icon: Icons.spatial_audio_off,
+        label: 'Public Speaking Level', // PS-specific
+        value: 'lvl$publicSpeakingLevel',
+      ),
+      StatTileData(
+        icon: Icons.local_fire_department,
+        label: 'Highest Streak', // PS-specific
+        value: '$highestStreak',
+      ),
+    ];
 
-        if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(child: Text('Error: ${snapshot.error}')),
-          );
-        }
-
-        if (snapshot.hasData) {
-          // FIX: The variable name is now consistent.
-          final profileData = snapshot.data!;
-
-          // cleanup hardcoded data
-          final stats = [
-            StatTileData(
-              icon: Icons.school,
-              label: 'Mastery Level',
-              value: 'lvl${profileData.masteryLevel}',
-            ),
-            StatTileData(
-              icon: Icons.spatial_audio_off,
-              label: 'Public Speaking Level',
-              value: 'lvl${profileData.publicSpeakingLevel}',
-            ),
-            StatTileData(
-              icon: Icons.local_fire_department,
-              label: 'Highest Streak',
-              value: '${profileData.highestStreak}',
-            ),
-          ];
-
-          final avatarImage =
-              _localAvatarImage ??
-              (profileData.avatarUrl != null
-                      ? NetworkImage(profileData.avatarUrl!)
-                      : const AssetImage('assets/images/tempCharacter.png'))
-                  as ImageProvider;
-
-          final bannerImage =
-              _localBannerImage ??
-              (profileData.bannerUrl != null
-                      ? NetworkImage(profileData.bannerUrl!)
-                      : const AssetImage('assets/images/defaultbg.png'))
-                  as ImageProvider;
-
-          return ProfileTemplate(
-            username: profileData.username,
-            level: profileData.level,
-            bio: profileData.bio ?? 'Write your bio here...',
-            bannerImage: bannerImage,
-            avatarImage: avatarImage,
-            stats: stats,
-            onBack: () => Navigator.of(context).maybePop(),
-            onEdit: () => _openEditSheet(profileData),
-          );
-        }
-
-        return const Scaffold(
-          body: Center(child: Text('No profile data found.')),
-        );
-      },
+    return ProfileTemplate(
+      // Using `ProfileTemplate` as a reusable base; only data is PS-specific.
+      username: username,
+      level: level,
+      bio: bio,
+      avatarImage: avatarImage,
+      stats: stats,
+      onTapAvatar: _uploadAvatar,
+      onTapBanner: _uploadBanner,
+      onBack: () => Navigator.of(context).maybePop(),
+      onEdit: _openEditSheet,
     );
   }
 
-  /// Opens the bottom sheet for editing the profile.
-  void _openEditSheet(ProfileData profileData) {
+  void _openEditSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -135,81 +96,57 @@ class _PublicSpeakingProfileStageState
       ),
       builder: (context) {
         return ProfileEditSheet(
-          initialBio: profileData.bio ?? '',
-          onPickAvatar: () => _handleImagePickAndUpload(
-            profileData: profileData,
-            isAvatar: true,
-          ),
-          onPickBanner: () => _handleImagePickAndUpload(
-            profileData: profileData,
-            isAvatar: false,
-          ),
-          onSaveBio: _handleBioSave,
+          initialBio: bio,
+          onPickAvatar: _pickAvatar,
+          onPickBanner: _pickBanner,
+          onSaveBio: (newBio) {
+            setState(() {
+              bio = newBio.isEmpty ? 'Write your bio here...' : newBio;
+            });
+          },
         );
       },
     );
   }
 
-  /// Handles saving the new bio to the database.
-  Future<void> _handleBioSave(String newBio) async {
-    final user = context.read<AppFlowController>().currentUser;
-    if (user == null) return;
-
-    Navigator.of(context).pop();
-
-    try {
-      await UserService.updateBio(user.id, newBio);
-      _refreshProfile();
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to update bio: $e')));
-    }
-  }
-
-  /// Handles picking an image, showing a preview, and calling the replacement service.
-  Future<void> _handleImagePickAndUpload({
-    required ProfileData profileData,
-    required bool isAvatar,
-  }) async {
-    final user = context.read<AppFlowController>().currentUser;
-    if (user == null) return;
-
-    final result = await _picker.pickImage(
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final result = await picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: isAvatar ? 1024 : 2048,
+      maxWidth: 1024,
     );
     if (result == null) return;
-
-    final imageFile = File(result.path);
-    final imageType = isAvatar ? 'avatar' : 'banner';
-    final oldImageUrl = isAvatar
-        ? profileData.avatarUrl
-        : profileData.bannerUrl;
-
-    Navigator.of(context).pop();
-
+    // For now preview locally; persistence to storage can be added later
     setState(() {
-      if (isAvatar) {
-        _localAvatarImage = FileImage(imageFile);
-      } else {
-        _localBannerImage = FileImage(imageFile);
-      }
+      avatarImage = FileImage(File(result.path));
     });
+  }
 
-    try {
-      await UserService.replaceProfileImage(
-        userId: user.id,
-        newImageFile: imageFile,
-        imageType: imageType,
-        oldImageUrl: oldImageUrl,
-      );
-      _refreshProfile();
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to update image: $e')));
-      _refreshProfile();
-    }
+  Future<void> _pickBanner() async {
+    final picker = ImagePicker();
+    final result = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2048,
+    );
+    if (result == null) return;
+    // Placeholder: when profile storage is implemented, pass picked image to template
+  }
+
+  // Placeholder: Upload new avatar to storage once DB schema is ready
+  void _uploadAvatar() async {
+    // Steps to implement when ready:
+    // 1) Use ImagePicker to select an image file
+    // 2) Call a UserService.uploadAvatar(file) that uploads to 'profile_assets' bucket
+    // 3) Update the user's profile_avatar_url in DB
+    // 4) Refresh local state by re-fetching or setting NetworkImage with the new URL
+  }
+
+  // Placeholder: Upload new banner to storage once DB schema is ready
+  void _uploadBanner() async {
+    // Steps to implement when ready:
+    // 1) Use ImagePicker to select an image file
+    // 2) Call a UserService.uploadBanner(file) that uploads to 'profile_assets' bucket
+    // 3) Update the user's profile_banner_url in DB
+    // 4) Refresh local state by re-fetching or setting NetworkImage with the new URL
   }
 }

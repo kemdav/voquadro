@@ -365,6 +365,7 @@ class PublicSpeakingController with ChangeNotifier {
           if (clarityEval.isNotEmpty) {
             parts.add('• Clarity & Structure: $clarityEval');
           }
+
           if (overallEval.isNotEmpty) {
             parts.add('• Overall: $overallEval');
           }

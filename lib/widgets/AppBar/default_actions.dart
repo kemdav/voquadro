@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
+import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 var logger = Logger();
@@ -41,7 +42,9 @@ class DefaultActions extends StatelessWidget {
               IconButton.filled(
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const PublicSpeakingProfileStage()),
+                    MaterialPageRoute(
+                      builder: (_) => const PublicSpeakingProfileStage(),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.person),
@@ -53,7 +56,11 @@ class DefaultActions extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               IconButton.filled(
-                onPressed: () => logger.d('settings pressed!'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsStage()),
+                  );
+                },
                 icon: const Icon(Icons.settings),
                 iconSize: 50,
                 style: IconButton.styleFrom(

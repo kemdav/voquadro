@@ -72,11 +72,6 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateUser(User newUser) {
-    currentUser = newUser;
-    notifyListeners(); // This is the most important part!
-  }
-
   void logout() {
     // session to clear. Just clearing the local state
     currentUser = null;
