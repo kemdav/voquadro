@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
+import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 
 class TranscriptPage extends StatelessWidget {
