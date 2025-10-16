@@ -22,7 +22,7 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
   Timer? _speakingTimer;
 
   static const readyingDuration = Duration(seconds: 5);
-  static const speakingDuration = Duration(seconds: 30);
+  static const speakingDuration = Duration(seconds: 10);
 
   double _speakingProgress = 0.0;
   double get speakingProgress => _speakingProgress;

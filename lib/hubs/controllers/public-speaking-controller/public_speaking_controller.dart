@@ -6,7 +6,7 @@ import 'dart:math';
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
-import 'package:voquadro/src/models/user_feedback.dart';
+import 'package:voquadro/src/models/session_model.dart';
 
 // Import and export the mixins
 import 'public_speaking_state_manager.dart';
@@ -60,13 +60,20 @@ class PublicSpeakingController with
   String? _transcriptionError;
   String? get transcriptionError => _transcriptionError;
 
-  Level? _sessionResult;
-  Level? get sessionResult => _sessionResult;
+  Session? _sessionResult;
+  Session? get sessionResult => _sessionResult;
 
   // Scores
   int? _overallScore;
   int? _contentQualityScore;
   int? _clarityStructureScore;
+
+  // General Info
+  String? _topic;
+  String? get topic => _topic;
+
+  String? _questionGenerated;
+  String? get questionGenerated => _questionGenerated;
 
   // Speech metrics
   int? _fillerWordCount;
@@ -141,13 +148,14 @@ class PublicSpeakingController with
       if (_userTranscript != null && _userTranscript!.isNotEmpty) {
         if (aiFeedback == null) await generateAIFeedback();
         if (overallScore == null) {
-          // LOGIC FIX: Handle the returned map from the refactored generateScores method.
-          final scores = await generateScores();
-          _overallScore = scores['overall'];
-          _contentQualityScore = scores['content_quality'];
-          _clarityStructureScore = scores['clarity_structure'];
-          _wordsPerMinute = scores['words_per_minute']!.toDouble();
-          _fillerWordCount = scores['filler_count'];
+          final feedback = await getAIFeedback();
+          _overallScore = feedback['overall'];
+          _contentQualityScore = feedback['content_quality'];
+          _clarityStructureScore = feedback['clarity_structure'];
+          _wordsPerMinute = feedback['words_per_minute']!.toDouble();
+          _fillerWordCount = feedback['filler_count'];
+          _topic = feedback['topic'];
+          _questionGenerated = feedback['question'];
         }
       }
 
@@ -177,9 +185,13 @@ class PublicSpeakingController with
     notifyListeners();
   }
 
-  Level createSessionResult() {
-    return Level(
+  Session createSessionResult() {
+    return Session(
       id: 'session_${DateTime.now().millisecondsSinceEpoch}',
+      modeId: 'public',
+      topic:  topic ?? 'Topic', // Replace with topic
+      generatedQuestion: questionGenerated ?? 'Question Generated', // Replace with generated question
+      timestamp: DateTime.now(),
       modeEXP: 50, practiceEXP: 100, masteryEXP: 35,
       paceControlEXP: 25, fillerControlEXP: 10,
       paceControl: wordsPerMinute?.toDouble() ?? 0.0,

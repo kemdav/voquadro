@@ -1,5 +1,6 @@
-class Level {
+class Session {
   final String id;
+  final String modeId;
   final double modeEXP;
   final double practiceEXP;
   final double masteryEXP;
@@ -18,8 +19,9 @@ class Level {
 
   final String transcript;
   final String feedback;
-  Level({
+  Session({
     required this.id,
+    required this.modeId,
     required this.modeEXP,
     required this.practiceEXP,
     required this.masteryEXP,
@@ -37,9 +39,10 @@ class Level {
     required this.feedback,
   });
 
-  factory Level.fromMap(Map<String, dynamic> map) {
-    return Level(
+  factory Session.fromMap(Map<String, dynamic> map) {
+    return Session(
       id: map['id'],
+      modeId: map['modeId'],
       modeEXP: map['modeEXP'],
       practiceEXP: map['practiceEXP'],
       masteryEXP: map['masteryEXP'],

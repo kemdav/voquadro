@@ -70,8 +70,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
     }
   }
 
-  /// Generates and returns a map of scores. It no longer sets state directly.
-  Future<Map<String, int?>> generateScores({
+  Future<Map<String, dynamic>> getAIFeedback({
     int wordCount = 0,
     int fillerCount = 0,
     int durationSeconds = 60,
@@ -161,6 +160,8 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         'overall': (scores?['overall'] as num?)?.toInt(),
         'filler_count': fillerWordCount,
         'words_per_minute': wordsPerMinute.toInt(),
+        'question' : result['question'],
+        'topic': result['topic'],
       };
     } catch (e) {
       debugPrint('Error generating scores: $e');
@@ -171,6 +172,8 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         'overall': 0,
         'filler_count': 0,
         'words_per_minute': 0,
+        'question' :'Question',
+        'topic': 'Topic',
       };
     }
   }
