@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 import 'package:bcrypt/bcrypt.dart';
+import 'dart:io';
 
 // Import custom exception class
 import 'package:voquadro/utils/exceptions.dart';
@@ -29,7 +30,7 @@ class User {
     this.bio,
     this.profileAvatarUrl,
     this.profileBannerUrl,
-     required this.practiceEXP,
+    required this.practiceEXP,
     required this.masteryEXP,
     required this.paceControlEXP,
     required this.fillerControlEXP,
@@ -62,7 +63,7 @@ class User {
       bio: map['bio'],
       profileAvatarUrl: map['profile_avatar_url'],
       profileBannerUrl: map['profile_banner_url'],
-       practiceEXP: practiceEXP,
+      practiceEXP: practiceEXP,
       masteryEXP: masteryEXP,
       paceControlEXP: paceControlEXP,
       fillerControlEXP: fillerControlEXP,
@@ -71,6 +72,28 @@ class User {
       masteryLevel: calculatedMasteryLevel,
     );
   }
+}
+
+class ProfileData {
+  final String username;
+  final String? bio;
+  final String? avatarUrl;
+  final String? bannerUrl;
+  final int level;
+  final int masteryLevel;
+  final int publicSpeakingLevel; // Can be distinguished later if needed
+  final int highestStreak;
+
+  ProfileData({
+    required this.username,
+    this.bio,
+    this.avatarUrl,
+    this.bannerUrl,
+    required this.level,
+    required this.masteryLevel,
+    required this.publicSpeakingLevel,
+    required this.highestStreak,
+  });
 }
 
 class UserService {
@@ -208,7 +231,7 @@ class UserService {
     try {
       final response = await _supabase
           .from('users')
-          .select('id, username, email, password_hash')
+          .select()
           .eq('username', username)
           .single();
 
@@ -432,43 +455,6 @@ class UserService {
       return response;
     } catch (e) {
       throw Exception('Failed to get user');
-    }
-  }
-
-  /// Changes a user's password by verifying the current password and then
-  /// updating the stored bcrypt hash in the `users` table.
-  static Future<void> changePassword({
-    required String userId,
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    try {
-      // Fetch existing password hash
-      final userRow = await _supabase
-          .from('users')
-          .select('password_hash')
-          .eq('id', userId)
-          .single();
-
-      final String storedHash = userRow['password_hash'] as String;
-
-      final bool matches = BCrypt.checkpw(currentPassword, storedHash);
-      if (!matches) {
-        throw AuthException('Current password is incorrect.');
-      }
-
-      // Hash the new password and update
-      final String newHash = BCrypt.hashpw(newPassword, BCrypt.gensalt());
-      await _supabase
-          .from('users')
-          .update({'password_hash': newHash})
-          .eq('id', userId);
-    } on PostgrestException catch (_) {
-      throw AuthException('Could not change password. Please try again.');
-    } on AuthException {
-      rethrow;
-    } catch (_) {
-      throw AuthException('An unexpected error occurred. Please try again.');
     }
   }
 }
