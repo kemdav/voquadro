@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/hubs/controllers/public_speaking_controller.dart';
+import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
 // Import your component and content widgets
 import 'package:voquadro/widgets/Widget/feedback_continue_button_widget.dart';
@@ -42,7 +42,7 @@ class FeedbackFlowPage extends StatelessWidget {
                 // Pass colors and any other required data to your pages
                 TranscriptPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
                 SpeakFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
-                StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple, fillerCount: controller.fillerWordCount, wpm: controller.wordsPerMinute),
+                StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
                 ProgressionPage(),
                 NextRankPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
               ],

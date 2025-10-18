@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
-import 'package:voquadro/hubs/controllers/public_speaking_controller.dart'; // 1. Import the controller
+import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart'; // 1. Import the controller
 import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';

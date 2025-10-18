@@ -233,6 +233,8 @@ class HybridAIService with ChangeNotifier {
               'clarity_structure':
                   (scores?['clarity_structure'] as num?)?.round() ?? 0,
             },
+            'topic': session.topic,
+            'question': session.generatedQuestion,
           };
         } catch (e) {
           debugPrint('Optimized Ollama failed: $e');
