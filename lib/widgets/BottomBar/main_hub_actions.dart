@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
+import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 var logger = Logger();
@@ -27,7 +28,7 @@ class MainHubActions extends StatelessWidget {
                 onPressed: () {
                   logger.d('FAB 1 pressed!');
 
-                   context.read<PublicSpeakingController>().startMicTest();
+                  context.read<PublicSpeakingController>().startMicTest();
                 },
                 backgroundColor: "00A9A5".toColor(),
                 elevation: 3.0,
@@ -50,7 +51,9 @@ class MainHubActions extends StatelessWidget {
                 shape: const StadiumBorder(),
                 onPressed: () {
                   logger.d('FAB 2 pressed!');
-                  context.read<AppFlowController>().selectMode(AppMode.modeSelection);
+                  context.read<AppFlowController>().selectMode(
+                    AppMode.modeSelection,
+                  );
                 },
                 backgroundColor: "125B5A".toColor(),
                 elevation: 3.0,
@@ -68,10 +71,49 @@ class MainHubActions extends StatelessWidget {
         ),
         const SizedBox(width: 20),
         Column(
+          //user journey (public speaing or daily chatting)
           children: [
             IconButton.filled(
               onPressed: () {
                 logger.d('Book icon pressed!');
+
+                final appFlow = context.read<AppFlowController>();
+
+                // If the app is in public speaking mode, navigate to the journey section.
+                if (appFlow.currentMode == AppMode.publicSpeaking) {
+                  final user = appFlow.currentUser;
+
+                  if (user != null) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => PublicSpeakJourneySection(
+                          username: user.username,
+                          currentXP: user.practiceEXP,
+                          maxXP: 200, // fallback/adjust as needed
+                          currentLevel: 'Level ${user.practiceLevel}',
+                          averageWPM: 0, // supply real metric when available
+                          averageFillers:
+                              0, // supply real metric when available
+                          sessionFeedbacks:
+                              const [], // replace with real feedbacks later
+                          onBackPressed: () => Navigator.of(context).pop(),
+                          onProfilePressed: () {}, // optional handlers
+                          onSettingsPressed: () {},
+                        ),
+                      ),
+                    );
+                  } else {
+                    // No logged-in user — use the example placeholder for now.
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const PublicSpeakJourneySectionExample(),
+                      ),
+                    );
+                  }
+                } else {
+                  // Not in public speaking mode yet — no-op for now.
+                }
               },
               icon: const Icon(Icons.book),
               iconSize: 50,
