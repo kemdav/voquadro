@@ -10,6 +10,9 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
   /// Provides the user's transcribed text for analysis.
   String? get userTranscript;
 
+  /// Allows this mixin to update the transcript.
+  set userTranscript(String? value);
+
   /// Provides the active AI session for context.
   SpeechSession? get currentSession;
 
@@ -31,8 +34,9 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
   ) async {
     try {
       debugPrint('Generating question with AI service...');
-      // Use the public setter to clear feedback
+      // Clear previous session data
       aiFeedback = null;
+      userTranscript = null;
 
       await aiService.preWarmConnection();
       await aiService.generateQuestion(topic);
@@ -160,7 +164,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         'overall': (scores?['overall'] as num?)?.toInt(),
         'filler_count': fillerWordCount,
         'words_per_minute': wordsPerMinute.toInt(),
-        'question' : result['question'],
+        'question': result['question'],
         'topic': result['topic'],
       };
     } catch (e) {
@@ -172,7 +176,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         'overall': 0,
         'filler_count': 0,
         'words_per_minute': 0,
-        'question' :'Question',
+        'question': 'Question',
         'topic': 'Topic',
       };
     }

@@ -1,117 +1,357 @@
-# AI Integration - Hybrid Approach
+# AI Integration - Hybrid Cloud & Local Approach
 
-This directory contains the AI integration services for the VoQuadro public speaking app, implementing a hybrid approach that gracefully handles both Ollama availability and offline scenarios.
+This directory contains the AI integration services for the VoQuadro public speaking app, implementing a **three-tier hybrid approach** that works seamlessly across mobile, desktop, and offline scenarios.
 
-## Architecture Overview
+## 🎯 Architecture Overview
 
-The hybrid AI system consists of three main components:
+The system prioritizes AI services in this order:
 
-### 1. OllamaService (`ollama_service.dart`)
+1. **Cloud AI (Gemini)** - Primary for mobile devices
+2. **Ollama** - Secondary for desktop/development
+3. **Fallback** - Static/rule-based for offline support
 
-- **Purpose**: Direct integration with Ollama for advanced AI features
-- **Features**: AI-generated questions, advanced speech analysis, detailed feedback
-- **Requirements**: Ollama must be installed and running locally
+### Service Components
 
-### 2. Fallback Services
+#### 1. CloudAIService (`cloud_ai_service.dart`) ✨ NEW
 
-- **FallbackQuestionService** (`fallback_question_service.dart`): Provides static question bank with 200+ questions across 20+ topics
-- **FallbackFeedbackService** (`fallback_feedback_service.dart`): Rule-based feedback system using heuristics and pattern analysis
+- **Purpose**: Cloud-based AI for mobile devices (no local installation needed)
+- **Provider**: Google Gemini API (free tier: 15 req/min, 1M tokens/day)
+- **Features**:
+  - AI-generated questions
+  - Comprehensive speech analysis
+  - Detailed feedback with scores
+  - Works on iOS, Android, and Web
+- **Requirements**: Internet connection + API key
 
-### 3. HybridAIService (`hybrid_ai_service.dart`)
+#### 2. OllamaService (`ollama_service.dart`)
 
-- **Purpose**: Orchestrates between Ollama and fallback services
-- **Behavior**:
-  - Tries Ollama first for all AI operations
-  - Falls back to static/rule-based services if Ollama fails
-  - Provides transparent interface to the rest of the app
+- **Purpose**: Local AI for desktop/development environments
+- **Features**: Advanced AI when Ollama is installed locally
+- **Requirements**: Ollama installed and running
 
-## How It Works
+#### 3. Fallback Services
+
+- **FallbackQuestionService**: 200+ static questions across 20+ topics
+- **FallbackFeedbackService**: Rule-based feedback and scoring
+- **Works**: Completely offline, no dependencies
+
+#### 4. HybridAIService (`hybrid_ai_service.dart`)
+
+- **Purpose**: Orchestrates all AI services with intelligent fallback
+- **Behavior**: Cloud AI → Ollama → Fallback (automatic switching)
+- **Provides**: Transparent interface to the rest of the app
+
+## 🚀 Quick Start
+
+### For Mobile Users (Recommended)
+
+1. **Get a free Gemini API key**:
+   - Visit: https://makersuite.google.com/app/apikey
+   - Click "Create API Key"
+   - Copy your key
+
+2. **Add to `.env` file**:
+
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   ```
+
+3. **Run your app** - Cloud AI will work automatically! 🎉
+
+### For Desktop Developers (Optional)
+
+Ollama provides additional AI capabilities for development:
+
+1. Install Ollama from https://ollama.ai
+2. Run: `ollama pull qwen2.5:0.5b`
+3. Start: `ollama serve`
+4. Configure in `.env`:
+   ```env
+   OLLAMA_BASE_URL=http://localhost:11434
+   OLLAMA_MODEL_NAME=qwen2.5:0.5b
+   ```
+
+### Offline Support
+
+Works automatically without any setup - uses static question bank and rule-based feedback.
+
+## 📊 How It Works
 
 ```mermaid
 graph TD
     A[User Request] --> B[HybridAIService]
-    B --> C{Ollama Available?}
-    C -->|Yes| D[Try Ollama]
-    C -->|No| E[Use Fallback]
-    D --> F{Ollama Success?}
+    B --> C{Cloud AI Available?}
+    C -->|Yes| D[Try Cloud AI Gemini]
+    C -->|No| E{Ollama Available?}
+    D --> F{Success?}
     F -->|Yes| G[Return AI Result]
-    F -->|No| H[Fallback to Static/Rule-based]
-    E --> I[Return Fallback Result]
-    H --> I
-    G --> J[Update UI]
-    I --> J
+    F -->|No| E
+    E -->|Yes| H[Try Ollama]
+    E -->|No| I[Use Fallback]
+    H --> J{Success?}
+    J -->|Yes| G
+    J -->|No| I
+    I --> K[Return Fallback Result]
+    G --> L[Update UI]
+    K --> L
 ```
 
-## Service Priority
+## 🔑 Service Priority & Use Cases
 
-1. **Primary**: Ollama (when available)
+| Scenario         | Cloud AI       | Ollama    | Fallback    |
+| ---------------- | -------------- | --------- | ----------- |
+| Mobile (online)  | ✅ Primary     | ❌ N/A    | Backup      |
+| Mobile (offline) | ❌ No internet | ❌ N/A    | ✅ Active   |
+| Desktop (dev)    | ✅ Fast        | ✅ Backup | Last resort |
+| Web app          | ✅ Primary     | ❌ N/A    | Backup      |
 
-   - Advanced AI question generation
-   - Sophisticated speech analysis
-   - Context-aware feedback
-   - Dynamic scoring algorithms
+## 📱 Mobile Integration Benefits
 
-2. **Fallback**: Static + Rule-based
-   - Pre-written question bank (200+ questions)
-   - Heuristic-based speech analysis
-   - Structured feedback templates
-   - Pattern-based scoring
+### Why Cloud AI for Mobile?
 
-## Key Features
+✅ **No Installation Required** - Users don't need to install anything  
+✅ **Works Out of Box** - Just add API key and go  
+✅ **Cross-Platform** - iOS, Android, Web all supported  
+✅ **Free Tier** - Generous limits for most users  
+✅ **Always Updated** - Latest AI models without app updates  
+✅ **Low Device Impact** - Doesn't drain battery or use storage
 
-### Question Generation
+### Comparison
 
-- **Ollama**: Dynamic, context-aware questions tailored to topics
-- **Fallback**: Curated question bank with 8 questions per topic across 20+ topics
+| Aspect      | Cloud AI (Gemini)  | On-Device AI             | Ollama Mobile   |
+| ----------- | ------------------ | ------------------------ | --------------- |
+| Setup       | API key only       | Download models (100MB+) | ❌ Not feasible |
+| Performance | Fast, server-grade | Device-dependent         | ❌ Not possible |
+| Battery     | Minimal            | High during inference    | ❌ N/A          |
+| Storage     | None               | 100MB - 2GB              | ❌ N/A          |
+| Quality     | Latest models      | Limited models           | ❌ N/A          |
+| Offline     | ❌ Needs internet  | ✅ Works offline         | ❌ N/A          |
 
-### Speech Analysis
+## 🛠️ API Usage
 
-- **Ollama**: Advanced NLP analysis with context understanding
-- **Fallback**: Rule-based analysis checking for:
-  - Relevance to question
-  - Speech structure (introduction, conclusion, transitions)
-  - Content depth (examples, opinions, details)
-  - Speaking pace and filler words
-
-### Feedback Generation
-
-- **Ollama**: Detailed, personalized feedback with specific suggestions
-- **Fallback**: Structured feedback covering:
-  - Content Quality Evaluation
-  - Clarity & Structure Evaluation
-  - Overall Performance Assessment
-
-### Scoring System
-
-- **Ollama**: AI-powered scoring with nuanced understanding
-- **Fallback**: Heuristic-based scoring using:
-  - Relevance analysis (40% weight)
-  - Content depth indicators (30% weight)
-  - Personal opinion expression (30% weight)
-
-## Usage
-
-The app automatically detects Ollama availability and uses the appropriate service:
+### Check AI Availability
 
 ```dart
-// The controller automatically uses the hybrid service
-final controller = PublicSpeakingController();
+final hybridAI = HybridAIService.instance;
 
-// Check AI service status
-bool isOllamaAvailable = controller.isOllamaAvailable;
-String status = controller.aiServiceStatus;
-String message = controller.aiServiceMessage;
+// Check all AI services
+await hybridAI.checkAIAvailability();
 
-// Generate questions (works with both services)
-await controller.generateQuestionAndStart("Technology");
-
-// Get feedback (works with both services)
-await controller.generateScores();
+// Check which service is active
+print(hybridAI.activeAIService); // "Cloud AI (Gemini)" | "Ollama" | "Fallback"
+print(hybridAI.isCloudAIAvailable);
+print(hybridAI.isOllamaAvailable);
+print(hybridAI.isUsingFallback);
 ```
 
-## User Experience
+### Generate Questions
 
-### When Ollama is Available
+```dart
+final hybridAI = HybridAIService.instance;
+
+// Automatically uses best available AI
+final session = await hybridAI.generateQuestion("Technology");
+print(session.generatedQuestion);
+```
+
+### Get Comprehensive Feedback
+
+```dart
+// Returns detailed feedback + scores
+final result = await hybridAI.getPublicSpeakingFeedbackWithScores(
+  transcript,
+  session,
+  wordCount: 150,
+  fillerCount: 3,
+  durationSeconds: 90,
+);
+
+print(result['feedback']); // Formatted feedback text
+print(result['scores']); // { overall: 85, content_quality: 80, clarity_structure: 90 }
+```
+
+### Individual Scores
+
+```dart
+// Get specific scores
+final contentScore = await hybridAI.contentQualityScore(transcript);
+final clarityScore = await hybridAI.clarityStructureScore(transcript);
+final overallScore = await hybridAI.overallScore(transcript);
+```
+
+## 💰 Cost & Limits
+
+### Google Gemini Free Tier
+
+- **Rate Limit**: 15 requests per minute
+- **Daily Quota**: 1 million tokens per day
+- **Sufficient for**: ~1,000+ speeches per day
+- **Cost**: FREE for most users
+- **Paid tier**: Available if needed ($0.001/1K tokens)
+
+### Upgrade Path
+
+When users exceed free tier, you can:
+
+1. Implement user-specific API keys
+2. Upgrade to paid tier (very affordable)
+3. Use rate limiting / caching
+4. Fall back to static content
+
+## 🔒 Security Best Practices
+
+### Protecting Your API Key
+
+```dart
+// ✅ DO: Use environment variables
+final apiKey = dotenv.env['GEMINI_API_KEY'];
+
+// ❌ DON'T: Hardcode in source
+final apiKey = 'AIzaSy...'; // Never do this!
+```
+
+### Production Deployment
+
+For production apps:
+
+1. **Option A**: Use your own API key (simple)
+   - Good for: Small apps, MVPs
+   - Limit: You pay for all usage
+
+2. **Option B**: Backend proxy (recommended for scale)
+
+   ```dart
+   // Your backend handles API calls
+   final response = await http.post(
+     'https://yourapi.com/generate-question',
+     body: {'topic': topic},
+   );
+   ```
+
+   - Good for: Large apps, commercial use
+   - Benefit: Better security, rate limiting, monitoring
+
+3. **Option C**: User-provided keys
+   - Users bring their own Gemini API keys
+   - Good for: Power users, developer tools
+
+## 📈 Performance Optimization
+
+### Response Times (Typical)
+
+- Cloud AI: 1-3 seconds
+- Ollama: 3-10 seconds (depends on hardware)
+- Fallback: Instant (<100ms)
+
+### Caching Strategy
+
+The services automatically cache:
+
+- Connection status (5 minutes)
+- No duplicate API calls for same request
+
+### Tips for Best Performance
+
+```dart
+// Preload AI check on app start
+void initState() {
+  super.initState();
+  HybridAIService.instance.checkAIAvailability();
+}
+
+// Show loading states
+if (loading) {
+  return CircularProgressIndicator();
+}
+
+// Use timeouts
+final session = await hybridAI
+  .generateQuestion(topic)
+  .timeout(Duration(seconds: 30));
+```
+
+## 🐛 Troubleshooting
+
+### Cloud AI Not Working
+
+1. **Check API key**: Ensure `GEMINI_API_KEY` is set in `.env`
+2. **Internet connection**: Cloud AI requires internet
+3. **Check logs**: Look for "Cloud AI" debug messages
+4. **Verify quota**: Check https://makersuite.google.com/app/apikey
+
+### Ollama Not Working (Desktop)
+
+1. **Check Ollama is running**: `ollama list`
+2. **Verify URL**: Check `OLLAMA_BASE_URL` in `.env`
+3. **Model pulled**: `ollama pull qwen2.5:0.5b`
+
+### Always Using Fallback
+
+- This is normal if:
+  - No API key configured
+  - No internet (mobile)
+  - Ollama not running (desktop)
+  - Both services unavailable
+
+Debug with:
+
+```dart
+await hybridAI.forceCheckAIAvailability();
+print('Cloud AI: ${hybridAI.isCloudAIAvailable}');
+print('Ollama: ${hybridAI.isOllamaAvailable}');
+print('Active: ${hybridAI.activeAIService}');
+```
+
+## 🎨 UI Integration
+
+Show users which AI service is active:
+
+```dart
+Widget buildAIStatusBadge() {
+  final ai = HybridAIService.instance;
+
+  return Chip(
+    avatar: Icon(
+      ai.isCloudAIAvailable ? Icons.cloud :
+      ai.isOllamaAvailable ? Icons.computer :
+      Icons.offline_bolt,
+    ),
+    label: Text(ai.activeAIService),
+    backgroundColor: ai.isCloudAIAvailable ? Colors.blue :
+                     ai.isOllamaAvailable ? Colors.green :
+                     Colors.grey,
+  );
+}
+```
+
+## 🔄 Migration from Ollama-Only
+
+Existing code continues to work! The service is backward compatible:
+
+```dart
+// Old code still works
+await hybridAI.checkOllamaAvailability(); // Works!
+final isOllama = hybridAI.isOllamaAvailable; // Works!
+
+// But now you can also use:
+await hybridAI.checkAIAvailability(); // Better!
+final activeService = hybridAI.activeAIService; // New!
+```
+
+## 📚 Additional Resources
+
+- [Google Gemini API Docs](https://ai.google.dev/docs)
+- [Get API Key](https://makersuite.google.com/app/apikey)
+- [Ollama Documentation](https://ollama.ai/docs)
+- [Flutter Environment Variables](https://pub.dev/packages/flutter_dotenv)
+
+## 🎯 Next Steps
+
+1. ✅ Get Gemini API key
+2. ✅ Add to `.env` file
+3. ✅ Test on mobile device
+4. ✅ Deploy to users
+5. 🚀 Enjoy AI-powered speech feedback!
 
 - Users get advanced AI features
 - Status shows "Using Ollama AI (Advanced)"
@@ -142,7 +382,7 @@ await controller.generateScores();
 
 ## Files Structure
 
-``` python
+```python
 lib/src/ai-integration/
 ├── README.md                           # This documentation
 ├── ollama_service.dart                 # Direct Ollama integration
