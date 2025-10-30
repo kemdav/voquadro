@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
 import 'package:voquadro/widgets/AppBar/default_actions.dart';
-import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
-import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
 
 class PublicSpeakJourneySection extends StatefulWidget {
