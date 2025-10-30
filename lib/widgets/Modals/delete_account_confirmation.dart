@@ -1,15 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
 
-class LogoutConfirmationModal extends StatelessWidget {
-  const LogoutConfirmationModal({super.key});
+class DeleteConfirmationDialog extends StatefulWidget {
+  const DeleteConfirmationDialog({super.key});
 
-  void _handleLogout(BuildContext context) {
-    debugPrint('Logout requested - implement actual logout logic');
+  @override
+  State<DeleteConfirmationDialog> createState() =>
+      _DeleteConfirmationDialogState();
+}
+
+class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> {
+  int _confirmationStep = 1;
+
+  void _showNextConfirmation() {
+    if (_confirmationStep < 3) {
+      setState(() {
+        _confirmationStep++;
+      });
+    } else {
+      _handleFinalDeletion();
+    }
+  }
+
+  void _handleFinalDeletion() {
+    debugPrint('Account deletion requested - implement actual deletion logic');
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Logout functionality coming soon')),
+      const SnackBar(
+        content: Text('Account deletion functionality coming soon'),
+        duration: Duration(seconds: 2),
+      ),
     );
+  }
+
+  String _getConfirmationText() {
+    switch (_confirmationStep) {
+      case 1:
+        return 'Are you sure you want to\ndelete your account?';
+      case 2:
+        return 'This action cannot be\nundone. Continue?';
+      case 3:
+        return 'Seriously?';
+      default:
+        return 'Are you sure?';
+    }
+  }
+
+  String _getConfirmButtonText() {
+    switch (_confirmationStep) {
+      case 1:
+        return 'Yes, Delete';
+      case 2:
+        return 'Continue';
+      case 3:
+        return 'YES.';
+      default:
+        return 'Yes';
+    }
+  }
+
+  String _getCancelButtonText() {
+    switch (_confirmationStep) {
+      case 1:
+        return 'No, Keep';
+      case 2:
+        return 'Go Back';
+      case 3:
+        return 'Cancel';
+      default:
+        return 'No';
+    }
   }
 
   @override
@@ -40,7 +100,7 @@ class LogoutConfirmationModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Are you sure you want to log out?',
+              _getConfirmationText(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: purpleDark,
@@ -54,21 +114,20 @@ class LogoutConfirmationModal extends StatelessWidget {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close the dialog
-                      _handleLogout(context);
-                    },
+                    onPressed: _showNextConfirmation,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: purpleMid,
+                      backgroundColor: _confirmationStep == 3
+                          ? Colors.red
+                          : purpleMid,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text(
-                      'Yes',
-                      style: TextStyle(
+                    child: Text(
+                      _getConfirmButtonText(),
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -89,7 +148,7 @@ class LogoutConfirmationModal extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: Text(
-                      'No',
+                      _getCancelButtonText(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

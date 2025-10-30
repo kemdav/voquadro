@@ -4,6 +4,7 @@ import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/screens/home/settings/change_password_stage.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 import 'package:voquadro/widgets/Modals/logout_confirmation.dart';
+import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});
@@ -126,8 +127,15 @@ class _SettingsStageState extends State<SettingsStage> {
                         const _TileDivider(),
                         SettingsTile(
                           title: 'Delete Account',
-                          textColor: Colors.redAccent,
-                          onTap: () {},
+                          textColor: Colors.red,
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (BuildContext context) =>
+                                  const DeleteConfirmationDialog(),
+                            );
+                          },
                         ),
                         const _TileDivider(),
                         SettingsTile(
