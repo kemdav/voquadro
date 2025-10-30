@@ -87,9 +87,10 @@ class MainHubActions extends StatelessWidget {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => PublicSpeakJourneySection(
+                          //refer to user services lang para ani
                           username: user.username,
                           currentXP: user.practiceEXP,
-                          maxXP: 200, // fallback/adjust as needed
+                          maxXP: 200,
                           currentLevel: 'Level ${user.practiceLevel}',
                           averageWPM: 0, // supply real metric when available
                           averageFillers:
@@ -100,14 +101,6 @@ class MainHubActions extends StatelessWidget {
                           onProfilePressed: () {}, // optional handlers
                           onSettingsPressed: () {},
                         ),
-                      ),
-                    );
-                  } else {
-                    // No logged-in user — use the example placeholder for now.
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const PublicSpeakJourneySectionExample(),
                       ),
                     );
                   }
