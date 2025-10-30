@@ -69,7 +69,7 @@ Your VoQuadro app now has a **three-tier hybrid AI system** that works seamlessl
 
 ### Priority System
 
-```
+```Diagram
 User Makes Request
        ↓
 [1] Try Cloud AI (Gemini)
@@ -164,7 +164,7 @@ ListView(
 
 ### Step 1: Get API Key
 
-1. Visit: https://makersuite.google.com/app/apikey
+1. Visit: <https://makersuite.google.com/app/apikey>
 2. Click "Create API Key"
 3. Copy the key
 
@@ -359,7 +359,7 @@ Need help?
 
 - 📖 Read: `CLOUD_AI_SETUP.md`
 - 🔍 Check: `CLOUD_AI_QUICK_REFERENCE.md`
-- 🌐 Visit: https://ai.google.dev/docs
+- 🌐 Visit: <https://ai.google.dev/docs>
 - 🎓 Example: `lib/widgets/ai_status_indicator.dart`
 
 ---

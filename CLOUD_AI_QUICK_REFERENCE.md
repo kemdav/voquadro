@@ -67,7 +67,7 @@ OLLAMA_MODEL_NAME=qwen2.5:0.5b
 
 ## 🔄 Priority Cascade
 
-```
+```Diagram
 User Request
     ↓
 Cloud AI? → YES → Use Gemini API → Success? → Return Result
@@ -212,7 +212,7 @@ debugPrint('Question: ${session?.generatedQuestion}');
 
 ## 📚 Related Files
 
-```
+```Diagram
 lib/src/ai-integration/
 ├── cloud_ai_service.dart          # Cloud AI (Gemini)
 ├── ollama_service.dart            # Local AI (Ollama)

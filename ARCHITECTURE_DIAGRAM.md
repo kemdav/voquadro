@@ -2,7 +2,7 @@
 
 ## 🏗️ System Architecture
 
-```
+```Diagram
 ┌─────────────────────────────────────────────────────────────────┐
 │                        VoQuadro App                             │
 │                                                                 │
@@ -51,7 +51,7 @@
 
 ### Scenario 1: Mobile User (Online) ✅ Recommended
 
-```
+```Diagram
 User taps "Generate Question"
          ↓
 HybridAIService.generateQuestion("Technology")
@@ -73,7 +73,7 @@ Display question to user
 
 ### Scenario 2: Mobile User (Offline)
 
-```
+```Diagram
 User taps "Generate Question"
          ↓
 HybridAIService.generateQuestion("Technology")
@@ -97,7 +97,7 @@ Display question to user
 
 ### Scenario 3: Desktop Developer
 
-```
+Diagram
 User taps "Generate Question"
          ↓
 HybridAIService.generateQuestion("Technology")
@@ -113,11 +113,12 @@ Try CloudAIService.generateQuestion()
 Return to UI
 
 (If Cloud AI failed, would try Ollama next)
-```
+
+```Diagram
 
 ## 📊 Service Priority Matrix
 
-```
+```Diagram
 ┌──────────────┬────────────┬─────────┬──────────┬──────────────┐
 │  Scenario    │  Cloud AI  │ Ollama  │ Fallback │ Result       │
 ├──────────────┼────────────┼─────────┼──────────┼──────────────┤
@@ -140,7 +141,7 @@ Return to UI
 
 ## 🎯 Decision Tree
 
-```
+```Diagram
                     Start Request
                           │
                           ↓
@@ -187,7 +188,7 @@ Return to UI
 
 ## 🔌 Component Diagram
 
-```
+```Diagram
 ┌─────────────────────────────────────────────────────────┐
 │                   CloudAIService                        │
 │                                                         │
@@ -240,7 +241,7 @@ Return to UI
 
 ## 📱 Mobile vs Desktop Comparison
 
-```
+```Diagram
 MOBILE DEVICE (Android/iOS)
 ┌─────────────────────────┐
 │      VoQuadro App       │
@@ -294,7 +295,7 @@ DESKTOP (Windows/Mac/Linux)
 
 ## 🔐 Data Flow
 
-```
+```Diagram
 1. Question Generation:
    User Input (Topic) → HybridAI → Cloud AI → Gemini API
                                         ↓
@@ -319,7 +320,7 @@ DESKTOP (Windows/Mac/Linux)
 
 ## 💾 State Management
 
-```
+```Diagram
 HybridAIService (Singleton)
 ├── _cloudAIService: CloudAIService
 ├── _ollamaService: OllamaService
@@ -333,7 +334,7 @@ HybridAIService (Singleton)
 
 ## 🎯 Integration Points
 
-```
+```Diagram
 Your App Screens
        ↓
 ┌─────────────────┐

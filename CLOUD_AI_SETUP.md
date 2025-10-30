@@ -20,7 +20,7 @@ This guide will help you set up AI-powered speech feedback on your mobile device
 
 ### Option A: Quick Guide
 
-1. **Visit**: https://makersuite.google.com/app/apikey
+1. **Visit**: <https://makersuite.google.com/app/apikey>
 2. **Sign in** with your Google account
 3. **Click** "Create API Key"
 4. **Choose** "Create API key in new project" (or select existing project)
@@ -28,7 +28,7 @@ This guide will help you set up AI-powered speech feedback on your mobile device
 
 ### Option B: Detailed Steps
 
-1. Open your browser and go to: https://makersuite.google.com/app/apikey
+1. Open your browser and go to: <https://makersuite.google.com/app/apikey>
 2. You'll see the Google AI Studio page. Click **"Get API key"**
 
 3. You'll be asked to sign in with Google if not already signed in
@@ -41,7 +41,7 @@ This guide will help you set up AI-powered speech feedback on your mobile device
 
 6. Your API key will appear! It looks like:
 
-   ```
+   ```API
    AIzaSyABcDeFgHiJkLmNoPqRsTuVwXyZ1234567
    ```
 
@@ -111,12 +111,13 @@ Once your app launches:
    - You should get an AI-generated question!
 
 3. **Check the console** for confirmation:
-   ```
+
+   ```Console
    AI Availability - Cloud: true, Ollama: false
    Using Cloud AI (Gemini) for question generation
    ```
 
-## 🎉 You're All Set!
+## 🎉 You're All Set
 
 Your app now uses AI to:
 
@@ -194,7 +195,7 @@ print('Active: ${HybridAIService.instance.activeAIService}');
 
 Want to see how many API calls you're making?
 
-1. Visit: https://console.cloud.google.com/apis/dashboard
+1. Visit: <https://console.cloud.google.com/apis/dashboard>
 2. Sign in with the same Google account
 3. Select your project
 4. View API usage statistics

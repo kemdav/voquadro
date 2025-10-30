@@ -194,10 +194,10 @@ class _AIStatusCardState extends State<AIStatusCard> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _ai.isCloudAIAvailable
-                    ? Colors.blue.withOpacity(0.1)
+                    ? Colors.blue.withValues(alpha: 0.1)
                     : _ai.isOllamaAvailable
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1),
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -287,25 +287,3 @@ class _AIStatusCardState extends State<AIStatusCard> {
   }
 }
 
-/// Simple usage example in your app
-/// 
-/// In your AppBar:
-/// ```dart
-/// AppBar(
-///   title: Text('VoQuadro'),
-///   actions: [
-///     AIStatusIndicator(),
-///     SizedBox(width: 8),
-///   ],
-/// )
-/// ```
-/// 
-/// In your settings screen:
-/// ```dart
-/// ListView(
-///   children: [
-///     AIStatusCard(),
-///     // ... other settings
-///   ],
-/// )
-/// ```
