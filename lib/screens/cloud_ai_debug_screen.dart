@@ -263,7 +263,7 @@ class _CloudAIDebugScreenState extends State<CloudAIDebugScreen> {
   }
 
   void _copyToClipboard() {
-    final text = _debugInfo.join('\n');
+    //final text = _debugInfo.join('\n');
     // You can use Clipboard.setData here if needed
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
