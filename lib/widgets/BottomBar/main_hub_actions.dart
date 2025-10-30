@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
+import 'package:voquadro/screens/home/settings/settings_stage.dart';
+import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 var logger = Logger();
@@ -98,8 +100,21 @@ class MainHubActions extends StatelessWidget {
                           sessionFeedbacks:
                               const [], // replace with real feedbacks later
                           onBackPressed: () => Navigator.of(context).pop(),
-                          onProfilePressed: () {}, // optional handlers
-                          onSettingsPressed: () {},
+                          onProfilePressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PublicSpeakingProfileStage(),
+                              ),
+                            );
+                          },
+                          onSettingsPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsStage(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     );
