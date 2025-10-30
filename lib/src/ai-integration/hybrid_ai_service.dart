@@ -230,7 +230,7 @@ class HybridAIService with ChangeNotifier {
           final feedbackText = comprehensive['feedback_text'];
           final scores = comprehensive['scores'] as Map<String, dynamic>?;
 
-          // Format feedback_text
+          // Format feedback_text with clear section headers
           String formattedFeedback = 'No feedback';
 
           if (feedbackText != null) {
@@ -250,15 +250,15 @@ class HybridAIService with ChangeNotifier {
               final String overallStr = overallEval?.toString().trim() ?? '';
 
               if (contentStr.isNotEmpty) {
-                parts.add('Content Quality: $contentStr');
+                parts.add('- Content Quality Evaluation: $contentStr');
               }
 
               if (clarityStr.isNotEmpty) {
-                parts.add('Clarity & Structure: $clarityStr');
+                parts.add('- Clarity & Structure Evaluation: $clarityStr');
               }
 
               if (overallStr.isNotEmpty) {
-                parts.add('Overall: $overallStr');
+                parts.add('- Overall Evaluation: $overallStr');
               }
 
               formattedFeedback = parts.isEmpty
@@ -271,6 +271,9 @@ class HybridAIService with ChangeNotifier {
 
           return {
             'feedback': formattedFeedback,
+            // pass through parsed_feedback for richer UI rendering when available
+            'parsed_feedback':
+                comprehensive['parsed_feedback'] ?? <String, List<String>>{},
             'scores': {
               'overall': (scores?['overall'] as num?)?.round() ?? 0,
               'content_quality':
@@ -302,7 +305,7 @@ class HybridAIService with ChangeNotifier {
           final feedbackText = comprehensive['feedback_text'];
           final scores = comprehensive['scores'] as Map<String, dynamic>?;
 
-          // Format feedback_text (same logic as Cloud AI)
+          // Format feedback_text with clear section headers (same logic as Cloud AI)
           String formattedFeedback = 'No feedback';
           final overallNumeric = (scores?['overall'] as num?)?.toInt();
 
@@ -323,26 +326,26 @@ class HybridAIService with ChangeNotifier {
               final String overallStr = overallEval?.toString().trim() ?? '';
 
               if (contentStr.isNotEmpty) {
-                parts.add('Content Quality: $contentStr');
+                parts.add('📝 Content Quality Evaluation:\n$contentStr');
               } else {
                 parts.add(
-                  'Content Quality: Keep speaking up. Your speech content has a lot to offer! Your current content quality score is $overallNumeric. With more practice, you can enhance your relevance, depth, and originality.',
+                  '📝 Content Quality Evaluation:\n• Your speech content has potential! Current score: $overallNumeric\n• Focus on adding more specific examples and depth\n• Practice developing your main points more thoroughly',
                 );
               }
 
               if (clarityStr.isNotEmpty) {
-                parts.add('Clarity & Structure: $clarityStr');
+                parts.add('🎯 Clarity & Structure Evaluation:\n$clarityStr');
               } else {
                 parts.add(
-                  'Clarity & Structure: Great effort! Your current clarity and structure score is $overallNumeric. Focus on improving logical flow, pacing, and conciseness to make your speeches even more engaging.',
+                  '🎯 Clarity & Structure Evaluation:\n• Good effort! Current score: $overallNumeric\n• Work on improving logical flow and transitions\n• Practice pacing to make your message more engaging',
                 );
               }
 
               if (overallStr.isNotEmpty) {
-                parts.add('Overall: $overallStr');
+                parts.add('⭐ Overall Evaluation:\n$overallStr');
               } else if (overallNumeric != null) {
                 parts.add(
-                  'Overall: Well done! great effort, here is a $overallNumeric. But you can always improve, there is still a lot of room for growth!',
+                  '⭐ Overall Evaluation:\n• Well done! Current score: $overallNumeric\n• You have room for growth - keep practicing!\n• Focus on the specific areas mentioned above',
                 );
               }
 
@@ -358,6 +361,8 @@ class HybridAIService with ChangeNotifier {
 
           return {
             'feedback': formattedFeedback,
+            'parsed_feedback':
+                comprehensive['parsed_feedback'] ?? <String, List<String>>{},
             'scores': {
               'overall': (scores?['overall'] as num?)?.round() ?? 0,
               'content_quality':
