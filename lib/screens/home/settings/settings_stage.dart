@@ -3,6 +3,7 @@ import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/screens/home/settings/change_password_stage.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
+import 'package:voquadro/widgets/Modals/logout_confirmation.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});
@@ -132,7 +133,13 @@ class _SettingsStageState extends State<SettingsStage> {
                         SettingsTile(
                           title: 'Log out',
                           textColor: Colors.cyan,
-                          onTap: () {},
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  const LogoutConfirmationModal(),
+                            );
+                          },
                         ),
                       ],
                     ),
