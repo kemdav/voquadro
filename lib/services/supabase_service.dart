@@ -11,14 +11,7 @@ class SupabaseService {
   static Future<void> initialize() async {
     try {
       // Load base environment variables from the .env file.
-      await dotenv.load(fileName: ".env");
-
-      // Attempt to load optional local overrides from .env.local.
-      try {
-        await dotenv.load(fileName: ".env.local");
-      } catch (e) {
-        // Silently ignore if .env.local doesn't exist.
-      }
+      await dotenv.load(fileName: ".env.local");
 
       // Get the variables. The '!' will cause a crash if they are not found.
       String supabaseUrl = dotenv.env['SUPABASE_URL']!;
