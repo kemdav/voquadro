@@ -16,13 +16,12 @@ import 'public_speaking_ai_interaction.dart';
 // This export makes the enums available to other files that import the controller.
 export 'public_speaking_state_manager.dart';
 
-
-class PublicSpeakingController with
-    ChangeNotifier,
-    PublicSpeakingStateManager,
-    PublicSpeakingGameplay,
-    PublicSpeakingAIInteraction
-{
+class PublicSpeakingController
+    with
+        ChangeNotifier,
+        PublicSpeakingStateManager,
+        PublicSpeakingGameplay,
+        PublicSpeakingAIInteraction {
   // 1. DEPENDENCIES
   // FIX: Removed incorrect @override from a private field.
   final AudioController _audioController;
@@ -39,11 +38,15 @@ class PublicSpeakingController with
   PublicSpeakingController({required AudioController audioController})
     : _audioController = audioController;
 
-
   // 2. STATE OWNERSHIP & GETTERS
   String? _userTranscript;
   @override
   String? get userTranscript => _userTranscript;
+  @override
+  set userTranscript(String? value) {
+    _userTranscript = value;
+    notifyListeners();
+  }
 
   String? _aiFeedback;
   @override
@@ -104,7 +107,6 @@ class PublicSpeakingController with
   String get aiServiceMessage => _aiService.getServiceMessage();
   String get estimatedResponseTime => _aiService.getEstimatedResponseTime();
 
-
   // 3. ORCHESTRATION & METHODS
 
   Future<void> generateRandomQuestionAndStart() async {
@@ -132,7 +134,8 @@ class PublicSpeakingController with
         _transcriptionError = null;
         notifyListeners();
         try {
-          final transcribed = await audioController.transcribeWithAssemblyAI(); // Use the getter
+          final transcribed = await audioController
+              .transcribeWithAssemblyAI(); // Use the getter
           _userTranscript = transcribed.isNotEmpty ? transcribed : null;
           if (transcribed.isEmpty) {
             _transcriptionError = 'Transcription returned empty text.';
@@ -162,6 +165,7 @@ class PublicSpeakingController with
       _sessionResult = createSessionResult();
       notifyListeners();
     }
+
     ensureTranscriptAndGenerate();
   }
 
@@ -185,15 +189,30 @@ class PublicSpeakingController with
     notifyListeners();
   }
 
+  // FIX: Implement clearSessionData required by PublicSpeakingGameplay mixin
+  @override
+  void clearSessionData() {
+    _userTranscript = null;
+    _aiFeedback = null;
+    _transcriptionError = null;
+    _isTranscribing = false;
+    clearScores();
+  }
+
   Session createSessionResult() {
     return Session(
       id: 'session_${DateTime.now().millisecondsSinceEpoch}',
       modeId: 'public',
-      topic:  topic ?? 'Topic', // Replace with topic
-      generatedQuestion: questionGenerated ?? 'Question Generated', // Replace with generated question
+      topic: topic ?? 'Topic', // Replace with topic
+      generatedQuestion:
+          questionGenerated ??
+          'Question Generated', // Replace with generated question
       timestamp: DateTime.now(),
-      modeEXP: 50, practiceEXP: 100, masteryEXP: 35,
-      paceControlEXP: 25, fillerControlEXP: 10,
+      modeEXP: 50,
+      practiceEXP: 100,
+      masteryEXP: 35,
+      paceControlEXP: 25,
+      fillerControlEXP: 10,
       paceControl: wordsPerMinute?.toDouble() ?? 0.0,
       fillerControl: fillerWordCount?.toDouble() ?? 0.0,
       overallRating: overallScore?.toDouble() ?? 0.0,

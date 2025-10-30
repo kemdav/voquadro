@@ -1,14 +1,21 @@
 import 'package:flutter/foundation.dart';
+import 'package:voquadro/src/ai-integration/cloud_ai_service.dart';
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/src/ai-integration/fallback_question_service.dart';
 import 'package:voquadro/src/ai-integration/fallback_feedback_service.dart';
 
-/// Hybrid AI service that tries Ollama first, then falls back to static content
+/// Hybrid AI service with priority: Cloud AI → Ollama → Fallback
+/// - Cloud AI: Works on mobile without Ollama setup (requires internet)
+/// - Ollama: Local AI for desktop/development (optional)
+/// - Fallback: Static content when no AI is available (offline support)
 class HybridAIService with ChangeNotifier {
   HybridAIService._();
   static final HybridAIService instance = HybridAIService._();
 
+  final CloudAIService _cloudAIService = CloudAIService.instance;
   final OllamaService _ollamaService = OllamaService.instance;
+
+  bool _isCloudAIAvailable = false;
   bool _isOllamaAvailable = false;
   bool _hasCheckedConnection = false;
   SpeechSession? _currentSession;
@@ -18,64 +25,107 @@ class HybridAIService with ChangeNotifier {
   bool get hasActiveSession => _currentSession != null;
   String? get currentTopic => _currentSession?.topic;
   String? get currentQuestion => _currentSession?.generatedQuestion;
+  bool get isCloudAIAvailable => _isCloudAIAvailable;
   bool get isOllamaAvailable => _isOllamaAvailable;
-  bool get isUsingFallback => !_isOllamaAvailable;
+  bool get isUsingFallback => !_isCloudAIAvailable && !_isOllamaAvailable;
+  String get activeAIService {
+    if (_isCloudAIAvailable) return 'Cloud AI (Gemini)';
+    if (_isOllamaAvailable) return 'Ollama';
+    return 'Fallback';
+  }
 
   static String get _modelName =>
       OllamaService.modelName; // Consistent model name access
 
-  /// Checks if Ollama is available and caches the result
-  Future<bool> checkOllamaAvailability() async {
+  /// Checks AI availability with priority: Cloud AI → Ollama
+  Future<void> checkAIAvailability() async {
     if (!_hasCheckedConnection) {
+      // Check Cloud AI first (best for mobile)
+      _isCloudAIAvailable = await _cloudAIService.checkAvailability();
+
+      // Check Ollama second (for desktop/development)
       _isOllamaAvailable = await _ollamaService.checkOllamaConnection();
+
       _hasCheckedConnection = true;
       notifyListeners();
-      debugPrint('Ollama availability checked: $_isOllamaAvailable');
+
+      debugPrint(
+        'AI Availability - Cloud: $_isCloudAIAvailable, Ollama: $_isOllamaAvailable',
+      );
     }
+  }
+
+  /// Legacy method for backward compatibility
+  Future<bool> checkOllamaAvailability() async {
+    await checkAIAvailability();
     return _isOllamaAvailable;
   }
 
-  /// Forces a new connection check (useful for retry scenarios)
-  Future<bool> forceCheckOllamaAvailability() async {
+  /// Forces a new connection check for all AI services
+  Future<void> forceCheckAIAvailability() async {
     _hasCheckedConnection = false;
-    return await checkOllamaAvailability();
+    await checkAIAvailability();
   }
 
-  /// Generates a question using Ollama if available, otherwise uses fallback
+  /// Forces a new connection check (legacy compatibility)
+  Future<bool> forceCheckOllamaAvailability() async {
+    await forceCheckAIAvailability();
+    return _isOllamaAvailable;
+  }
+
+  /// Generates a question with priority: Cloud AI → Ollama → Fallback
   Future<SpeechSession> generateQuestion(String topic) async {
     try {
-      // Quick check if Ollama is available (with timeout)
-      final isOllamaAvailable = await _checkOllamaWithRetry();
+      // Force a fresh check for Cloud AI availability at the start of each session
+      // This ensures we retry Cloud AI even if it failed previously
+      _hasCheckedConnection = false;
+      await checkAIAvailability();
 
-      if (isOllamaAvailable) {
-        debugPrint('Using Ollama for question generation');
+      // Try Cloud AI first (best for mobile)
+      if (_isCloudAIAvailable) {
+        debugPrint('Using Cloud AI (Gemini) for question generation');
         try {
-          // Set up a race between Ollama and fallback
-          final session = await _ollamaService
+          final session = await _cloudAIService
               .generateQuestion(topic)
               .timeout(
-                const Duration(seconds: 120), // Max wait time for Ollama
+                const Duration(seconds: 30),
                 onTimeout: () {
-                  debugPrint(
-                    'Ollama generation timed out, switching to fallback',
-                  );
-                  _isOllamaAvailable = false;
-                  notifyListeners();
-                  throw 'Ollama timeout';
+                  debugPrint('Cloud AI timed out, trying next option');
+                  throw Exception('Cloud AI timeout');
                 },
               );
-          _isOllamaAvailable = true;
           _currentSession = session;
           notifyListeners();
           return session;
         } catch (e) {
-          debugPrint('Ollama failed, falling back to static questions: $e');
-          _isOllamaAvailable = false;
-          notifyListeners();
+          debugPrint('Cloud AI failed: $e, trying Ollama');
+          _isCloudAIAvailable = false;
         }
       }
 
-      // Use fallback service (immediate response)
+      // Try Ollama second (for desktop/development)
+      if (_isOllamaAvailable) {
+        debugPrint('Using Ollama for question generation');
+        try {
+          final session = await _ollamaService
+              .generateQuestion(topic)
+              .timeout(
+                const Duration(seconds: 120),
+                onTimeout: () {
+                  debugPrint('Ollama timed out, switching to fallback');
+                  throw Exception('Ollama timeout');
+                },
+              );
+          _currentSession = session;
+          notifyListeners();
+          return session;
+        } catch (e) {
+          debugPrint('Ollama failed: $e, using fallback');
+          _isOllamaAvailable = false;
+        }
+      }
+
+      // Use fallback service (offline support)
       debugPrint('Using fallback service for question generation');
       final session = FallbackQuestionService.createFallbackSession(topic);
       _currentSession = session;
@@ -83,7 +133,7 @@ class HybridAIService with ChangeNotifier {
       return session;
     } catch (e) {
       debugPrint('Error in generateQuestion: $e');
-      // Final fallback (immediate response)
+      // Final fallback
       final session = FallbackQuestionService.createFallbackSession(topic);
       _currentSession = session;
       notifyListeners();
@@ -91,30 +141,30 @@ class HybridAIService with ChangeNotifier {
     }
   }
 
-  Future<bool> _checkOllamaWithRetry() async {
-    try {
-      return await checkOllamaAvailability().timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          debugPrint('Ollama availability check timed out');
-          return false;
-        },
-      );
-    } catch (e) {
-      debugPrint('Error checking Ollama availability: $e');
-      return false;
-    }
-  }
-
-  /// Gets public speaking feedback using Ollama if available, otherwise uses fallback
+  /// Gets public speaking feedback with priority: Cloud AI → Ollama → Fallback
   Future<String> getPublicSpeakingFeedback(
     String transcript,
     SpeechSession session,
   ) async {
     try {
-      final isOllamaAvailable = await checkOllamaAvailability();
+      await checkAIAvailability();
 
-      if (isOllamaAvailable) {
+      // Try Cloud AI first
+      if (_isCloudAIAvailable) {
+        debugPrint('Using Cloud AI for feedback generation');
+        try {
+          return await _cloudAIService.getPublicSpeakingFeedback(
+            transcript,
+            session,
+          );
+        } catch (e) {
+          debugPrint('Cloud AI failed: $e, trying Ollama');
+          _isCloudAIAvailable = false;
+        }
+      }
+
+      // Try Ollama second
+      if (_isOllamaAvailable) {
         debugPrint('Using Ollama for feedback generation');
         try {
           return await _ollamaService.getPublicSpeakingFeedback(
@@ -122,9 +172,8 @@ class HybridAIService with ChangeNotifier {
             session,
           );
         } catch (e) {
-          debugPrint('Ollama failed, falling back to rule-based feedback: $e');
+          debugPrint('Ollama failed: $e, using fallback');
           _isOllamaAvailable = false;
-          notifyListeners();
         }
       }
 
@@ -143,7 +192,7 @@ class HybridAIService with ChangeNotifier {
     }
   }
 
-  /// Gets feedback with scores using Ollama if available, otherwise uses fallback
+  /// Gets feedback with scores with priority: Cloud AI → Ollama → Fallback
   Future<Map<String, dynamic>> getPublicSpeakingFeedbackWithScores(
     String transcript,
     SpeechSession session, {
@@ -152,13 +201,99 @@ class HybridAIService with ChangeNotifier {
     int durationSeconds = 1,
   }) async {
     try {
-      final isOllamaAvailable = await checkOllamaAvailability();
+      // Don't force recheck here since we already did it in generateQuestion
+      // But ensure we have checked at least once
+      if (!_hasCheckedConnection) {
+        await checkAIAvailability();
+      }
 
-      if (isOllamaAvailable) {
-        debugPrint('Using optimized combined scores generation');
+      // Try Cloud AI first
+      if (_isCloudAIAvailable) {
+        debugPrint('Using Cloud AI for comprehensive feedback');
         try {
-          // Use the new single-call comprehensive endpoint to get both
-          // structured feedback and scores in one request.
+          final comprehensive = await _cloudAIService
+              .getComprehensiveFeedback(
+                transcript,
+                session,
+                wordCount: wordCount,
+                fillerCount: fillerCount,
+                durationSeconds: durationSeconds,
+              )
+              .timeout(
+                const Duration(seconds: 45),
+                onTimeout: () {
+                  debugPrint('Cloud AI feedback timed out, trying Ollama');
+                  throw Exception('Cloud AI feedback timeout');
+                },
+              );
+
+          final feedbackText = comprehensive['feedback_text'];
+          final scores = comprehensive['scores'] as Map<String, dynamic>?;
+
+          // Format feedback_text with clear section headers
+          String formattedFeedback = 'No feedback';
+
+          if (feedbackText != null) {
+            if (feedbackText is String) {
+              formattedFeedback = feedbackText;
+            } else if (feedbackText is Map) {
+              final Map fb = feedbackText;
+              final contentEval =
+                  fb['content_quality_eval'] ?? fb['content_eval'] ?? '';
+              final clarityEval =
+                  fb['clarity_structure_eval'] ?? fb['clarity_eval'] ?? '';
+              final overallEval = fb['overall_eval'] ?? fb['overall'] ?? '';
+
+              final parts = <String>[];
+              final String contentStr = contentEval?.toString().trim() ?? '';
+              final String clarityStr = clarityEval?.toString().trim() ?? '';
+              final String overallStr = overallEval?.toString().trim() ?? '';
+
+              if (contentStr.isNotEmpty) {
+                parts.add('- Content Quality Evaluation: $contentStr');
+              }
+
+              if (clarityStr.isNotEmpty) {
+                parts.add('- Clarity & Structure Evaluation: $clarityStr');
+              }
+
+              if (overallStr.isNotEmpty) {
+                parts.add('- Overall Evaluation: $overallStr');
+              }
+
+              formattedFeedback = parts.isEmpty
+                  ? 'No feedback'
+                  : parts.join('\n\n');
+            } else {
+              formattedFeedback = feedbackText.toString();
+            }
+          }
+
+          return {
+            'feedback': formattedFeedback,
+            // pass through parsed_feedback for richer UI rendering when available
+            'parsed_feedback':
+                comprehensive['parsed_feedback'] ?? <String, List<String>>{},
+            'scores': {
+              'overall': (scores?['overall'] as num?)?.round() ?? 0,
+              'content_quality':
+                  (scores?['content_quality'] as num?)?.round() ?? 0,
+              'clarity_structure':
+                  (scores?['clarity_structure'] as num?)?.round() ?? 0,
+            },
+            'topic': session.topic,
+            'question': session.generatedQuestion,
+          };
+        } catch (e) {
+          debugPrint('Cloud AI failed: $e, trying Ollama');
+          _isCloudAIAvailable = false;
+        }
+      }
+
+      // Try Ollama second
+      if (_isOllamaAvailable) {
+        debugPrint('Using Ollama for comprehensive feedback');
+        try {
           final comprehensive = await _ollamaService.getComprehensiveFeedback(
             transcript,
             session: session,
@@ -170,7 +305,7 @@ class HybridAIService with ChangeNotifier {
           final feedbackText = comprehensive['feedback_text'];
           final scores = comprehensive['scores'] as Map<String, dynamic>?;
 
-          // Format feedback_text into a readable labeled string to avoid raw Map display
+          // Format feedback_text with clear section headers (same logic as Cloud AI)
           String formattedFeedback = 'No feedback';
           final overallNumeric = (scores?['overall'] as num?)?.toInt();
 
@@ -191,26 +326,26 @@ class HybridAIService with ChangeNotifier {
               final String overallStr = overallEval?.toString().trim() ?? '';
 
               if (contentStr.isNotEmpty) {
-                parts.add('Content Quality: $contentStr');
+                parts.add('📝 Content Quality Evaluation:\n$contentStr');
               } else {
                 parts.add(
-                  'Content Quality: Keep speaking up. Your speech content has a lot to offer! Your current content quality score is $overallNumeric. With more practice, you can enhance your relevance, depth, and originality.',
+                  '📝 Content Quality Evaluation:\n• Your speech content has potential! Current score: $overallNumeric\n• Focus on adding more specific examples and depth\n• Practice developing your main points more thoroughly',
                 );
               }
 
               if (clarityStr.isNotEmpty) {
-                parts.add('Clarity & Structure: $clarityStr');
+                parts.add('🎯 Clarity & Structure Evaluation:\n$clarityStr');
               } else {
                 parts.add(
-                  'Clarity & Structure: Great effort! Your current clarity and structure score is $overallNumeric. Focus on improving logical flow, pacing, and conciseness to make your speeches even more engaging.',
+                  '🎯 Clarity & Structure Evaluation:\n• Good effort! Current score: $overallNumeric\n• Work on improving logical flow and transitions\n• Practice pacing to make your message more engaging',
                 );
               }
 
               if (overallStr.isNotEmpty) {
-                parts.add('Overall: $overallStr');
+                parts.add('⭐ Overall Evaluation:\n$overallStr');
               } else if (overallNumeric != null) {
                 parts.add(
-                  'Overall: Well done! great effort, here is a $overallNumeric. But you can always improve, there is still a lot of room for growth!',
+                  '⭐ Overall Evaluation:\n• Well done! Current score: $overallNumeric\n• You have room for growth - keep practicing!\n• Focus on the specific areas mentioned above',
                 );
               }
 
@@ -226,6 +361,8 @@ class HybridAIService with ChangeNotifier {
 
           return {
             'feedback': formattedFeedback,
+            'parsed_feedback':
+                comprehensive['parsed_feedback'] ?? <String, List<String>>{},
             'scores': {
               'overall': (scores?['overall'] as num?)?.round() ?? 0,
               'content_quality':
@@ -237,13 +374,12 @@ class HybridAIService with ChangeNotifier {
             'question': session.generatedQuestion,
           };
         } catch (e) {
-          debugPrint('Optimized Ollama failed: $e');
+          debugPrint('Ollama failed: $e, using fallback');
           _isOllamaAvailable = false;
-          notifyListeners();
         }
       }
 
-      // Fallback to existing method
+      // Fallback
       return await _getFallbackFeedbackWithScores(
         transcript,
         session,
@@ -252,7 +388,7 @@ class HybridAIService with ChangeNotifier {
         durationSeconds: durationSeconds,
       );
     } catch (e) {
-      debugPrint('Error in optimized feedback with scores: $e');
+      debugPrint('Error in feedback with scores: $e');
       return FallbackFeedbackService.generateFeedbackWithScores(
         transcript,
         session.generatedQuestion,
@@ -291,19 +427,30 @@ class HybridAIService with ChangeNotifier {
     }
   }
 
-  /// Gets content quality score using Ollama if available, otherwise uses fallback
+  /// Gets content quality score with priority: Cloud AI → Ollama → Fallback
   Future<double> contentQualityScore(String transcript) async {
     try {
-      final isOllamaAvailable = await checkOllamaAvailability();
+      await checkAIAvailability();
 
-      if (isOllamaAvailable) {
+      // Try Cloud AI first
+      if (_isCloudAIAvailable) {
+        debugPrint('Using Cloud AI for content quality score');
+        try {
+          return await _cloudAIService.contentQualityScore(transcript);
+        } catch (e) {
+          debugPrint('Cloud AI failed: $e, trying Ollama');
+          _isCloudAIAvailable = false;
+        }
+      }
+
+      // Try Ollama second
+      if (_isOllamaAvailable) {
         debugPrint('Using Ollama for content quality score');
         try {
           return await _ollamaService.contentQualityScore(transcript);
         } catch (e) {
-          debugPrint('Ollama failed, falling back to rule-based scoring: $e');
+          debugPrint('Ollama failed: $e, using fallback');
           _isOllamaAvailable = false;
-          notifyListeners();
         }
       }
 
@@ -320,7 +467,7 @@ class HybridAIService with ChangeNotifier {
     }
   }
 
-  /// Gets clarity and structure score using Ollama if available, otherwise uses fallback
+  /// Gets clarity and structure score with priority: Cloud AI → Ollama → Fallback
   Future<double> clarityStructureScore(
     String transcript, {
     int wordCount = 0,
@@ -328,9 +475,21 @@ class HybridAIService with ChangeNotifier {
     int durationSeconds = 0,
   }) async {
     try {
-      final isOllamaAvailable = await checkOllamaAvailability();
+      await checkAIAvailability();
 
-      if (isOllamaAvailable) {
+      // Try Cloud AI first
+      if (_isCloudAIAvailable) {
+        debugPrint('Using Cloud AI for clarity and structure score');
+        try {
+          return await _cloudAIService.clarityStructureScore(transcript);
+        } catch (e) {
+          debugPrint('Cloud AI failed: $e, trying Ollama');
+          _isCloudAIAvailable = false;
+        }
+      }
+
+      // Try Ollama second
+      if (_isOllamaAvailable) {
         debugPrint('Using Ollama for clarity and structure score');
         try {
           return await _ollamaService.clarityStructureScore(
@@ -340,9 +499,8 @@ class HybridAIService with ChangeNotifier {
             durationSeconds: durationSeconds,
           );
         } catch (e) {
-          debugPrint('Ollama failed, falling back to rule-based scoring: $e');
+          debugPrint('Ollama failed: $e, using fallback');
           _isOllamaAvailable = false;
-          notifyListeners();
         }
       }
 
@@ -362,7 +520,7 @@ class HybridAIService with ChangeNotifier {
     }
   }
 
-  /// Gets overall score using Ollama if available, otherwise uses fallback
+  /// Gets overall score with priority: Cloud AI → Ollama → Fallback
   Future<double> overallScore(
     String transcript, {
     int wordCount = 0,
@@ -370,9 +528,27 @@ class HybridAIService with ChangeNotifier {
     int durationSeconds = 0,
   }) async {
     try {
-      final isOllamaAvailable = await checkOllamaAvailability();
+      await checkAIAvailability();
 
-      if (isOllamaAvailable) {
+      // Try Cloud AI first (calculate from component scores)
+      if (_isCloudAIAvailable) {
+        debugPrint('Using Cloud AI for overall score');
+        try {
+          final contentScore = await _cloudAIService.contentQualityScore(
+            transcript,
+          );
+          final clarityScore = await _cloudAIService.clarityStructureScore(
+            transcript,
+          );
+          return (contentScore + clarityScore) / 2;
+        } catch (e) {
+          debugPrint('Cloud AI failed: $e, trying Ollama');
+          _isCloudAIAvailable = false;
+        }
+      }
+
+      // Try Ollama second
+      if (_isOllamaAvailable) {
         debugPrint('Using Ollama for overall score');
         try {
           return await _ollamaService.overallScore(
@@ -382,9 +558,8 @@ class HybridAIService with ChangeNotifier {
             durationSeconds: durationSeconds,
           );
         } catch (e) {
-          debugPrint('Ollama failed, falling back to rule-based scoring: $e');
+          debugPrint('Ollama failed: $e, using fallback');
           _isOllamaAvailable = false;
-          notifyListeners();
         }
       }
 
@@ -404,10 +579,13 @@ class HybridAIService with ChangeNotifier {
     }
   }
 
-  /// Clears the current session
+  /// Clears the current session and resets AI availability flags
+  /// This allows the next session to retry all AI services
   void clearSession() {
     _currentSession = null;
     _ollamaService.clearSession();
+    // Reset the connection check flag to force recheck on next session
+    _hasCheckedConnection = false;
     notifyListeners();
   }
 
