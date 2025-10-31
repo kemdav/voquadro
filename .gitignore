@@ -14,7 +14,7 @@ migrate_working_dir/
 
 # Supabase
 .env.local
-.env
+supabase\.temp
 
 # IntelliJ related
 *.iml
@@ -68,4 +68,3 @@ app.*.map.json
 /windows/flutter/generated_plugin_registrant.cc
 /windows/flutter/generated_plugin_registrant.h
 /windows/flutter/generated_plugins.cmake
-

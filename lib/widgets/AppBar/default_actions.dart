@@ -7,7 +7,16 @@ import 'package:voquadro/src/hex_color.dart';
 var logger = Logger();
 
 class DefaultActions extends StatelessWidget {
-  const DefaultActions({super.key});
+  const DefaultActions({
+    super.key,
+    this.onBackPressed,
+    this.onProfilePressed,
+    this.onSettingsPressed,
+  });
+
+  final VoidCallback? onBackPressed;
+  final VoidCallback? onProfilePressed;
+  final VoidCallback? onSettingsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +33,13 @@ class DefaultActions extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconButton.filled(
-            onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-            },
+            onPressed:
+                onBackPressed ??
+                () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
             icon: const Icon(Icons.arrow_back),
             iconSize: 50,
             style: IconButton.styleFrom(
@@ -40,13 +51,15 @@ class DefaultActions extends StatelessWidget {
           Row(
             children: [
               IconButton.filled(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const PublicSpeakingProfileStage(),
-                    ),
-                  );
-                },
+                onPressed:
+                    onProfilePressed ??
+                    () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const PublicSpeakingProfileStage(),
+                        ),
+                      );
+                    },
                 icon: const Icon(Icons.person),
                 iconSize: 50,
                 style: IconButton.styleFrom(
@@ -56,11 +69,15 @@ class DefaultActions extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               IconButton.filled(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SettingsStage()),
-                  );
-                },
+                onPressed:
+                    onSettingsPressed ??
+                    () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsStage(),
+                        ),
+                      );
+                    },
                 icon: const Icon(Icons.settings),
                 iconSize: 50,
                 style: IconButton.styleFrom(
