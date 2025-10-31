@@ -13,8 +13,8 @@
 migrate_working_dir/
 
 # Supabase
-#.env.local
-.env
+.env.local
+supabase\.temp
 
 # IntelliJ related
 *.iml
