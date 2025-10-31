@@ -72,6 +72,11 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
+  void updateUser(User newUser) {
+    currentUser = newUser;
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     //Call the service to sign the user out from the backend (Supabase)
     await UserService.signOut();
