@@ -23,11 +23,11 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> {
   }
 
   void _handleFinalDeletion() {
-    debugPrint('Account deletion requested - implement actual deletion logic');
+    debugPrint('Account deletion requested - baibai!');
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Account deletion functionality coming soon'),
+        content: Text('logic for deelte here'),
         duration: Duration(seconds: 2),
       ),
     );
