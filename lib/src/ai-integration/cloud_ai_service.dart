@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
+import 'package:voquadro/src/speech-calculations/score_utils.dart';
+import 'package:voquadro/src/speech-calculations/speech_metrics.dart';
 
 /// Cloud-based AI service using Google Gemini API
 /// Works on mobile devices without requiring local AI installation
@@ -132,44 +134,45 @@ Return ONLY a JSON object in this exact format:
     try {
       final prompt =
           '''
-Analyze this public speaking performance.
+  Analyze this public speaking performance.
 
-Topic: ${session.topic}
-Question: ${session.generatedQuestion}
-Duration: ${durationSeconds}s
-Word Count: $wordCount
-Filler Words: $fillerCount
+  Topic: ${session.topic}
+  Question: ${session.generatedQuestion}
+  Duration: ${durationSeconds}s
+  Word Count: $wordCount
+  Filler Words: $fillerCount
 
-Speech Transcript:
-"""
-$transcript
-"""
+  Speech Transcript:
+  """
+  $transcript
+  """
 
-CRITICAL: Return ONLY the JSON structure below. NO introductory text, NO explanations, NO commentary.
+  CRITICAL: Return ONLY the JSON object wrapped in a fenced code block tagged as json, e.g. ```json\n{...}\n```.
+  Do NOT include any other text outside the code block.
 
-REQUIREMENTS:
-- MAXIMUM 2 bullet points per category
-- Each bullet MUST be ONE SHORT sentence (max 15 words)
-- NO introductory statements like "Let's break down..." or "Okay..."
-- NO phrases like "First", "Overall", "Right now", "In general"
-- Start each bullet with "• " followed immediately by content
-- Be direct and specific
+  REQUIREMENTS (strict):
+  - MAXIMUM 2 bullet points per category.
+  - Each bullet MUST be ONE SHORT sentence (max 15 words).
+  - Do NOT include extraneous commentary, prefaces, or lists beyond the required JSON.
+  - Start each bullet with the bullet marker "• " exactly, and separate bullets with a literal "\\n" inside the JSON string value.
+  - Escape any newline or control characters inside JSON string values using \\n+  (that is, use "\\n" for newlines inside string values).
 
-FORBIDDEN:
-- Any text before or after the JSON object
-- Conversational tone or preambles
-- Meta-commentary about the speech
-- Phrases like "let's", "okay", "here's", "this speech"
+  FORBIDDEN:
+  - Any text before or after the fenced code block.
+  - Unescaped newlines inside JSON string literals.
+  - Any conversational preamble or meta commentary.
 
-Return EXACTLY this JSON structure with NO other text:
-{
-  "feedback_text": {
-    "content_quality_eval": "• [specific observation]\n• [specific suggestion]",
-    "clarity_structure_eval": "• [specific observation]\n• [specific suggestion]",
-    "overall_eval": "• [main strength]\n• [key improvement]"
+  Return EXACTLY this JSON structure inside the fenced ```json block:
+  ```json
+  {
+    "feedback_text": {
+      "content_quality_eval": "• [specific observation]\\n• [specific suggestion]",
+      "clarity_structure_eval": "• [specific observation]\\n• [specific suggestion]",
+      "overall_eval": "• [main strength]\\n• [key improvement]"
+    }
   }
-}
-''';
+  ```
+  ''';
 
       // Use JSON mode and low temperature for consistent structured output
       final response = await _callGemini(
@@ -215,11 +218,51 @@ Return EXACTLY this JSON structure with NO other text:
         final textResponse = response['text'] as String;
         debugPrint('Gemini returned plain text instead of JSON structure');
 
-        feedbackText = {
-          'content_quality_eval': textResponse,
-          'clarity_structure_eval': '',
-          'overall_eval': '',
-        };
+        // Attempt to recover structured fields from the plain text by
+        // extracting quoted values for the expected keys when possible.
+        // This helps when the model returned a JSON-like string but it
+        // failed strict parsing due to unescaped newlines or minor issues.
+        final extracted = <String, String>{};
+
+        // Only attempt extraction if the text contains the feedback_text marker
+        if (textResponse.contains('feedback_text')) {
+          // try to extract the three evaluation strings using regex with dotAll
+          String? tryExtract(String key) {
+            final reg = RegExp(
+              '"${RegExp.escape(key)}"\\s*:\\s*"(.*?)"',
+              dotAll: true,
+            );
+            final m = reg.firstMatch(textResponse);
+            if (m != null && m.groupCount >= 1) return m.group(1)?.trim();
+            return null;
+          }
+
+          final a =
+              tryExtract('content_quality_eval') ??
+              tryExtract('content_quality') ??
+              '';
+          final b =
+              tryExtract('clarity_structure_eval') ??
+              tryExtract('clarity_structure') ??
+              '';
+          final c = tryExtract('overall_eval') ?? tryExtract('overall') ?? '';
+
+          if (a.isNotEmpty || b.isNotEmpty || c.isNotEmpty) {
+            extracted['content_quality_eval'] = a.replaceAll('\\n', '\n');
+            extracted['clarity_structure_eval'] = b.replaceAll('\\n', '\n');
+            extracted['overall_eval'] = c.replaceAll('\\n', '\n');
+          }
+        }
+
+        if (extracted.isNotEmpty) {
+          feedbackText = Map<String, dynamic>.from(extracted);
+        } else {
+          feedbackText = {
+            'content_quality_eval': textResponse,
+            'clarity_structure_eval': '',
+            'overall_eval': '',
+          };
+        }
       }
 
       // Ensure we have valid structure with fallback values
@@ -234,13 +277,75 @@ Return EXACTLY this JSON structure with NO other text:
                 '• Good effort on your first attempt\n• Focus on organization and examples\n• Keep practicing to build confidence',
           };
 
-      final finalScores =
-          scores ??
-          {
-            'overall': Random().nextInt(100) + 1,
-            'content_quality': Random().nextInt(100) + 1,
-            'clarity_structure': Random().nextInt(100) + 1,
-          };
+      // Compute deterministic metrics
+      final effectiveWordCount = wordCount <= 0
+          ? transcript
+                .trim()
+                .split(RegExp(r'\s+'))
+                .where((w) => w.isNotEmpty)
+                .length
+          : wordCount;
+      final effectiveFillerCount = fillerCount;
+      final duration = Duration(seconds: max(1, durationSeconds));
+      final wpm = calculateWordsPerMinute(transcript, duration);
+
+      // Normalize model-provided scores if present
+      int modelOverall = 0;
+      int modelContent = 0;
+      int modelClarity = 0;
+      if (scores != null) {
+        modelOverall = ScoreUtils.normalizeModelScore(
+          scores['overall'] as num?,
+        );
+        modelContent = ScoreUtils.normalizeModelScore(
+          scores['content_quality'] as num?,
+        );
+        modelClarity = ScoreUtils.normalizeModelScore(
+          scores['clarity_structure'] as num?,
+        );
+      }
+
+      // Deterministic metric scores
+      final wpmScore = ScoreUtils.wpmToScore(wpm);
+      final fillerScore = ScoreUtils.fillerToScore(
+        effectiveFillerCount,
+        max(1, effectiveWordCount),
+      );
+
+      // If model did not provide explicit scores, reduce model weight so deterministic metrics carry more influence
+      final bool hasModelScores = scores != null && scores.isNotEmpty;
+      final blendedOverall = ScoreUtils.blendScores(
+        modelScore: hasModelScores ? modelOverall : 0,
+        wpmScore: wpmScore,
+        fillerScore: fillerScore,
+        modelWeight: hasModelScores ? 0.6 : 0.4,
+        wpmWeight: hasModelScores ? 0.25 : 0.4,
+        fillerWeight: hasModelScores ? 0.15 : 0.2,
+      );
+
+      final blendedContent = ScoreUtils.blendScores(
+        modelScore: hasModelScores ? modelContent : 0,
+        wpmScore: wpmScore,
+        fillerScore: fillerScore,
+        modelWeight: hasModelScores ? 0.6 : 0.4,
+        wpmWeight: hasModelScores ? 0.25 : 0.4,
+        fillerWeight: hasModelScores ? 0.15 : 0.2,
+      );
+
+      final blendedClarity = ScoreUtils.blendScores(
+        modelScore: hasModelScores ? modelClarity : 0,
+        wpmScore: wpmScore,
+        fillerScore: fillerScore,
+        modelWeight: hasModelScores ? 0.6 : 0.4,
+        wpmWeight: hasModelScores ? 0.25 : 0.4,
+        fillerWeight: hasModelScores ? 0.15 : 0.2,
+      );
+
+      final finalScores = {
+        'overall': blendedOverall,
+        'content_quality': blendedContent,
+        'clarity_structure': blendedClarity,
+      };
 
       // Ensure scores are integers
       final parsed = parseFeedbackMap(finalFeedback);

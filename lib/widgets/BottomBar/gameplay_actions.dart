@@ -19,7 +19,7 @@ class GameplayActions extends StatelessWidget {
         if (controller.currentState == PublicSpeakingState.micTest) {
           return _micTestActions(context);
         }
-        
+
         // Show restart/close buttons during readying and speaking
         return _speakingActions(context);
       },
@@ -32,7 +32,9 @@ class GameplayActions extends StatelessWidget {
       child: IconButton.filled(
         onPressed: () {
           // Generate a random question and start the timed sequence
-          context.read<PublicSpeakingController>().generateRandomQuestionAndStart();
+          context
+              .read<PublicSpeakingController>()
+              .generateRandomQuestionAndStart();
         },
         icon: const Icon(Icons.play_arrow),
         iconSize: 100,
@@ -75,7 +77,9 @@ class GameplayActions extends StatelessWidget {
           ),
         ),
         // A placeholder to balance the layout, matching the size of the restart button.
-        const SizedBox(width: 66), // Approx size of IconButton.filled with iconSize 50
+        const SizedBox(
+          width: 66,
+        ), // Approx size of IconButton.filled with iconSize 50
       ],
     );
   }
