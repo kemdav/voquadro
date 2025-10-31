@@ -119,7 +119,7 @@ class SpeakFeedbackPage extends StatelessWidget {
       );
     }
 
-    //Display the actual feedback
+    //Display the feedback
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -139,15 +139,21 @@ class SpeakFeedbackPage extends StatelessWidget {
           const SizedBox(height: 16),
         ],
 
-        //Display the feedback
-        Text(
-          feedback,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontSize: 16,
-            height: 1.5,
+        // If parsed feedback is available, render it as widgets for better UX
+        if (controller.aiParsedFeedback != null &&
+            controller.aiParsedFeedback!.isNotEmpty) ...[
+          ...controller.buildParsedFeedbackWidgets(controller.aiParsedFeedback),
+        ] else ...[
+          // Fallback to the plain formatted string
+          Text(
+            feedback,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+              height: 1.5,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }

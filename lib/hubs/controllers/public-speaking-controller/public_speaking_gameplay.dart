@@ -15,6 +15,8 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
   /// A method to transition to the feedback view.
   void showFeedback();
 
+  /// A method to clear session data when starting a new session.
+  void clearSessionData();
 
   // --- INTERNAL STATE & METHODS ---
 
@@ -29,6 +31,7 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
 
   void startGameplaySequence() {
     cancelGameplaySequence(); // Stop any previous timers
+    clearSessionData(); // Clear previous session data including transcript
 
     // Now correctly calls the method provided by the controller
     setPublicSpeakingState(PublicSpeakingState.readying);
