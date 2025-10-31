@@ -5,10 +5,10 @@ class LogoutConfirmationModal extends StatelessWidget {
   const LogoutConfirmationModal({super.key});
 
   void _handleLogout(BuildContext context) {
-    debugPrint('Logout requested - implement actual logout logic');
+    debugPrint('logout logicccc');
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Logout functionality coming soon')),
+      const SnackBar(content: Text('logic for logout here pleasessss')),
     );
   }
 

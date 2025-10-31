@@ -152,7 +152,7 @@ class _SettingsStageState extends State<SettingsStage> {
                       ],
                     ),
 
-                    // Privacy & Security
+                    // Add back Privacy & Security section
                     _SectionHeader(
                       title: 'Privacy & Security',
                       icon: Icons.lock,
@@ -205,7 +205,7 @@ class SettingsTile extends StatelessWidget {
   final Widget? trailing;
 
   const SettingsTile({
-    super.key, // Updated to use super parameter
+    super.key,
     required this.title,
     required this.onTap,
     this.textColor,
@@ -236,7 +236,7 @@ class SwitchSettingsTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   const SwitchSettingsTile({
-    super.key, // Updated to use super parameter
+    super.key,
     required this.title,
     required this.value,
     required this.onChanged,
@@ -261,7 +261,7 @@ class SwitchSettingsTile extends StatelessWidget {
 }
 
 //log out confirmation dialog
-// Add this method inside the _SettingsStageState class
+// Add this method inside the _SettingsStageState class plsss
 void showLogoutConfirmationDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -271,13 +271,7 @@ void showLogoutConfirmationDialog(BuildContext context) {
       return ConfirmationDialog(
         // Pass the logout logic to the dialog
         onConfirm: () {
-          // --- YOUR LOGOUT LOGIC GOES HERE ---
-
-          // Example of navigating to a login screen after logout:
-          // Navigator.of(context).pushAndRemoveUntil(
-          //   MaterialPageRoute(builder: (_) => const LoginScreen()),
-          //   (route) => false,
-          // );
+          // --- LOGIC SA LOGOUT ---
         },
       );
     },
