@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/screens/home/settings/change_password_stage.dart';
+import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 //import 'package:voquadro/screens/authentication/firstLaunch/first_launch_page.dart';
-import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});

@@ -14,9 +14,12 @@ class MicTestPage extends StatefulWidget {
 }
 
 class _MicTestPageState extends State<MicTestPage> {
+  late AudioController _audioController;
+
   @override
   void initState() {
     super.initState();
+    _audioController = context.read<AudioController>();
     // Start the volume test as soon as the page is visible
     // Use addPostFrameCallback to ensure the context is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -26,7 +29,7 @@ class _MicTestPageState extends State<MicTestPage> {
 
   @override
   void dispose() {
-    context.read<AudioController>().stopAmplitudeStream();
+    _audioController.stopAmplitudeStream();
     super.dispose();
   }
 
