@@ -72,10 +72,13 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
-  void logout() {
-    // session to clear. Just clearing the local state
+  Future<void> logout() async {
+    //Call the service to sign the user out from the backend (Supabase)
+    await UserService.signOut();
+    //Clear the local user state
     currentUser = null;
-    _appState = AppState.unauthenticated;
+    //Set the app state to show the first launch screen
+    _appState = AppState.firstLaunch;
     notifyListeners();
   }
 }

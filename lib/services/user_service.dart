@@ -416,6 +416,14 @@ class UserService {
     }
   }
 
+  static Future<void> signOut() async {
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      debugPrint("Error signing out: $e");
+    }
+  }
+
   static Future<bool> isUsernameTaken(String username) async {
     try {
       final response = await _supabase
