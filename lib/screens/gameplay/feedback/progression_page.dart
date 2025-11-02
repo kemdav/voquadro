@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:voquadro/utils/level_progress_calculator.dart';
+import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 import 'package:voquadro/widgets/Widget/customer_progress_bar.dart';
 
 class ProgressionPage extends StatelessWidget {
@@ -19,19 +19,18 @@ class ProgressionPage extends StatelessWidget {
     if (user == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final practiceLevelInfo = LevelProgress.fromTotalExp(
-      (user.practiceEXP + (result?.practiceEXP ?? 0)).toInt(),
-      200,
-    );
+    if (result == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    final masteryLevelInfo = LevelProgress.fromTotalExp(
-      (user.masteryEXP + (result?.masteryEXP ?? 0)).toInt(),
-      200,
-    );
-
-    final publicLevelInfo = LevelProgress.fromTotalExp(
-      (user.publicSpeakingEXP + (result?.modeEXP ?? 0)).toInt(),
-      200,
+    final publicLevelInfo = LevelProgressInfo(
+      currentLevelExp: result.modeEXP.toInt(),
+      nextLevelTargetExp: ProggressionConversionHelper.getCurrentExpTargetToLevel(ExpType.mode, user.publicSpeakingEXP),
+      currentProgressToLevel:
+          ProggressionConversionHelper.getProgressToNextLevel(
+            ExpType.mode,
+            user.publicSpeakingEXP.toDouble(),
+          ),
     );
 
     // --- Define Colors from the Design ---
@@ -45,28 +44,7 @@ class ProgressionPage extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // --- Practice Level Bar ---
-            CustomProgressBar(
-              title: 'Practice lvl',
-              valueText:
-                  '${practiceLevelInfo.currentLevelExp}/${practiceLevelInfo.nextLevelTargetExp}',
-              xpGainText: '+${result?.practiceEXP.toInt()} PXP',
-              progress: practiceLevelInfo.progress,
-              progressColor: progressTeal,
-              textColor: primaryPurple,
-            ),
-            const SizedBox(height: 24),
-
-            // --- Mastery Level Bars ---
-            CustomProgressBar(
-              title: 'Mastery lvl',
-              valueText:
-                  '${masteryLevelInfo.currentLevelExp}/${masteryLevelInfo.nextLevelTargetExp}',
-              xpGainText: '+${result?.masteryEXP.toInt()} MXP',
-              progress: user.masteryEXP / 200,
-              progressColor: progressTeal,
-              textColor: primaryPurple,
-            ),
+            Text("Mastery LVL"),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -74,7 +52,7 @@ class ProgressionPage extends StatelessWidget {
                   child: CustomProgressBar(
                     title: 'Pace Control',
                     valueText: '',
-                    xpGainText: '+${result?.paceControlEXP.toInt()} MXP',
+                    xpGainText: '+${result.paceControlEXP.toInt()} MXP',
                     progress: user.paceControlEXP / 100,
                     progressColor: progressTeal,
                     textColor: primaryPurple,
@@ -85,7 +63,7 @@ class ProgressionPage extends StatelessWidget {
                   child: CustomProgressBar(
                     title: 'Filler Word Control',
                     valueText: '',
-                    xpGainText: '+${result?.fillerControlEXP.toInt()} MXP',
+                    xpGainText: '+${result.fillerControlEXP.toInt()} MXP',
                     progress: user.fillerControlEXP / 100,
                     progressColor: progressTeal,
                     textColor: primaryPurple,
@@ -100,8 +78,8 @@ class ProgressionPage extends StatelessWidget {
               title: 'Public Speaking lvl',
               valueText:
                   '${publicLevelInfo.currentLevelExp}/${publicLevelInfo.nextLevelTargetExp}',
-              xpGainText: '+${result?.modeEXP.toInt()} Public XP',
-              progress: publicLevelInfo.progress,
+              xpGainText: '+${result.modeEXP.toInt()} Public XP',
+              progress: publicLevelInfo.currentProgressToLevel,
               progressColor: progressTeal,
               textColor: primaryPurple,
             ),
@@ -124,7 +102,7 @@ class ProgressionPage extends StatelessWidget {
                   width: 180,
                   height: 180,
                   child: CircularProgressIndicator(
-                    value: publicLevelInfo.progress,
+                    value: publicLevelInfo.currentProgressToLevel,
                     strokeWidth: 10,
                     backgroundColor: Colors.grey.shade400,
                     valueColor: AlwaysStoppedAnimation<Color>(progressTeal),
@@ -133,7 +111,7 @@ class ProgressionPage extends StatelessWidget {
                 Positioned(
                   top: 0,
                   child: Text(
-                    '+${result?.practiceEXP.toInt()}',
+                    '+${result.practiceEXP.toInt()}',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,

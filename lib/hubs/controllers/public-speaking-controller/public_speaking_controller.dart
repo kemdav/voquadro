@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
+import 'package:voquadro/services/user_service.dart';
 import 'dart:async';
 import 'dart:math';
-
-// Import services and models
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
+import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 import 'package:voquadro/src/models/session_model.dart';
-
-// Import and export the mixins
 import 'public_speaking_state_manager.dart';
 import 'public_speaking_gameplay.dart';
 import 'public_speaking_ai_interaction.dart';
-
-// This export makes the enums available to other files that import the controller.
 export 'public_speaking_state_manager.dart';
 
 class PublicSpeakingController
@@ -22,23 +19,20 @@ class PublicSpeakingController
         PublicSpeakingStateManager,
         PublicSpeakingGameplay,
         PublicSpeakingAIInteraction {
-  // 1. DEPENDENCIES
-  // FIX: Removed incorrect @override from a private field.
   final AudioController _audioController;
   final HybridAIService _aiService = HybridAIService.instance;
+  AppFlowController _appFlowController;
 
-  // FIX: Provide the concrete implementation for the getter required by PublicSpeakingGameplay.
   @override
   AudioController get audioController => _audioController;
 
-  // Provide the AI service instance to the AI mixin
   @override
   HybridAIService get aiService => _aiService;
 
-  PublicSpeakingController({required AudioController audioController})
-    : _audioController = audioController;
+  PublicSpeakingController({required AudioController audioController, required AppFlowController appFlowController,})
+    : _audioController = audioController, _appFlowController = appFlowController;
+    
 
-  // 2. STATE OWNERSHIP & GETTERS
   String? _userTranscript;
   @override
   String? get userTranscript => _userTranscript;
@@ -127,6 +121,10 @@ class PublicSpeakingController
     notifyListeners();
   }
 
+  void update(AppFlowController newAppFlowController) {
+    _appFlowController = newAppFlowController;
+  }
+
   void onEnterFeedbackFlow() {
     Future<void> ensureTranscriptAndGenerate() async {
       if (_userTranscript == null || _userTranscript!.isEmpty) {
@@ -163,6 +161,21 @@ class PublicSpeakingController
       }
 
       _sessionResult = createSessionResult();
+
+      final String? userId = _appFlowController.currentUser?.id;
+
+      // Null user
+      if (userId == null) {
+      notifyListeners();
+      return; 
+    }
+
+      UserService.addExp(
+      userId,
+      practiceExp: _sessionResult!.practiceEXP.toInt(),
+      paceControlExp: _sessionResult!.paceControlEXP.toInt(),
+      fillerControlExp: _sessionResult!.fillerControlEXP.toInt(),
+      );
       notifyListeners();
     }
 
@@ -208,11 +221,11 @@ class PublicSpeakingController
           questionGenerated ??
           'Question Generated', // Replace with generated question
       timestamp: DateTime.now(),
-      modeEXP: 50,
+      modeEXP: ProggressionConversionHelper.convertOverallRatingToEXP(overallScore).toDouble(),
       practiceEXP: 100,
       masteryEXP: 35,
-      paceControlEXP: 25,
-      fillerControlEXP: 10,
+      paceControlEXP: ProggressionConversionHelper.convertPaceControlToEXP(wordsPerMinute?.toInt() ?? 0).toDouble(),
+      fillerControlEXP: ProggressionConversionHelper.convertFillerWordControlToEXP(fillerWordCount, userTranscript).toDouble(),
       paceControl: wordsPerMinute?.toDouble() ?? 0.0,
       fillerControl: fillerWordCount?.toDouble() ?? 0.0,
       overallRating: overallScore?.toDouble() ?? 0.0,
