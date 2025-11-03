@@ -3,6 +3,8 @@ import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/screens/home/settings/change_password_stage.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
+import 'package:voquadro/widgets/Modals/logout_confirmation.dart';
+import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});
@@ -125,19 +127,32 @@ class _SettingsStageState extends State<SettingsStage> {
                         const _TileDivider(),
                         SettingsTile(
                           title: 'Delete Account',
-                          textColor: Colors.redAccent,
-                          onTap: () {},
+                          textColor: Colors.red,
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (BuildContext context) =>
+                                  const DeleteConfirmationDialog(),
+                            );
+                          },
                         ),
                         const _TileDivider(),
                         SettingsTile(
                           title: 'Log out',
                           textColor: Colors.cyan,
-                          onTap: () {},
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  const LogoutConfirmationModal(),
+                            );
+                          },
                         ),
                       ],
                     ),
 
-                    // Privacy & Security
+                    // Add back Privacy & Security section
                     _SectionHeader(
                       title: 'Privacy & Security',
                       icon: Icons.lock,
@@ -190,7 +205,7 @@ class SettingsTile extends StatelessWidget {
   final Widget? trailing;
 
   const SettingsTile({
-    super.key, // Updated to use super parameter
+    super.key,
     required this.title,
     required this.onTap,
     this.textColor,
@@ -221,7 +236,7 @@ class SwitchSettingsTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   const SwitchSettingsTile({
-    super.key, // Updated to use super parameter
+    super.key,
     required this.title,
     required this.value,
     required this.onChanged,
@@ -246,7 +261,7 @@ class SwitchSettingsTile extends StatelessWidget {
 }
 
 //log out confirmation dialog
-// Add this method inside the _SettingsStageState class
+// Add this method inside the _SettingsStageState class plsss
 void showLogoutConfirmationDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -256,13 +271,7 @@ void showLogoutConfirmationDialog(BuildContext context) {
       return ConfirmationDialog(
         // Pass the logout logic to the dialog
         onConfirm: () {
-          // --- YOUR LOGOUT LOGIC GOES HERE ---
-
-          // Example of navigating to a login screen after logout:
-          // Navigator.of(context).pushAndRemoveUntil(
-          //   MaterialPageRoute(builder: (_) => const LoginScreen()),
-          //   (route) => false,
-          // );
+          // --- LOGIC SA LOGOUT ---
         },
       );
     },
