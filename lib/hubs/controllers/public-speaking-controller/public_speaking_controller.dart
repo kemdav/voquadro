@@ -231,16 +231,16 @@ class PublicSpeakingController
           questionGenerated ??
           'Question Generated', // Replace with generated question
       timestamp: DateTime.now(),
-      modeEXP: ProggressionConversionHelper.convertOverallRatingToEXP(
+      modeEXP: ProgressionConversionHelper.convertOverallRatingToEXP(
         overallScore,
       ).toDouble(),
       practiceEXP: 100,
       masteryEXP: 35,
-      paceControlEXP: ProggressionConversionHelper.convertPaceControlToEXP(
+      paceControlEXP: ProgressionConversionHelper.convertPaceControlToEXP(
         wordsPerMinute?.toInt() ?? 0,
       ).toDouble(),
       fillerControlEXP:
-          ProggressionConversionHelper.convertFillerWordControlToEXP(
+          ProgressionConversionHelper.convertFillerWordControlToEXP(
             fillerWordCount,
             userTranscript,
           ).toDouble(),

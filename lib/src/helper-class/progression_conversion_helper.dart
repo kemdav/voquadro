@@ -21,8 +21,8 @@ class LevelProgressInfo {
   });
 }
 
-class ProggressionConversionHelper {
-  ProggressionConversionHelper._();
+class ProgressionConversionHelper {
+  ProgressionConversionHelper._();
 
   /// The base amount of EXP required to go from level 1 to level 2.
   static const int _baseExp = 100;

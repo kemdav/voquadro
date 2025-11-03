@@ -23,11 +23,11 @@ class ProgressionPage extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final publicLevelInfo = ProggressionConversionHelper.getLevelProgressInfo(user.publicSpeakingEXP);
+    final publicLevelInfo = ProgressionConversionHelper.getLevelProgressInfo(user.publicSpeakingEXP);
 
-    final paceControlInfo = ProggressionConversionHelper.getLevelProgressInfo(user.paceControlEXP);
+    final paceControlInfo = ProgressionConversionHelper.getLevelProgressInfo(user.paceControlEXP);
 
-    final fillerWordInfo = ProggressionConversionHelper.getLevelProgressInfo(user.fillerControlEXP);
+    final fillerWordInfo = ProgressionConversionHelper.getLevelProgressInfo(user.fillerControlEXP);
 
     // --- Define Colors from the Design ---
     final Color primaryPurple = const Color(0xFF322082);
