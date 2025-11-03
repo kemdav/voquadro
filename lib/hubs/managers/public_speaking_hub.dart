@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart'; // 1. Import the controller
 import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
@@ -82,23 +83,30 @@ class PublicSpeakingHub extends StatelessWidget {
   Widget build(BuildContext context) {
     const double customAppBarHeight = 80.0;
 
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AudioController()),
-        ChangeNotifierProxyProvider<AudioController, PublicSpeakingController>(
-          create: (context) => PublicSpeakingController(
-            audioController: context.read<AudioController>(),
-          ),
-          update: (context, audioController, previousPublicSpeakingController) {
-            return previousPublicSpeakingController ??
-                PublicSpeakingController(audioController: audioController);
-          },
-        ),
-      ],
+    return ChangeNotifierProxyProvider2<AppFlowController, AudioController, PublicSpeakingController>(
+      create: (context) => PublicSpeakingController(
+        audioController: context.read<AudioController>(),
+        appFlowController: context.read<AppFlowController>(),
+      ),
+      update: (
+        context,
+        appFlowController,
+        audioController,
+        previous,
+      ) {
+        if (previous == null) {
+          return PublicSpeakingController(
+            audioController: audioController,
+            appFlowController: appFlowController,
+          );
+        }
+        previous.update(appFlowController);
+        return previous;
+      },
       child: Scaffold(
         body: Stack(
           children: [
-            // This Consumer will manage both the main content AND the bottom bar
+            // This Consumer will now get the correctly configured PublicSpeakingController
             Consumer<PublicSpeakingController>(
               builder: (context, controller, child) {
                 return Stack(
@@ -109,7 +117,7 @@ class PublicSpeakingHub extends StatelessWidget {
                         index: controller.currentState.index,
                         children: const [
                           PublicSpeakingHomePage(),
-                          PublicSpeakingProfileStage(), // Might change to a general profile stage later on, depends
+                          PublicSpeakingProfileStage(),
                           PublicSpeakingStatusPage(),
                           MicTestPage(),
                           ReadyingPromptPage(),
@@ -121,14 +129,9 @@ class PublicSpeakingHub extends StatelessWidget {
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: GeneralNavigationBar(
-                        // The actions are now dynamically chosen by our helper method
                         actions: _buildBottomActions(controller.currentState),
-                        navBarVisualHeight: _bottomNavigationBarDimensions(
-                          controller.currentState,
-                        )[0],
-                        totalHitTestHeight: _bottomNavigationBarDimensions(
-                          controller.currentState,
-                        )[1],
+                        navBarVisualHeight: _bottomNavigationBarDimensions(controller.currentState)[0],
+                        totalHitTestHeight: _bottomNavigationBarDimensions(controller.currentState)[1],
                       ),
                     ),
                     Positioned(
@@ -136,9 +139,7 @@ class PublicSpeakingHub extends StatelessWidget {
                       left: 0,
                       right: 0,
                       child: AppBarGeneral(
-                        actionButtons: _buildUpperActions(
-                          controller.currentState,
-                        ),
+                        actionButtons: _buildUpperActions(controller.currentState),
                       ),
                     ),
                   ],

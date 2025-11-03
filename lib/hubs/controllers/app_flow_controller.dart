@@ -38,6 +38,11 @@ class AppFlowController with ChangeNotifier {
     notifyListeners();
   }
 
+  void updateCurrentUser(User updatedUser) {
+    currentUser = updatedUser;
+    notifyListeners();
+  }
+
   void goBackToLaunchScreen() {
     _appState = AppState.firstLaunch;
     notifyListeners();
