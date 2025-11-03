@@ -91,9 +91,9 @@ class MainHubActions extends StatelessWidget {
                         builder: (context) => PublicSpeakJourneySection(
                           //refer to user services lang para ani
                           username: user.username,
-                          currentXP: user.practiceEXP,
+                          currentXP: 69,
                           maxXP: 200,
-                          currentLevel: 'Level ${user.practiceLevel}',
+                          currentLevel: 'Level 69',
                           averageWPM: 0, // supply real metric when available
                           averageFillers:
                               0, // supply real metric when available

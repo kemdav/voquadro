@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/managers/app_flow_manager.dart';
 import 'package:voquadro/services/supabase_service.dart'; 
 Future<void> main() async {
@@ -9,8 +10,13 @@ Future<void> main() async {
   await SupabaseService.initialize();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AppFlowController(),
+    MultiProvider(
+      providers: [
+        // These providers are now available to the ENTIRE application.
+        ChangeNotifierProvider(create: (_) => AppFlowController()),
+        ChangeNotifierProvider(create: (_) => AudioController()),
+        // Add any other global services here.
+      ],
       child: const MyApp(),
     ),
   );
