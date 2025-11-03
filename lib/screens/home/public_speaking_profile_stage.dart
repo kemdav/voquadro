@@ -25,20 +25,23 @@ class _PublicSpeakingProfileStageState
   ImageProvider? _localAvatarImage;
   ImageProvider? _localBannerImage;
 
+  User? _user;
+
   @override
   void initState() {
     super.initState();
+    _user = context.read<AppFlowController>().currentUser;
     _profileDataFuture = _fetchProfileData();
   }
 
   /// Fetches the user's profile data from the UserService.
   //The return type is <ProfileData>
   Future<ProfileData> _fetchProfileData() {
-    final user = context.read<AppFlowController>().currentUser;
-    if (user == null) {
+    //final user = context.read<AppFlowController>().currentUser;
+    if (_user == null) {
       return Future.error('User not logged in. Cannot fetch profile.');
     }
-    return UserService.getProfileData(user.id);
+    return UserService.getProfileData(_user!.id);
   }
 
   /// Call this to refetch all data from the server and rebuild the widget.
@@ -148,13 +151,13 @@ class _PublicSpeakingProfileStageState
   }
 
   Future<void> _handleBioSave(String newBio) async {
-    final user = context.read<AppFlowController>().currentUser;
-    if (user == null) return;
+    //final user = context.read<AppFlowController>().currentUser;
+    if (_user == null) return;
 
     if (mounted) Navigator.of(context).pop();
 
     try {
-      await UserService.updateBio(user.id, newBio);
+      await UserService.updateBio(_user!.id, newBio);
       _refreshProfile();
     } catch (e) {
       if (mounted) {
@@ -169,8 +172,8 @@ class _PublicSpeakingProfileStageState
     required ProfileData profileData,
     required bool isAvatar,
   }) async {
-    final user = context.read<AppFlowController>().currentUser;
-    if (user == null) return;
+    //final user = context.read<AppFlowController>().currentUser;
+    if (_user == null) return;
 
     final result = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -196,7 +199,7 @@ class _PublicSpeakingProfileStageState
 
     try {
       await UserService.replaceProfileImage(
-        userId: user.id,
+        userId: _user!.id,
         newImageFile: imageFile,
         imageType: imageType,
         oldImageUrl: oldImageUrl,

@@ -8,8 +8,6 @@ import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 //import 'package:voquadro/screens/authentication/firstLaunch/first_launch_page.dart';
-import 'package:voquadro/widgets/Modals/logout_confirmation.dart';
-import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});
