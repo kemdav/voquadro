@@ -2,212 +2,207 @@ import 'dart:math';
 
 enum ExpType { mode, pace, filler }
 
+/// A data class to hold all necessary info for a level progress UI.
 class LevelProgressInfo {
-  final int currentLevelExp;
-  final int nextLevelTargetExp;
-  final double currentProgressToLevel;
+  final int level;
+  final String rank;
+  final int currentLevelExp;      // e.g., 50 (progress into the current level)
+  final int expToNextLevel;       // e.g., 200 (the size of the current level's EXP bar)
+  final int cumulativeExpForNextLevel;
+  final double progressPercentage; // e.g., 0.25 (for a progress bar)
 
   const LevelProgressInfo({
+    required this.level,
+    required this.rank,
     required this.currentLevelExp,
-    required this.nextLevelTargetExp,
-    required this.currentProgressToLevel,
+    required this.expToNextLevel,
+     required this.cumulativeExpForNextLevel,
+    required this.progressPercentage,
   });
 }
 
 class ProggressionConversionHelper {
   ProggressionConversionHelper._();
 
-  static const List<int> _modeExpThresholds = [
-    0, // Level 1
-    100, // Level 2
-    300, // Level 3
-    600, // Level 4
-    1000, // Level 5
-    1500, // Level 6
-    2100, // Level 7
-  ];
+  /// The base amount of EXP required to go from level 1 to level 2.
+  static const int _baseExp = 100;
 
-  static const List<int> _paceControlExpThresholds = [
-    0, // Level 1
-    100, // Level 2
-    300, // Level 3
-    600, // Level 4
-    1000, // Level 5
-    1500, // Level 6
-    2100, // Level 7
-  ];
+  /// The multiplier that determines how much harder each level gets.
+  /// 1.5 means the EXP requirement grows by about 50% each level.
+  static const double _multiplier = 1.5;
 
-  static const List<int> _fillerWordControlExpThersholds = [
-    0, // Level 1
-    100, // Level 2
-    300, // Level 3
-    600, // Level 4
-    1000, // Level 5
-    1500, // Level 6
-    2100, // Level 7
-  ];
-
-  static int get maxLevel => _modeExpThresholds.length;
-
-  static List<int> getThershold(ExpType thershold) {
-    switch (thershold) {
-      case ExpType.filler:
-        return _fillerWordControlExpThersholds;
-      case ExpType.pace:
-        return _paceControlExpThresholds;
-      case ExpType.mode:
-        return _modeExpThresholds;
-    }
+  /// Calculates the EXP needed to complete a given level (i.e., to go from `level` to `level + 1`).
+  static int getExpForLevel(int level) {
+    if (level <= 0) return _baseExp;
+    // Formula: base_exp * (level ^ multiplier)
+    return (_baseExp * pow(level, _multiplier)).floor();
   }
 
-  static int getCurrentExpTargetToLevel(ExpType thershold, totalExp) {
-    List<int> expThershold = getThershold(thershold);
-    int currentLevel = getLevelFromExp(thershold, totalExp);
+  /// Calculates the user's current level based on their total accumulated EXP.
+  static int getLevelFromTotalExp(int totalExp) {
+    if (totalExp < 0) return 1;
 
-    return expThershold[currentLevel];
-  }
+    int currentLevel = 1;
+    int expTally = totalExp;
 
-  static int getLevelFromExp(ExpType thershold, totalExp) {
-    List<int> expThershold = getThershold(thershold);
-
-    for (int i = expThershold.length - 1; i >= 0; i--) {
-      if (totalExp >= expThershold[i]) {
-        return i + 1;
+    while (true) {
+      int expForNextLevel = getExpForLevel(currentLevel);
+      if (expTally >= expForNextLevel) {
+        expTally -= expForNextLevel;
+        currentLevel++;
+      } else {
+        break; // Can't afford the next level up.
       }
     }
-    return 1;
+    return currentLevel;
   }
 
-  static int getExpForLevel(ExpType thershold, level) {
-    List<int> expThershold = getThershold(thershold);
+  static int _getTotalExpForLevelStart(int level) {
     if (level <= 1) return 0;
-    if (level > expThershold.length) {
-      return expThershold.last;
+    
+    int totalExp = 0;
+    // Sum the EXP cost of all preceding levels.
+    for (int i = 1; i < level; i++) {
+      totalExp += getExpForLevel(i);
     }
-    return expThershold[level - 1];
+    return totalExp;
   }
 
-  static double getProgressToNextLevel(ExpType expType, double totalExp) {
-    final int currentLevel = getLevelFromExp(expType, totalExp);
+  /// Returns the amount of EXP the user has accumulated *within their current level*.
+  static int getCurrentExpInLevel(int totalExp) {
+    if (totalExp < 0) return 0;
 
-    if (currentLevel >= maxLevel) {
-      return 1.0; // At max level, progress is complete.
+    int currentLevel = 1;
+    int expLeft = totalExp;
+
+    while (true) {
+      int expForNextLevel = getExpForLevel(currentLevel);
+      if (expLeft >= expForNextLevel) {
+        expLeft -= expForNextLevel;
+        currentLevel++;
+      } else {
+        break; // The remaining expLeft is the progress in the current level.
+      }
     }
+    return expLeft;
+  }
+  
+  static LevelProgressInfo getLevelProgressInfo(int totalExp) {
+    final int currentLevel = getLevelFromTotalExp(totalExp);
+    final int currentExpInLevel = getCurrentExpInLevel(totalExp);
+    final int expNeededForLevelUp = getExpForLevel(currentLevel);
+    final int cumulativeTarget = _getTotalExpForLevelStart(currentLevel + 1);
 
-    final int expForCurrentLevel = getExpForLevel(expType, currentLevel);
-    final int expForNextLevel = getExpForLevel(expType, currentLevel + 1);
-
-    final double expInCurrentLevel = totalExp - expForCurrentLevel;
-    final double expNeededForLevelUp = (expForNextLevel - expForCurrentLevel)
-        .toDouble();
-
-    // Avoid division by zero if levels have the same EXP for some reason.
-    if (expNeededForLevelUp == 0) return 1.0;
-
-    return max(0.0, min(1.0, expInCurrentLevel / expNeededForLevelUp));
+    return LevelProgressInfo(
+      level: currentLevel,
+      rank: convertLevelToRank(currentLevel),
+      currentLevelExp: currentExpInLevel,
+      expToNextLevel: expNeededForLevelUp,
+      cumulativeExpForNextLevel: cumulativeTarget,
+      progressPercentage: expNeededForLevelUp == 0 ? 1.0 : currentExpInLevel / expNeededForLevelUp,
+    );
   }
 
+// --- EXP CONVERSION FUNCTIONS ---
+
+  /// Converts the user's speaking pace (WPM) into EXP.
   static int convertPaceControlToEXP(int? paceControl) {
+    // Handle null input safely
     if (paceControl == null) {
       return 0;
     }
+
+    // Ideal pace: 140-160 WPM
     if (paceControl >= 140 && paceControl <= 160) {
-      // Maximum EXP for being in the optimal range.
       return 100;
     }
-    // Good pace: Slightly outside the ideal range, but still very effective.
-    // Audiences can generally follow along comfortably at these speeds.
+    // Good pace
     else if ((paceControl >= 130 && paceControl < 140) ||
         (paceControl > 160 && paceControl <= 170)) {
       return 75;
     }
-    // Acceptable pace: A bit too slow or too fast, but can still be acceptable
-    // depending on the context of the speech. For example, a slower pace can be
-    // useful for complex topics. [1]
+    // Acceptable pace
     else if ((paceControl >= 110 && paceControl < 130) ||
         (paceControl > 170 && paceControl <= 190)) {
       return 50;
     }
-    // Needs improvement: This pace is likely to be distracting to the audience.
-    // Novice speakers sometimes speak faster than 170 WPM due to nerves. [1]
+    // Needs improvement
     else if ((paceControl >= 90 && paceControl < 110) ||
         (paceControl > 190 && paceControl <= 210)) {
       return 25;
     }
-    // Significantly too fast or slow: This pace will likely hinder the
-    // audience's ability to understand the message.
+    // Significantly too fast or slow
     else {
       return 10;
     }
   }
 
+  /// Converts the filler word count into EXP based on its density in the speech.
   static int convertFillerWordControlToEXP(
     int? fillerControl,
     String? transcript,
   ) {
-    if (fillerControl == null || transcript == null) {
+    // Handle null inputs safely
+    if (fillerControl == null || transcript == null || transcript.isEmpty) {
       return 0;
     }
 
-    List<String> words = transcript.trim().split(RegExp(r'\s+'));
-    int totalWords = words.length;
+    // Calculate the total number of words in the transcript.
+    final List<String> words = transcript.trim().split(RegExp(r'\s+'));
+    final int totalWords = words.length;
 
+    // Avoid division by zero
     if (totalWords == 0) {
       return 0;
     }
 
-    double fillerWordPercentage = (fillerControl / totalWords) * 100;
+    // Calculate the percentage of filler words.
+    final double fillerWordPercentage = (fillerControl / totalWords) * 100;
 
-    // Excellent: Very few filler words, shows great control and confidence.
+    // Award EXP based on the filler word density (lower is better).
     if (fillerWordPercentage < 1.0) {
-      return 100;
-    }
-    // Good: A few filler words, but not enough to be distracting.
-    else if (fillerWordPercentage < 2.0) {
-      return 75;
-    }
-    // Acceptable: Filler words are noticeable, a clear area for improvement.
-    else if (fillerWordPercentage < 4.0) {
-      return 50;
-    }
-    // Needs Improvement: The frequency of filler words is likely distracting.
-    else if (fillerWordPercentage < 6.0) {
-      return 25;
-    }
-    // Significant Room for Improvement: Filler words are very frequent and
-    // may hinder the message.
-    else {
-      return 10;
+      return 100; // Excellent
+    } else if (fillerWordPercentage < 2.0) {
+      return 75;  // Good
+    } else if (fillerWordPercentage < 4.0) {
+      return 50;  // Acceptable
+    } else if (fillerWordPercentage < 6.0) {
+      return 25;  // Needs Improvement
+    } else {
+      return 10;  // Significant Room for Improvement
     }
   }
 
+  /// Converts an overall content and structure rating (0-100) into EXP using a curve.
   static int convertOverallRatingToEXP(int? overallRating) {
+    // Handle null input safely
     if (overallRating == null) {
       return 0;
     }
 
-    final clampedRating = overallRating.clamp(0, 100);
+    // Clamp the rating to be within the 0-100 range to prevent errors.
+    final int clampedRating = overallRating.clamp(0, 100);
+
+    // This can be adjusted to balance the overall progression of your app.
     const int maxEXP = 250;
+
+    // Normalize the rating to a value between 0.0 and 1.0.
     final double normalizedRating = clampedRating / 100.0;
 
+    // Apply a quadratic curve (power of 2) to make higher scores grant more EXP.
     final double curvedValue = pow(normalizedRating, 2).toDouble();
+
+    // Calculate the final EXP and round to the nearest whole number.
     final int calculatedEXP = (curvedValue * maxEXP).round();
 
     return calculatedEXP;
   }
-
+  
   static String convertLevelToRank(int level) {
-    switch (level) {
-      case 1:
-        return "Novice";
-      case 2:
-        return "Apprentice";
-      case 3:
-        return "Communicator";
-      case 4:
-        return "Virtuouso";
-      default:
-        return "Error";
+    const ranks = ["Novice", "Apprentice", "Communicator", "Adept", "Virtuoso", "Orator", "Master"];
+    if (level > 0 && level <= ranks.length) {
+      return ranks[level - 1];
     }
+    return "Legend";
   }
 }

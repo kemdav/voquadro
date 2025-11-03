@@ -29,9 +29,11 @@ class PublicSpeakingController
   @override
   HybridAIService get aiService => _aiService;
 
-  PublicSpeakingController({required AudioController audioController, required AppFlowController appFlowController,})
-    : _audioController = audioController, _appFlowController = appFlowController;
-    
+  PublicSpeakingController({
+    required AudioController audioController,
+    required AppFlowController appFlowController,
+  }) : _audioController = audioController,
+       _appFlowController = appFlowController;
 
   String? _userTranscript;
   @override
@@ -166,16 +168,24 @@ class PublicSpeakingController
 
       // Null user
       if (userId == null) {
-      notifyListeners();
-      return; 
-    }
+        notifyListeners();
+        return;
+      }
 
-      UserService.addExp(
-      userId,
-      practiceExp: _sessionResult!.practiceEXP.toInt(),
-      paceControlExp: _sessionResult!.paceControlEXP.toInt(),
-      fillerControlExp: _sessionResult!.fillerControlEXP.toInt(),
-      );
+      try {
+        final User updatedUser = await UserService.addExp(
+          userId,
+          practiceExp: _sessionResult!.practiceEXP.toInt(),
+          paceControlExp: _sessionResult!.paceControlEXP.toInt(),
+          fillerControlExp: _sessionResult!.fillerControlEXP.toInt(),
+          modeExpGains: {"public_speaking_xp": _sessionResult!.modeEXP.toInt()},
+        );
+
+        _appFlowController.updateCurrentUser(updatedUser);
+      } catch (e) {
+        logger.d("An error occurred while updating EXP: $e");
+      }
+
       notifyListeners();
     }
 
@@ -221,11 +231,19 @@ class PublicSpeakingController
           questionGenerated ??
           'Question Generated', // Replace with generated question
       timestamp: DateTime.now(),
-      modeEXP: ProggressionConversionHelper.convertOverallRatingToEXP(overallScore).toDouble(),
+      modeEXP: ProggressionConversionHelper.convertOverallRatingToEXP(
+        overallScore,
+      ).toDouble(),
       practiceEXP: 100,
       masteryEXP: 35,
-      paceControlEXP: ProggressionConversionHelper.convertPaceControlToEXP(wordsPerMinute?.toInt() ?? 0).toDouble(),
-      fillerControlEXP: ProggressionConversionHelper.convertFillerWordControlToEXP(fillerWordCount, userTranscript).toDouble(),
+      paceControlEXP: ProggressionConversionHelper.convertPaceControlToEXP(
+        wordsPerMinute?.toInt() ?? 0,
+      ).toDouble(),
+      fillerControlEXP:
+          ProggressionConversionHelper.convertFillerWordControlToEXP(
+            fillerWordCount,
+            userTranscript,
+          ).toDouble(),
       paceControl: wordsPerMinute?.toDouble() ?? 0.0,
       fillerControl: fillerWordCount?.toDouble() ?? 0.0,
       overallRating: overallScore?.toDouble() ?? 0.0,

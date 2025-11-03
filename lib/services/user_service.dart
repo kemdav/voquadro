@@ -77,7 +77,7 @@ class UserService {
   static const String _kPostgrestErrorNoExactRow = 'PGRST116';
   static const String _kPostgresErrorUniqueViolation = '23505';
 
-  static Future<void> addExp(
+  static Future<User> addExp(
     String userId, {
     int practiceExp = 0,
     int paceControlExp = 0,
@@ -89,7 +89,7 @@ class UserService {
         paceControlExp <= 0 &&
         fillerControlExp <= 0 &&
         (modeExpGains == null || modeExpGains.isEmpty)) {
-      return;
+      return await getFullUserProfile(userId);
     }
 
     try {
@@ -127,6 +127,8 @@ class UserService {
       if (updatePayload.isNotEmpty) {
         await _supabase.from('users').update(updatePayload).eq('id', userId);
       }
+
+      return await getFullUserProfile(userId);
     } catch (e) {
       throw Exception('Failed to add user EXP: $e');
     }
