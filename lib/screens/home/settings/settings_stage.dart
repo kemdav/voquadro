@@ -5,6 +5,9 @@ import 'package:voquadro/screens/home/settings/change_password_stage.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 import 'package:voquadro/widgets/Modals/logout_confirmation.dart';
 import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
+//import 'package:voquadro/screens/authentication/firstLaunch/first_launch_page.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});
@@ -86,6 +89,7 @@ class _SettingsStageState extends State<SettingsStage> {
                     ),
 
                     // Account & Profile
+                    const _TileDivider(),
                     _SectionHeader(
                       title: 'Account & Profile',
                       icon: Icons.person,
@@ -140,13 +144,13 @@ class _SettingsStageState extends State<SettingsStage> {
                         const _TileDivider(),
                         SettingsTile(
                           title: 'Log out',
-                          textColor: Colors.cyan,
+                          textColor: Colors
+                              .redAccent, // Changed from cyan for better UX
                           onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) =>
-                                  const LogoutConfirmationModal(),
-                            );
+                            context.read<AppFlowController>().logout();
+                            Navigator.of(
+                              context,
+                            ).popUntil((route) => route.isFirst);
                           },
                         ),
                       ],

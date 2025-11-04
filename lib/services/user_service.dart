@@ -167,33 +167,35 @@ class UserService {
     required String password,
   }) async {
     try {
-      final String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+      // 1. Create the user in the Supabase Auth schema
+      final authResponse = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+        // We can store the username in the metadata
+        data: {'username': username},
+      );
 
-      final response = await _supabase
-          .from('users')
-          .insert({
-            'username': username,
-            'email': email,
-            'password_hash': hashedPassword,
-          })
-          .select()
-          .single();
-
-      await _createInitialUserSkills(response['id']);
-
-      return User.fromMap(response);
-    } on PostgrestException catch (e) {
-      //USE CONSTANT INSTEAD OF MAGIC STRING
-      if (e.code == _kPostgresErrorUniqueViolation) {
-        if (e.message.contains('users_username_key')) {
-          throw AuthException('Username is already taken.');
-        }
-        if (e.message.contains('users_email_key')) {
-          throw AuthException('Email is already taken.');
-        }
+      if (authResponse.user == null) {
+        throw AuthException('Could not create account. User is null.');
       }
-      throw AuthException('Could not create account. Please try again.');
-    } catch (e) {
+
+      // 2. The trigger has already created the profile. Now, we just fetch it.
+      //    This also confirms that the trigger worked correctly.
+      final userProfile = await getFullUserProfile(authResponse.user!.id);
+
+      // Your other logic remains the same
+      await _createInitialUserSkills(userProfile.id);
+      return userProfile;
+    } on AuthException catch (e) {
+      if (e.message.contains('User already registered')) {
+        throw AuthException('Email is already taken.');
+      }
+      // You can add more specific error handling here
+      throw AuthException(e.message);
+    } catch (e, stackTrace) {
+      debugPrint('--- REAL CREATE USER ERROR ---');
+      debugPrint('$e');
+      debugPrint('$stackTrace');
       throw AuthException(
         'An unexpected error occurred. Please try again later.',
       );
@@ -202,31 +204,37 @@ class UserService {
 
   /// Authenticates a user by username and password.
   static Future<User> signInWithUsernameAndPassword({
-    required String username,
+    required String username, // <-- Correctly takes username
     required String password,
   }) async {
     try {
-      final response = await _supabase
+      // Step 1: Look up the user's email from their username.
+      final userEmailResponse = await _supabase
           .from('users')
-          .select()
+          .select('email')
           .eq('username', username)
-          .single();
+          .maybeSingle();
 
-      final userMap = response;
-      final String storedHash = userMap['password_hash'];
+      if (userEmailResponse == null) {
+        throw AuthException('Invalid username or password.');
+      }
+      final String email = userEmailResponse['email'];
 
-      final bool isPasswordCorrect = BCrypt.checkpw(password, storedHash);
+      // Step 2: Use the found email to sign in with Supabase Auth.
+      final authResponse = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-      if (!isPasswordCorrect) {
+      if (authResponse.user == null) {
         throw AuthException('Invalid username or password.');
       }
 
-      return User.fromMap(userMap);
-    } on PostgrestException catch (e) {
-      if (e.code == _kPostgrestErrorNoExactRow) {
-        throw AuthException('Invalid username or password.');
-      }
-      throw AuthException('A database error occurred. Please try again.');
+      // Step 3: Fetch the full user profile.
+      final userProfile = await getFullUserProfile(authResponse.user!.id);
+      return userProfile;
+    } on AuthException {
+      throw AuthException('Invalid username or password.');
     } catch (e) {
       throw AuthException(
         'An unexpected error occurred. Please try again later.',
@@ -333,6 +341,8 @@ class UserService {
       // The path format 'user_id/image_type.ext' is crucial for security policies.
       final path = '$userId/$imageType.$fileExtension';
 
+      debugPrint("Uploading to Supabase Storage with path: $path");
+
       await _supabase.storage
           .from('profile-assets')
           .upload(
@@ -390,6 +400,14 @@ class UserService {
       }
     } catch (e) {
       debugPrint('Failed to create initial user skills');
+    }
+  }
+
+  static Future<void> signOut() async {
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      debugPrint("Error signing out: $e");
     }
   }
 
