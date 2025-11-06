@@ -17,6 +17,7 @@ class PublicSpeakJourneySection extends StatefulWidget {
   final VoidCallback? onSettingsPressed;
 
   const PublicSpeakJourneySection({
+    //change when needed this is only for the ui
     super.key,
     required this.username,
     required this.currentXP,
@@ -37,6 +38,22 @@ class PublicSpeakJourneySection extends StatefulWidget {
 
 class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   final ScrollController _feedbackScrollController = ScrollController();
+  //testing
+  late List<SessionFeedback> _sessionFeedbacks; //note: change
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionFeedbacks = List.from(widget.sessionFeedbacks);
+  }
+
+  void _addTestSession() {
+    setState(() {
+      final now = DateTime.now();
+      final date = "${now.day}/${now.month}/${now.year}";
+      _sessionFeedbacks.insert(0, SessionFeedback(date: date));
+    });
+  } //testing
 
   @override
   void dispose() {
@@ -52,6 +69,12 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
     return Scaffold(
       backgroundColor: pageBg,
+      //for testing
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addTestSession,
+        backgroundColor: const Color(0xFF00C8C8),
+        child: const Icon(Icons.add),
+      ), //for testing
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -376,6 +399,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
   Widget _buildEnhancedFeedbackList() {
     return ListView.separated(
+      //note: for testing change widget.sessionFeedbacks to _sessionFeedbacks
       controller: _feedbackScrollController,
       itemCount: widget.sessionFeedbacks.length, // Use widget's list directly
       separatorBuilder: (context, index) => const SizedBox(height: 12),
