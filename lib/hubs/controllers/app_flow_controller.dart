@@ -91,4 +91,14 @@ class AppFlowController with ChangeNotifier {
     _appState = AppState.firstLaunch;
     notifyListeners();
   }
+
+  Future<void> deleteAccount() async {
+    // Call the service to perform the backend deletion.
+    await UserService.deleteCurrentUserAccount();
+
+    // Clear the local user state, just like in logout().
+    currentUser = null;
+    _appState = AppState.firstLaunch;
+    notifyListeners();
+  }
 }

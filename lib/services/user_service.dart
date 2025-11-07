@@ -452,4 +452,15 @@ class UserService {
       throw Exception('Failed to get user');
     }
   }
+
+  static Future<void> deleteCurrentUserAccount() async {
+    try {
+      await _supabase.rpc('delete_user_account');
+
+      //signout locally
+      await _supabase.auth.signOut();
+    } catch (e) {
+      throw Exception('Failed to delete account: $e');
+    }
+  }
 }
