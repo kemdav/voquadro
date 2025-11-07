@@ -36,6 +36,8 @@ dependencies:
   permission_handler: ^11.1.0
   path_provider: ^2.1.1
 
+  intl: ^0.19.0
+
   logger: ^2.3.0
   just_audio: ^0.9.36
   image_picker: ^1.1.2
@@ -70,7 +72,6 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
 
   # To add assets to your application, add an assets section, like this:
   assets:
