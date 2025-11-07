@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 
 class DeleteConfirmationDialog extends StatefulWidget {
   const DeleteConfirmationDialog({super.key});
@@ -22,15 +24,33 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> {
     }
   }
 
-  void _handleFinalDeletion() {
-    debugPrint('Account deletion requested - baibai!');
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('logic for deelte here'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _handleFinalDeletion() async {
+    try {
+      await context.read<AppFlowController>().deleteAccount();
+
+      // Check if the widget is still mounted before using its context.
+      if (!mounted) return;
+
+      Navigator.of(context).popUntil((route) => route.isFirst);
+
+      // Optionally show a success message on the launch page.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account successfully deleted.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      // If something went wrong, pop the dialog and show an error.
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete account: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   String _getConfirmationText() {
