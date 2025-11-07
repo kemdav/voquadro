@@ -23,11 +23,17 @@ class ProgressionPage extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final publicLevelInfo = ProgressionConversionHelper.getLevelProgressInfo(user.publicSpeakingEXP);
+    final publicLevelInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.publicSpeakingEXP,
+    );
 
-    final paceControlInfo = ProgressionConversionHelper.getLevelProgressInfo(user.paceControlEXP);
+    final paceControlInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.paceControlEXP,
+    );
 
-    final fillerWordInfo = ProgressionConversionHelper.getLevelProgressInfo(user.fillerControlEXP);
+    final fillerWordInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.fillerControlEXP,
+    );
 
     // --- Define Colors from the Design ---
     final Color primaryPurple = const Color(0xFF322082);
@@ -47,7 +53,8 @@ class ProgressionPage extends StatelessWidget {
                 Expanded(
                   child: CustomProgressBar(
                     title: 'Pace Control ${paceControlInfo.level}',
-                    valueText: '${paceControlInfo.currentLevelExp}/${paceControlInfo.cumulativeExpForNextLevel}',
+                    valueText:
+                        '${paceControlInfo.currentLevelExp}/${paceControlInfo.cumulativeExpForNextLevel}',
                     xpGainText: '+${result.paceControlEXP.toInt()} MXP',
                     progress: paceControlInfo.progressPercentage,
                     progressColor: progressTeal,
@@ -58,7 +65,8 @@ class ProgressionPage extends StatelessWidget {
                 Expanded(
                   child: CustomProgressBar(
                     title: 'Filler Word Control ${fillerWordInfo.level}',
-                    valueText: '${fillerWordInfo.currentLevelExp}/${fillerWordInfo.cumulativeExpForNextLevel}',
+                    valueText:
+                        '${fillerWordInfo.currentLevelExp}/${fillerWordInfo.cumulativeExpForNextLevel}',
                     xpGainText: '+${result.fillerControlEXP.toInt()} MXP',
                     progress: fillerWordInfo.progressPercentage,
                     progressColor: progressTeal,
@@ -107,7 +115,7 @@ class ProgressionPage extends StatelessWidget {
                 Positioned(
                   top: 0,
                   child: Text(
-                    '+${result.practiceEXP.toInt()}',
+                    '+${result.modeEXP.toInt()}',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,

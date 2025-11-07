@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
+import 'package:voquadro/screens/home/user_journey/user_journey_data.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/src/models/session_model.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
 import 'package:voquadro/widgets/AppBar/default_actions.dart';
 import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
@@ -17,6 +21,7 @@ class PublicSpeakJourneySection extends StatefulWidget {
   final VoidCallback? onSettingsPressed;
 
   const PublicSpeakJourneySection({
+    //change when needed this is only for the ui
     super.key,
     required this.username,
     required this.currentXP,
@@ -37,6 +42,10 @@ class PublicSpeakJourneySection extends StatefulWidget {
 
 class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   final ScrollController _feedbackScrollController = ScrollController();
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -277,7 +286,9 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
               Row(
                 children: [
                   const SizedBox(width: 24),
-                  Expanded(child: _buildEnhancedFeedbackList()),
+                  Expanded(
+                    child: _buildEnhancedFeedbackList(AppMode.publicSpeaking),
+                  ),
                   Container(
                     width: 8,
                     margin: const EdgeInsets.only(left: 12),
@@ -374,24 +385,28 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
     );
   }
 
-  Widget _buildEnhancedFeedbackList() {
+  Widget _buildEnhancedFeedbackList(AppMode mode) {
+    // For exceljos: Replace this with the servie that returns List<Session> for a specific mode
+    // Examole: publicMode would query for the session history that belongs to public speaking mode
+    // to differentiate, make the id for the sessions begin with like pubmode_[id_number] or interviewmode_[id_number]
+    List<Session> sessionHistory = getModeSessionHistory(mode);
+
     return ListView.separated(
       controller: _feedbackScrollController,
-      itemCount: widget.sessionFeedbacks.length, // Use widget's list directly
+      itemCount: sessionHistory.length, // Use widget's list directly
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final feedback =
-            widget.sessionFeedbacks[index]; // Use widget's list directly
+        final feedback = sessionHistory[index]; // Use widget's list directly
         return GestureDetector(
           onTap: () {
             showDialog(
               context: context,
               builder: (context) => PublicSpeakingFeedbackModal(
-                sessionDate: feedback.date,
+                sessionDate: DateFormat('MMMM d, y').format(feedback.timestamp),
                 paceWPM: widget.averageWPM,
                 fillerCount: widget.averageFillers,
                 qualitativeFeedback:
-                    "Here's your feedback for the session on ${feedback.date}. gitgud.", // Example feedback text
+                    "Here's your feedback for the session on ${DateFormat('MMMM d, y').format(feedback.timestamp)}. gitgud.", // Example feedback text
               ),
             );
           },
@@ -423,7 +438,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                       ),
                     ),
                     Text(
-                      feedback.date,
+                      DateFormat('MMMM d, y').format(feedback.timestamp),
                       style: TextStyle(
                         fontSize: 14,
                         color: '49416D'.toColor().withValues(alpha: 204),

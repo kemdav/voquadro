@@ -173,9 +173,12 @@ class PublicSpeakingController
       }
 
       try {
+        // For exceljos: Add Session To Database
+
+        // Use _sessionResult to add a session to the database with unique id at the format of [modeid]_[sessionid]
+
         final User updatedUser = await UserService.addExp(
           userId,
-          practiceExp: _sessionResult!.practiceEXP.toInt(),
           paceControlExp: _sessionResult!.paceControlEXP.toInt(),
           fillerControlExp: _sessionResult!.fillerControlEXP.toInt(),
           modeExpGains: {"public_speaking_xp": _sessionResult!.modeEXP.toInt()},
@@ -234,8 +237,6 @@ class PublicSpeakingController
       modeEXP: ProgressionConversionHelper.convertOverallRatingToEXP(
         overallScore,
       ).toDouble(),
-      practiceEXP: 100,
-      masteryEXP: 35,
       paceControlEXP: ProgressionConversionHelper.convertPaceControlToEXP(
         wordsPerMinute?.toInt() ?? 0,
       ).toDouble(),

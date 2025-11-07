@@ -2,8 +2,6 @@ class Session {
   final String id;
   final String modeId;
   final double modeEXP;
-  final double practiceEXP;
-  final double masteryEXP;
   final double paceControlEXP;
   final double fillerControlEXP;
 
@@ -23,8 +21,6 @@ class Session {
     required this.id,
     required this.modeId,
     required this.modeEXP,
-    required this.practiceEXP,
-    required this.masteryEXP,
     required this.paceControlEXP,
     required this.fillerControlEXP,
     required this.topic,
@@ -44,8 +40,6 @@ class Session {
       id: map['id'],
       modeId: map['modeId'],
       modeEXP: map['modeEXP'],
-      practiceEXP: map['practiceEXP'],
-      masteryEXP: map['masteryEXP'],
       paceControlEXP: map['paceControlEXP'],
       fillerControlEXP: map['fillerControlEXP'],
       topic: map['topic'],
