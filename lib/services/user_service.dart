@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    hide AuthException, Session;
 import 'package:bcrypt/bcrypt.dart';
+import 'package:voquadro/src/models/session_model.dart';
 import 'dart:io';
 
 // Import custom exception class
@@ -54,9 +56,7 @@ class ProfileData {
   final String? bio;
   final String? avatarUrl;
   final String? bannerUrl;
-  final int level;
-  final int masteryLevel;
-  final int publicSpeakingLevel; // Can be distinguished later if needed
+
   final int highestStreak;
 
   ProfileData({
@@ -64,9 +64,7 @@ class ProfileData {
     this.bio,
     this.avatarUrl,
     this.bannerUrl,
-    required this.level,
-    required this.masteryLevel,
-    required this.publicSpeakingLevel,
+
     required this.highestStreak,
   });
 }
@@ -77,19 +75,18 @@ class UserService {
   static const String _kPostgrestErrorNoExactRow = 'PGRST116';
   static const String _kPostgresErrorUniqueViolation = '23505';
 
-  static Future<User> addExp(
+  static Future<void> addExp(
     String userId, {
-    int practiceExp = 0,
+    // int practiceExp = 0,
     int paceControlExp = 0,
     int fillerControlExp = 0,
     Map<String, int>? modeExpGains,
   }) async {
     // Do nothing if no XP is being added.
-    if (practiceExp <= 0 &&
-        paceControlExp <= 0 &&
+    if (paceControlExp <= 0 &&
         fillerControlExp <= 0 &&
         (modeExpGains == null || modeExpGains.isEmpty)) {
-      return await getFullUserProfile(userId);
+      return;
     }
 
     try {
@@ -100,9 +97,6 @@ class UserService {
       // --- Handle General and Mastery XP ---
 
       // NOTE: the braces indicated the column name < 3 :)
-      if (practiceExp > 0) {
-        updatePayload['practice_xp'] = currentXP['practice_xp']! + practiceExp;
-      }
       if (paceControlExp > 0) {
         updatePayload['pace_control'] =
             currentXP['pace_control']! + paceControlExp;
@@ -128,7 +122,7 @@ class UserService {
         await _supabase.from('users').update(updatePayload).eq('id', userId);
       }
 
-      return await getFullUserProfile(userId);
+      return;
     } catch (e) {
       throw Exception('Failed to add user EXP: $e');
     }
@@ -141,16 +135,12 @@ class UserService {
           .from('users')
           // Add any new mode XP columns to this select statement.
           // THIS IS THE LINE TO CHANGE THE COLUMNS <3
-          .select(
-            'practice_xp, master_xp, pace_control, filler_control, public_speaking_xp',
-          )
+          .select('pace_control, filler_control, public_speaking_xp')
           .eq('id', userId)
           .single();
 
       // Return all values, providing a default of 0 if they are null in the DB.
       return {
-        'practice_xp': response['practice_xp'] as int? ?? 0,
-        'master_xp': response['master_xp'] as int? ?? 0,
         'pace_control': response['pace_control'] as int? ?? 0,
         'filler_control': response['filler_control'] as int? ?? 0,
         'public_speaking_xp': response['public_speaking_xp'] as int? ?? 0,
@@ -247,22 +237,10 @@ class UserService {
       final userResponse = await _supabase
           .from('users')
           .select(
-            'username, bio, profile_avatar_url, profile_banner_url, highest_streak, practice_xp, master_xp',
+            'username, bio, profile_avatar_url, profile_banner_url, highest_streak',
           )
           .eq('id', userId)
           .single();
-
-      // Get the raw XP values, defaulting to 0 if null.
-      final totalPxp = userResponse['practice_xp'] as int? ?? 0;
-      final totalMxp = userResponse['master_xp'] as int? ?? 0;
-
-      // Define level-up rules here.
-      const int pxpPerLevel = 500;
-      const int mxpPerLevel = 100;
-
-      // Calculate the levels on-the-fly.
-      final calculatedLevel = (totalPxp / pxpPerLevel).floor() + 1;
-      final calculatedMasteryLevel = (totalMxp / mxpPerLevel).floor() + 1;
 
       // Assemble the final ProfileData object using the calculated values.
       return ProfileData(
@@ -270,10 +248,7 @@ class UserService {
         bio: userResponse['bio'],
         avatarUrl: userResponse['profile_avatar_url'],
         bannerUrl: userResponse['profile_banner_url'],
-        level: calculatedLevel, // Use the calculated level
-        masteryLevel: calculatedMasteryLevel, // Use the calculated level
-        publicSpeakingLevel:
-            calculatedMasteryLevel, // For now, this is the same
+        // For now, this is the same
         highestStreak: userResponse['highest_streak'],
       );
     } catch (e) {
@@ -461,6 +436,34 @@ class UserService {
       await _supabase.auth.signOut();
     } catch (e) {
       throw Exception('Failed to delete account: $e');
+    }
+  }
+
+  static Future<void> addSession(Session session, String userId) async {
+    try {
+      await _supabase.from('practice_sessions').insert(session.toMap(userId));
+    } catch (e) {
+      // THIS WILL SHOW YOU THE REAL ERROR
+      debugPrint('--- DATABASE INSERT FAILED ---');
+      debugPrint(e.toString());
+      // ------------------------------------
+      throw Exception('Failed to save session: $e');
+    }
+  }
+
+  /// Fetches a list of all past practice sessions for the given user.
+  static Future<List<Session>> getSessionsForUser(String userId) async {
+    try {
+      final response = await _supabase
+          .from('practice_sessions')
+          .select()
+          .eq('user_id', userId)
+          .order('timestamp', ascending: false); // Show most recent first
+
+      // Convert the list of maps into a list of Session objects
+      return response.map((map) => Session.fromMap(map)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch sessions: $e');
     }
   }
 }

@@ -78,12 +78,12 @@ class _PublicSpeakingProfileStageState
             StatTileData(
               icon: Icons.school,
               label: 'Mastery Level',
-              value: 'lvl${profileData.masteryLevel}',
+              value: '22',
             ),
             StatTileData(
               icon: Icons.spatial_audio_off,
               label: 'Public Speaking Level',
-              value: 'lvl${profileData.publicSpeakingLevel}',
+              value: '22',
             ),
             StatTileData(
               icon: Icons.local_fire_department,
@@ -108,7 +108,7 @@ class _PublicSpeakingProfileStageState
 
           return ProfileTemplate(
             username: profileData.username,
-            level: profileData.level,
+            level: 22,
             bio: profileData.bio ?? 'Write your bio here...',
             bannerImage: bannerImage,
             avatarImage: avatarImage,

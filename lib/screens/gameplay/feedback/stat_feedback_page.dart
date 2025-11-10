@@ -59,7 +59,9 @@ class StatFeedbackPage extends StatelessWidget {
                     ),
                     CircularStatWidget(
                       lowerText: 'WPM',
-                      upperText: controller.sessionResult!.paceControl.round().toString(),
+                      upperText: controller.sessionResult!.wordsPerMinute
+                          .round()
+                          .toString(),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -72,7 +74,8 @@ class StatFeedbackPage extends StatelessWidget {
                     ),
                     CircularStatWidget(
                       lowerText: 'Fillers',
-                      upperText: controller.sessionResult!.fillerControl.toString(),
+                      upperText: controller.sessionResult!.fillerControl
+                          .toString(),
                     ),
                   ],
                 ),
