@@ -97,8 +97,8 @@ class MainHubActions extends StatelessWidget {
                           averageWPM: 0, // supply real metric when available
                           averageFillers:
                               0, // supply real metric when available
-                          sessionFeedbacks:
-                              const [], // replace with real feedbacks later
+                          //sessionFeedbacks:
+                          //const [], // replace with real feedbacks later
                           onBackPressed: () => Navigator.of(context).pop(),
                           onProfilePressed: () {
                             Navigator.of(context).push(

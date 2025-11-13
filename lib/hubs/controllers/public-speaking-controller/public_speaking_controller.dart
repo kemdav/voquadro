@@ -177,16 +177,20 @@ class PublicSpeakingController
 
         // Use _sessionResult to add a session to the database with unique id at the format of [modeid]_[sessionid]
 
-        final User updatedUser = await UserService.addExp(
+        await UserService.addSession(_sessionResult!, userId);
+
+        await UserService.addExp(
           userId,
           paceControlExp: _sessionResult!.paceControlEXP.toInt(),
           fillerControlExp: _sessionResult!.fillerControlEXP.toInt(),
           modeExpGains: {"public_speaking_xp": _sessionResult!.modeEXP.toInt()},
         );
 
+        final User updatedUser = await UserService.getFullUserProfile(userId);
+
         _appFlowController.updateCurrentUser(updatedUser);
       } catch (e) {
-        logger.d("An error occurred while updating EXP: $e");
+        logger.d("An error occurred while saving session or updating EXP: $e");
       }
 
       notifyListeners();
@@ -227,7 +231,7 @@ class PublicSpeakingController
 
   Session createSessionResult() {
     return Session(
-      id: 'session_${DateTime.now().millisecondsSinceEpoch}',
+      id: '',
       modeId: 'public',
       topic: topic ?? 'Topic', // Replace with topic
       generatedQuestion:
@@ -245,7 +249,7 @@ class PublicSpeakingController
             fillerWordCount,
             userTranscript,
           ).toDouble(),
-      paceControl: wordsPerMinute?.toDouble() ?? 0.0,
+      wordsPerMinute: wordsPerMinute?.toDouble() ?? 0.0,
       fillerControl: fillerWordCount?.toDouble() ?? 0.0,
       overallRating: overallScore?.toDouble() ?? 0.0,
       contentClarityScore: contentQualityScore?.toDouble() ?? 0.0,
