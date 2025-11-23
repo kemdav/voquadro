@@ -387,6 +387,8 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         'clarity_structure_score': result['clarity_structure_score'],
         'content_clarity_score': result['content_clarity_score'],
         'overall_rating': result['overall_rating'],
+        'vocal_delivery_score': result['vocal_delivery_score'],
+        'message_depth_score': result['message_depth_score'],
       };
     } catch (e) {
       debugPrint('Error generating scores: $e');
