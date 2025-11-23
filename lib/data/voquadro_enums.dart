@@ -1,4 +1,4 @@
 enum GameplayActionsState {
-    defaultActions, // Restart, Play, Mic
-    speakingActions, // Restart, Stop
+  defaultActions, // Restart, Play, Mic
+  speakingActions, // Restart, Stop
 }
