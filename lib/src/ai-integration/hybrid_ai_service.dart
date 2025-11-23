@@ -291,6 +291,8 @@ class HybridAIService with ChangeNotifier {
             'filler_control': comprehensive['filler_control'],
             'topic': session.topic,
             'question': session.generatedQuestion,
+            'vocal_delivery_score': comprehensive['vocal_delivery_score'],
+            'message_depth_score': comprehensive['message_depth_score'],
           };
         } catch (e) {
           debugPrint('Cloud AI failed: $e, trying Ollama');
