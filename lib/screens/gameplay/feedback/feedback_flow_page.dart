@@ -7,7 +7,6 @@ import 'package:voquadro/src/hex_color.dart';
 // Import your component and content widgets
 import 'package:voquadro/widgets/Widget/feedback_continue_button_widget.dart';
 import 'package:voquadro/widgets/Widget/feedback_progress_widget.dart';
-import 'package:voquadro/screens/gameplay/feedback/next_rank_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/progression_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/stat_feedback_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/transcript_page.dart';
@@ -19,10 +18,9 @@ class FeedbackFlowPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Consume the controller to get the current feedback step
     final controller = context.watch<PublicSpeakingController>();
+    final currentIndex = controller.currentFeedbackStep.index;
 
-    // Your color palette
     final Color primaryPurple = "49416D".toColor();
     final Color buttonPurple = "887CAF".toColor();
     final Color cardBackground = Colors.white;
@@ -40,16 +38,14 @@ class FeedbackFlowPage extends StatelessWidget {
               index: controller.currentFeedbackStep.index,
               children: <Widget>[
                 // Pass colors and any other required data to your pages
-                TranscriptPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
-                SpeakFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
-                StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
-                ProgressionPage(),
-                NextRankPage(cardBackground: cardBackground, primaryPurple: primaryPurple),
+                TranscriptPage(cardBackground: cardBackground, primaryPurple: primaryPurple, isVisible: currentIndex == 0),
+                SpeakFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple, isVisible: currentIndex == 1),
+                StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple, isVisible: currentIndex == 2),
+                ProgressionPage(isVisible: currentIndex == 3),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          // Your refactored "dumb" widgets
           FeedbackContinueButton(buttonPurple: buttonPurple),
           const SizedBox(height: 20),
           FeedbackProgressWidget(activeColor: activeIndicator),

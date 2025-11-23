@@ -15,7 +15,6 @@ enum FeedbackStep {
   speakFeedback,
   statFeedback,
   progressionDisplay,
-  nextRankDisplay,
 }
 
 mixin PublicSpeakingStateManager on ChangeNotifier {
@@ -41,7 +40,7 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
   }
   
   void goToNextFeedbackStep() {
-    if (_currentFeedbackStep == FeedbackStep.nextRankDisplay) {
+    if (_currentFeedbackStep == FeedbackStep.progressionDisplay) {
       // Assuming endGameplay() is in the main controller
       // This can be handled by a callback or by overriding this method.
       // For simplicity, we'll just move the core logic here.
