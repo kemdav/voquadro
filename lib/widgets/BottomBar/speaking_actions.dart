@@ -13,11 +13,11 @@ class SpeakingActions extends StatelessWidget {
       children: [
         Expanded(
           child: LinearProgressIndicator(
-              value: 0.3, 
-              minHeight: 10,    
-              backgroundColor: Colors.grey[300],
-              color: "6CCC51".toColor(),
-            ),
+            value: 0.3,
+            minHeight: 10,
+            backgroundColor: Colors.grey[300],
+            color: "6CCC51".toColor(),
+          ),
         ),
       ],
     );
