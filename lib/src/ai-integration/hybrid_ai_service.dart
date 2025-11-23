@@ -281,7 +281,7 @@ class HybridAIService with ChangeNotifier {
               'clarity_structure':
                   (scores?['clarity_structure'] as num?)?.round() ?? 0,
             },
-            // session nigger fields
+            // session model fields
             'pace_control_exp': comprehensive['pace_control_exp'],
             'filler_control_exp': comprehensive['filler_control_exp'],
             'clarity_structure_score': comprehensive['clarity_structure_score'],
