@@ -38,7 +38,10 @@ class RegistrationScreen extends StatelessWidget {
       case RegistrationStage.confirmation:
         return RegistrationConfirmationStage(key: ValueKey('confirm'));
       case RegistrationStage.submitting:
-        return Center(key: ValueKey('submitting'), child: CircularProgressIndicator());
+        return Center(
+          key: ValueKey('submitting'),
+          child: CircularProgressIndicator(),
+        );
     }
   }
 }
