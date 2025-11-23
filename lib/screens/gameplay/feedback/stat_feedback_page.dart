@@ -81,7 +81,10 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
 
     // D. Vocal Delivery (Bottom Left)
     // Mapping 'Overall Rating' (assuming 0-10) to 0-1. Adjust if your scale differs.
-    final double scoreVocal = (session.vocalDeliveryScore / 10).clamp(0.0, 1.0);
+    final double scoreVocal = (session.vocalDeliveryScore / 100).clamp(
+      0.0,
+      1.0,
+    );
 
     // E. Message Depth (Left)
     final double scoreContent = (session.messageDepthScore / 100).clamp(
