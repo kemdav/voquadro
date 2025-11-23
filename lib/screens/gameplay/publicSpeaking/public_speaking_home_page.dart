@@ -15,9 +15,7 @@ class _ModePageState extends State<PublicSpeakingHomePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           ElevatedButton(
-            onPressed: () {
-              
-            },
+            onPressed: () {},
             child: Image.asset('assets/images/tempCharacter.png'),
           ),
         ],

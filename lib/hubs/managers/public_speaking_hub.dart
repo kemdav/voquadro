@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
-import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart'; // 1. Import the controller
+import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
@@ -16,66 +16,82 @@ import 'package:voquadro/widgets/AppBar/default_actions.dart';
 import 'package:voquadro/widgets/BottomBar/empty_actions.dart';
 import 'package:voquadro/widgets/BottomBar/gameplay_actions.dart';
 import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
-import 'package:voquadro/widgets/BottomBar/main_hub_actions.dart';
+import 'package:voquadro/widgets/BottomBar/start_speaking_actions.dart';
 
 class PublicSpeakingHub extends StatelessWidget {
   const PublicSpeakingHub({super.key});
 
+  /// Build the actions widget based on current state
   Widget _buildBottomActions(PublicSpeakingState state) {
     switch (state) {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
-        // For home and status, show the main navigation buttons.
-        return const MainHubActions();
+        return const StartSpeakingActions();
 
       case PublicSpeakingState.profile:
-        return EmptyNavigationActions();
+        return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
-        // For any gameplay state, show the gameplay-specific buttons.
         return const GameplayActions();
+
       case PublicSpeakingState.inFeedback:
-        return EmptyNavigationActions();
+        return const EmptyNavigationActions();
     }
   }
 
+  /// Build the upper app bar actions based on current state
   Widget _buildUpperActions(PublicSpeakingState state) {
     switch (state) {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
-        // For home and status, show the main navigation buttons.
         return const DefaultActions();
 
       case PublicSpeakingState.profile:
-        return const DefaultActions(); // make this empty
+        return const DefaultActions();
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
-        // For any gameplay state, show the gameplay-specific buttons.
-        return const EmptyActions(); // The NEW, dumb version]
+        return const EmptyActions();
+
       case PublicSpeakingState.inFeedback:
         return const EmptyActions();
     }
   }
 
-  List<double> _bottomNavigationBarDimensions(PublicSpeakingState state) {
+  /// Determine if the bottom navigation bar should be visible
+  bool _shouldShowBottomBar(PublicSpeakingState state) {
     switch (state) {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
-        return [140, 180];
-
       case PublicSpeakingState.profile:
-        return [0, 180];
+        return true;
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
-        return [140, 180];
       case PublicSpeakingState.inFeedback:
-        return [0, 180];
+        return false;
+    }
+  }
+
+  /// Get the bottom navigation bar dimensions based on state
+  List<double> _bottomNavigationBarDimensions(PublicSpeakingState state) {
+    switch (state) {
+      case PublicSpeakingState.home:
+      case PublicSpeakingState.status:
+        return [80, 180]; // navBarVisualHeight, totalHitTestHeight
+
+      case PublicSpeakingState.profile:
+        return [80, 180]; // Show navigation bar in profile/journey
+
+      case PublicSpeakingState.micTest:
+      case PublicSpeakingState.readying:
+      case PublicSpeakingState.speaking:
+      case PublicSpeakingState.inFeedback:
+        return [0, 0]; // Hide completely during gameplay and feedback
     }
   }
 
@@ -83,17 +99,16 @@ class PublicSpeakingHub extends StatelessWidget {
   Widget build(BuildContext context) {
     const double customAppBarHeight = 80.0;
 
-    return ChangeNotifierProxyProvider2<AppFlowController, AudioController, PublicSpeakingController>(
+    return ChangeNotifierProxyProvider2<
+      AppFlowController,
+      AudioController,
+      PublicSpeakingController
+    >(
       create: (context) => PublicSpeakingController(
         audioController: context.read<AudioController>(),
         appFlowController: context.read<AppFlowController>(),
       ),
-      update: (
-        context,
-        appFlowController,
-        audioController,
-        previous,
-      ) {
+      update: (context, appFlowController, audioController, previous) {
         if (previous == null) {
           return PublicSpeakingController(
             audioController: audioController,
@@ -106,11 +121,18 @@ class PublicSpeakingHub extends StatelessWidget {
       child: Scaffold(
         body: Stack(
           children: [
-            // This Consumer will now get the correctly configured PublicSpeakingController
             Consumer<PublicSpeakingController>(
               builder: (context, controller, child) {
+                final showBottomBar = _shouldShowBottomBar(
+                  controller.currentState,
+                );
+                final dimensions = _bottomNavigationBarDimensions(
+                  controller.currentState,
+                );
+
                 return Stack(
                   children: [
+                    // Main content area
                     Padding(
                       padding: const EdgeInsets.only(top: customAppBarHeight),
                       child: IndexedStack(
@@ -126,20 +148,25 @@ class PublicSpeakingHub extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: GeneralNavigationBar(
-                        actions: _buildBottomActions(controller.currentState),
-                        navBarVisualHeight: _bottomNavigationBarDimensions(controller.currentState)[0],
-                        totalHitTestHeight: _bottomNavigationBarDimensions(controller.currentState)[1],
+                    // Bottom navigation bar (only shown when appropriate)
+                    if (showBottomBar)
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: GeneralNavigationBar(
+                          actions: _buildBottomActions(controller.currentState),
+                          navBarVisualHeight: dimensions[0],
+                          totalHitTestHeight: dimensions[1],
+                        ),
                       ),
-                    ),
+                    // Top app bar
                     Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
                       child: AppBarGeneral(
-                        actionButtons: _buildUpperActions(controller.currentState),
+                        actionButtons: _buildUpperActions(
+                          controller.currentState,
+                        ),
                       ),
                     ),
                   ],

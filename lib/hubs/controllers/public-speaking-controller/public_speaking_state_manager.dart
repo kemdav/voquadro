@@ -39,7 +39,7 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
     _currentState = PublicSpeakingState.micTest;
     notifyListeners();
   }
-  
+
   void goToNextFeedbackStep() {
     if (_currentFeedbackStep == FeedbackStep.nextRankDisplay) {
       // Assuming endGameplay() is in the main controller

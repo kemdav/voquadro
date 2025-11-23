@@ -1,42 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
-import 'package:logger/logger.dart';
+import 'package:voquadro/widgets/BottomBar/navigation_icons.dart';
 
-var logger = Logger();
-
-class GeneralNavigationBar extends StatefulWidget {
+class GeneralNavigationBar extends StatelessWidget {
   const GeneralNavigationBar({
     super.key,
-    required this.actions,
-    required this.navBarVisualHeight,
-    required this.totalHitTestHeight,
+    this.actions,
+    this.navBarVisualHeight = 80,
+    this.totalHitTestHeight = 180,
   });
 
-  final Widget actions;
+  final Widget? actions;
   final double navBarVisualHeight;
   final double totalHitTestHeight;
 
   @override
-  State<GeneralNavigationBar> createState() => _GeneralNavigationBarState();
-}
-
-class _GeneralNavigationBarState extends State<GeneralNavigationBar> {
-  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: widget.totalHitTestHeight,
+      height: totalHitTestHeight,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: widget.navBarVisualHeight,
-              decoration: BoxDecoration(color: "49416D".toColor()),
+          // Purple background bar (fixed at bottom) - only show if navBarVisualHeight > 0
+          if (navBarVisualHeight > 0)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: navBarVisualHeight,
+                decoration: BoxDecoration(color: "49416D".toColor()),
+              ),
             ),
-          ),
-          Positioned(top: 0, left: 20, right: 20, child: widget.actions),
+          // Navigation icons (centered inside purple bar at bottom) - only show if navBarVisualHeight > 0
+          if (navBarVisualHeight > 0)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: navBarVisualHeight,
+              child: Center(
+                child: const NavigationIcons(),
+              ),
+            ),
+          // Actions widget (positioned above the purple navigation bar, or at bottom if no nav bar)
+          if (actions != null)
+            Positioned(
+              bottom: navBarVisualHeight > 0 ? navBarVisualHeight + 20 : 20,
+              left: 20,
+              right: 20,
+              child: actions!,
+            ),
         ],
       ),
     );
