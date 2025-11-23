@@ -367,6 +367,138 @@ Return ONLY a JSON object in this exact format:
     }
   }
 
+  /// Get specific 5-point metrics for a Radar Chart
+  /// Returns a Map with keys: message_depth, vocal_delivery, clarity_flow, pace_control, filler_control
+  Future<Map<String, int>> getRadarChartScores(
+    String transcript,
+    String topic, {
+    int durationSeconds = 0,
+    int wordCount = 0,
+    int fillerCount = 0,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw Exception('Gemini API key not configured');
+    }
+
+    try {
+      // Calculate raw stats to help the AI make an informed decision
+      final effectiveWordCount = wordCount <= 0
+          ? transcript.split(RegExp(r'\s+')).length
+          : wordCount;
+
+      // Fallback: If fillerCount is 0, try to estimate it from transcript
+      // This handles cases where the caller didn't provide the count
+      int effectiveFillerCount = fillerCount;
+      if (effectiveFillerCount == 0 && transcript.isNotEmpty) {
+        // Basic filler detection for fallback
+        final fillerRegex = RegExp(
+          r'\b(um|uh|ah|hmm|er|like|you know)\b',
+          caseSensitive: false,
+        );
+        effectiveFillerCount = fillerRegex.allMatches(transcript).length;
+      }
+
+      final duration = Duration(seconds: max(1, durationSeconds));
+      final wpm = calculateWordsPerMinute(transcript, duration);
+
+      // Calculate a raw filler percentage for the AI's context
+      final fillerPercentage = effectiveWordCount > 0
+          ? (effectiveFillerCount / effectiveWordCount * 100).toStringAsFixed(1)
+          : "0";
+
+      final prompt =
+          '''
+Analyze this speech performance for a 5-point radar chart.
+
+Context:
+- Topic: "$topic"
+- Duration: ${durationSeconds}s
+- Words per Minute: $wpm (Ideal range is usually 130-160 wpm)
+- Filler Words Used: $effectiveFillerCount (approx $fillerPercentage% of speech)
+
+Transcript:
+"""
+$transcript
+"""
+
+Task: Generate 5 specific scores (0-100) based on the text and stats provided.
+
+Definitions:
+1. Message Depth: Substance, relevance to topic, and thoughtfulness.
+2. Vocal Delivery: (Inferred from text) Confidence, sentence variety, and lack of hesitation markers.
+3. Clarity and Flow: Logical progression, transitions, and structure.
+4. Pace Control: Score based on the WPM provided (100 is perfect pace, lower if too fast or too slow).
+5. Filler Word Control: Score based on filler count (100 is zero fillers, lower as count increases).
+
+Return ONLY a JSON object in this exact format:
+{
+  "message_depth": 85,
+  "vocal_delivery": 75,
+  "clarity_flow": 80,
+  "pace_control": 90,
+  "filler_control": 70
+}
+''';
+
+      final response = await _callGemini(
+        prompt,
+        temperature: 0.3, // Lower temperature for more consistent scoring
+        forceJson: true,
+      );
+
+      // Default scores in case of parsing failure
+      final Map<String, int> resultScores = {
+        "message_depth": 0,
+        "vocal_delivery": 0,
+        "clarity_flow": 0,
+        "pace_control": 0,
+        "filler_control": 0,
+      };
+
+      // Calculate deterministic filler score to ensure accuracy
+      // Use ScoreUtils to account for speech length (density based)
+      final int deterministicFillerScore = ScoreUtils.fillerToScore(
+        effectiveFillerCount,
+        max(1, effectiveWordCount),
+      ).round();
+
+      // Parse response
+      if (response.isNotEmpty) {
+        resultScores['message_depth'] =
+            (response['message_depth'] as num?)?.toInt() ?? 0;
+        resultScores['vocal_delivery'] =
+            (response['vocal_delivery'] as num?)?.toInt() ?? 0;
+        resultScores['clarity_flow'] =
+            (response['clarity_flow'] as num?)?.toInt() ?? 0;
+        resultScores['pace_control'] =
+            (response['pace_control'] as num?)?.toInt() ?? 0;
+        // Overwrite AI filler score with deterministic calculation
+        resultScores['filler_control'] = deterministicFillerScore;
+      }
+
+      // --- DEBUG DISPLAY AS REQUESTED ---
+      debugPrint('--- RADAR CHART SCORES GENERATED ---');
+      debugPrint('Message Depth:      ${resultScores['message_depth']}');
+      debugPrint('Vocal Delivery:     ${resultScores['vocal_delivery']}');
+      debugPrint('Clarity & Flow:     ${resultScores['clarity_flow']}');
+      debugPrint('Pace Control:       ${resultScores['pace_control']}');
+      debugPrint('Filler Control:     ${resultScores['filler_control']}');
+      debugPrint('------------------------------------');
+
+      return resultScores;
+    } catch (e) {
+      debugPrint('Error generating radar chart scores: $e');
+      // Return safe defaults on error
+      return {
+        "message_depth": 50,
+        "vocal_delivery": 50,
+        "clarity_flow": 50,
+        "pace_control": 50,
+        "filler_control": 50,
+      };
+    }
+  }
+
   /// Get public speaking feedback (text only)
   Future<String> getPublicSpeakingFeedback(
     String transcript,

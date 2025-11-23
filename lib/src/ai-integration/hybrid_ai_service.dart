@@ -639,4 +639,32 @@ class HybridAIService with ChangeNotifier {
       return 'Instant (Offline)';
     }
   }
+
+  /// Get specific 5-point metrics for a Radar Chart
+  Future<Map<String, int>> getRadarChartScores(
+    String transcript,
+    String topic, {
+    int durationSeconds = 0,
+    int wordCount = 0,
+    int fillerCount = 0,
+  }) async {
+    if (_isCloudAIAvailable) {
+      return await _cloudAIService.getRadarChartScores(
+        transcript,
+        topic,
+        durationSeconds: durationSeconds,
+        wordCount: wordCount,
+        fillerCount: fillerCount,
+      );
+    }
+
+    // Fallback / Default
+    return {
+      "message_depth": 50,
+      "vocal_delivery": 50,
+      "clarity_flow": 50,
+      "pace_control": 50,
+      "filler_control": 50,
+    };
+  }
 }

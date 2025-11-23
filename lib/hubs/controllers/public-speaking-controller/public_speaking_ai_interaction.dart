@@ -22,12 +22,28 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
   /// Provides access to the feedback string for internal checks.
   String? get aiFeedback;
 
+  /// Provides access to the filler word count from the controller.
+  int? get fillerWordCount;
+
   /// Parsed feedback map (optional) for richer UI rendering. This is filled
   /// when the AI service returns a parsed structure (lists of bullets).
   Map<String, dynamic>? _aiParsedFeedback;
   Map<String, dynamic>? get aiParsedFeedback => _aiParsedFeedback;
   set aiParsedFeedback(Map<String, dynamic>? value) {
     _aiParsedFeedback = value;
+    notifyListeners();
+  }
+
+  /// Radar chart scores (0-100) for 5 metrics.
+  Map<String, int>? _radarChartScores;
+  Map<String, int>? get radarChartScores => _radarChartScores;
+
+  /// Clears all AI interaction state for a new session.
+  void clearAIInteractionState() {
+    aiFeedback = null;
+    userTranscript = null;
+    _aiParsedFeedback = null;
+    _radarChartScores = null;
     notifyListeners();
   }
 
@@ -273,8 +289,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
     try {
       debugPrint('Generating question with AI service...');
       // Clear previous session data
-      aiFeedback = null;
-      userTranscript = null;
+      clearAIInteractionState();
 
       await aiService.preWarmConnection();
       await aiService.generateQuestion(topic);
@@ -302,6 +317,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
       final feedbackData = await aiService.getPublicSpeakingFeedbackWithScores(
         userTranscript!,
         currentSession!,
+        fillerCount: fillerWordCount ?? 0,
       );
       // Use structured, human-friendly formatting for feedback (handles
       // both String and Map-shaped feedback and appends scores if present).
@@ -334,7 +350,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
     try {
       final computedFillerCount = (fillerCount > 0)
           ? fillerCount
-          : countFillerWords(userTranscript!);
+          : (this.fillerWordCount ?? countFillerWords(userTranscript!));
 
       final computedDurationSeconds = (durationSeconds > 0)
           ? durationSeconds
@@ -353,6 +369,23 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         fillerCount: fillerCount,
         durationSeconds: durationSeconds,
       );
+
+      // Fetch radar chart scores
+      _radarChartScores = await aiService.getRadarChartScores(
+        userTranscript!,
+        currentSession!.topic,
+        durationSeconds: durationSeconds,
+        wordCount: wordCount,
+        fillerCount: fillerCount,
+      );
+
+      // Calculate overall score from radar chart if available
+      int? aiOverallScore;
+      if (_radarChartScores != null && _radarChartScores!.isNotEmpty) {
+        final sum = _radarChartScores!.values.fold(0, (p, c) => p + c);
+        aiOverallScore = (sum / _radarChartScores!.length).round();
+      }
+
       final scores = result['scores'] as Map<String, dynamic>?;
       // Update feedback if it hasn't been set yet
       if (aiFeedback == null || aiFeedback == 'Generating feedback...') {
@@ -373,10 +406,11 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
       notifyListeners();
 
       // Return the scores to the caller (the controller)
+      // Prefer the AI-generated overall score from the radar chart
       return {
         'content_quality': (scores?['content_quality'] as num?)?.toInt(),
         'clarity_structure': (scores?['clarity_structure'] as num?)?.toInt(),
-        'overall': (scores?['overall'] as num?)?.toInt(),
+        'overall': aiOverallScore ?? (scores?['overall'] as num?)?.toInt(),
         'filler_count': fillerWordCount,
         'words_per_minute': wordsPerMinute.toInt(),
         'question': result['question'],

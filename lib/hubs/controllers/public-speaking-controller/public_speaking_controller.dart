@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
+import 'package:voquadro/src/speech-calculations/speech_metrics.dart';
 import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 import 'package:voquadro/src/models/session_model.dart';
 import 'public_speaking_state_manager.dart';
@@ -137,6 +138,11 @@ class PublicSpeakingController
           final transcribed = await audioController
               .transcribeWithAssemblyAI(); // Use the getter
           _userTranscript = transcribed.isNotEmpty ? transcribed : null;
+
+          if (_userTranscript != null) {
+            _fillerWordCount = countFillerWords(_userTranscript!);
+          }
+
           if (transcribed.isEmpty) {
             _transcriptionError = 'Transcription returned empty text.';
           }
@@ -226,7 +232,9 @@ class PublicSpeakingController
     _aiFeedback = null;
     _transcriptionError = null;
     _isTranscribing = false;
+    _sessionResult = null;
     clearScores();
+    clearAIInteractionState();
   }
 
   Session createSessionResult() {

@@ -17,6 +17,8 @@ class StatFeedbackPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<PublicSpeakingController>();
     final result = controller.sessionResult;
+    final radarScores = controller.radarChartScores;
+
     if (result == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -49,34 +51,73 @@ class StatFeedbackPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Pace Control',
-                      style: TextStyle(
-                        color: primaryPurple,
-                        fontSize: 35,
-                        fontWeight: FontWeight.bold,
+                    if (radarScores != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Message Depth',
+                        style: TextStyle(
+                          color: primaryPurple,
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    CircularStatWidget(
-                      lowerText: 'WPM',
-                      upperText: controller.sessionResult!.wordsPerMinute
-                          .round()
-                          .toString(),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Filler Word Control',
-                      style: TextStyle(
-                        color: primaryPurple,
-                        fontSize: 35,
-                        fontWeight: FontWeight.bold,
+                      CircularStatWidget(
+                        lowerText: 'Score',
+                        upperText: radarScores['message_depth'].toString(),
                       ),
-                    ),
-                    CircularStatWidget(
-                      lowerText: 'Fillers',
-                      upperText: controller.sessionResult!.fillerControl
-                          .toString(),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Vocal Delivery',
+                        style: TextStyle(
+                          color: primaryPurple,
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      CircularStatWidget(
+                        lowerText: 'Score',
+                        upperText: radarScores['vocal_delivery'].toString(),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Clarity & Flow',
+                        style: TextStyle(
+                          color: primaryPurple,
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      CircularStatWidget(
+                        lowerText: 'Score',
+                        upperText: radarScores['clarity_flow'].toString(),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Pace Score',
+                        style: TextStyle(
+                          color: primaryPurple,
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      CircularStatWidget(
+                        lowerText: 'Score',
+                        upperText: radarScores['pace_control'].toString(),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Filler Score',
+                        style: TextStyle(
+                          color: primaryPurple,
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      CircularStatWidget(
+                        lowerText: 'Score',
+                        upperText: radarScores['filler_control'].toString(),
+                      ),
+                    ],
                   ],
                 ),
               ),
