@@ -156,6 +156,7 @@ Return ONLY a JSON object in this exact format:
   - Do NOT include extraneous commentary, prefaces, or lists beyond the required JSON.
   - Start each bullet with the bullet marker "• " exactly, and separate bullets with a literal "\\n" inside the JSON string value.
   - Escape any newline or control characters inside JSON string values using \\n+  (that is, use "\\n" for newlines inside string values).
+  - Provide integer scores (0-100) for content_quality, clarity_structure, and overall_impression based on the transcript analysis.
 
   FORBIDDEN:
   - Any text before or after the fenced code block.
@@ -169,6 +170,11 @@ Return ONLY a JSON object in this exact format:
       "content_quality_eval": "• [specific observation]\\n• [specific suggestion]",
       "clarity_structure_eval": "• [specific observation]\\n• [specific suggestion]",
       "overall_eval": "• [main strength]\\n• [key improvement]"
+    },
+    "scores": {
+      "content_quality": 85,
+      "clarity_structure": 80,
+      "overall_impression": 82
     }
   }
   ```
@@ -295,7 +301,7 @@ Return ONLY a JSON object in this exact format:
       int modelClarity = 0;
       if (scores != null) {
         modelOverall = ScoreUtils.normalizeModelScore(
-          scores['overall'] as num?,
+          (scores['overall_impression'] ?? scores['overall']) as num?,
         );
         modelContent = ScoreUtils.normalizeModelScore(
           scores['content_quality'] as num?,
@@ -332,6 +338,9 @@ Return ONLY a JSON object in this exact format:
         fillerWeight: hasModelScores ? 0.15 : 0.2,
       );
 
+      // 0. Calculate Clarity & Structure
+      // Combination of wpm, filler, and model clarity score
+
       final blendedClarity = ScoreUtils.blendScores(
         modelScore: hasModelScores ? modelClarity : 0,
         wpmScore: wpmScore,
@@ -340,6 +349,23 @@ Return ONLY a JSON object in this exact format:
         wpmWeight: hasModelScores ? 0.25 : 0.4,
         fillerWeight: hasModelScores ? 0.15 : 0.2,
       );
+
+      // 1. Calculate Vocal Delivery (The "How")
+      // Derived from mechanical metrics: Pace (WPM) and Fluency (Fillers).
+      // We weight fillers slightly higher as they disrupt delivery more than pace.
+      final int vocalDelivery = ((wpmScore * 0.4) + (fillerScore * 0.6))
+          .round();
+
+      // 2. Calculate Message Depth (The "What")
+      // Derived from the AI's content quality score.
+      // We apply a penalty for very short speeches, as it's hard to have "depth" in < 30 words.
+      double lengthMultiplier = 1.0;
+      if (effectiveWordCount < 50) lengthMultiplier = 0.9;
+      if (effectiveWordCount < 30) lengthMultiplier = 0.7;
+
+      final int messageDepth = (blendedContent * lengthMultiplier)
+          .round()
+          .clamp(0, 100);
 
       final finalScores = {
         'overall': blendedOverall,
@@ -360,6 +386,16 @@ Return ONLY a JSON object in this exact format:
           'clarity_structure':
               (finalScores['clarity_structure'] as num?)?.toInt() ?? 70,
         },
+        //session model fields
+        'pace_control_exp': wpmScore,
+        'filler_control_exp': fillerScore,
+        'clarity_structure_score': blendedClarity,
+        'content_clarity_score': blendedContent,
+        'overall_rating': blendedOverall / 10.0,
+        'words_per_minute': wpm,
+        'filler_control': effectiveFillerCount,
+        'vocal_delivery_score': vocalDelivery,
+        'message_depth_score': messageDepth,
       };
     } catch (e) {
       debugPrint('Cloud AI comprehensive feedback failed: $e');

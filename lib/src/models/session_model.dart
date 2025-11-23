@@ -14,6 +14,8 @@ class Session {
   final double overallRating;
   final double contentClarityScore;
   final double clarityStructureScore;
+  final double vocalDeliveryScore;
+  final double messageDepthScore;
 
   final String transcript;
   final String feedback;
@@ -31,6 +33,8 @@ class Session {
     required this.overallRating,
     required this.contentClarityScore,
     required this.clarityStructureScore,
+    this.vocalDeliveryScore = 0.0,
+    this.messageDepthScore = 0.0,
     required this.transcript,
     required this.feedback,
   });
@@ -52,6 +56,9 @@ class Session {
           .toDouble(),
       clarityStructureScore: (map['clarity_structure_score'] as num? ?? 0.0)
           .toDouble(),
+      vocalDeliveryScore: (map['vocal_delivery_score'] as num? ?? 0.0)
+          .toDouble(),
+      messageDepthScore: (map['message_depth_score'] as num? ?? 0.0).toDouble(),
       transcript: map['transcript'] ?? '',
       feedback: map['feedback'] ?? '', // Expects 'feedback_summary' column
     );
@@ -73,6 +80,8 @@ class Session {
       'overall_rating': overallRating,
       'content_clarity_score': contentClarityScore,
       'clarity_structure_score': clarityStructureScore,
+      'vocal_delivery_score': vocalDeliveryScore,
+      'message_depth_score': messageDepthScore,
       'transcript': transcript,
       'feedback': feedback, // Writes to 'feedback_summary' column
     };
