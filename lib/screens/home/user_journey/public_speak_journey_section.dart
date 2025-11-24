@@ -77,6 +77,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
         children: [
           // Main content
           SafeArea(
+            top: false,
             child: Padding(
               padding: const EdgeInsets.only(
                 bottom: 55,
