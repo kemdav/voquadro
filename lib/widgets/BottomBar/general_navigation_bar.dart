@@ -39,9 +39,7 @@ class GeneralNavigationBar extends StatelessWidget {
               left: 0,
               right: 0,
               height: navBarVisualHeight,
-              child: Center(
-                child: const NavigationIcons(),
-              ),
+              child: Center(child: const NavigationIcons()),
             ),
           // Actions widget (positioned above the purple navigation bar, or at bottom if no nav bar)
           if (actions != null)
