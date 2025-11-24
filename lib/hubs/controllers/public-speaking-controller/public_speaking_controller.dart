@@ -115,7 +115,6 @@ class PublicSpeakingController
     await generateQuestionAndStart(topic, startGameplaySequence);
   }
 
-  // FIX: Added missing @override. This method is now required by PublicSpeakingGameplay.
   @override
   void showFeedback() {
     cancelGameplaySequence();
@@ -156,7 +155,10 @@ class PublicSpeakingController
       if (_userTranscript != null && _userTranscript!.isNotEmpty) {
         if (aiFeedback == null) await generateAIFeedback();
         if (overallScore == null) {
-          final feedback = await getAIFeedback();
+          double durationToUse = actualSpeakingDurationInSeconds;
+          if (durationToUse < 1.0) durationToUse = 1.0;
+
+          final feedback = await getAIFeedback(durationSeconds: durationToUse.toInt());
           _overallScore = feedback['overall'];
           _contentQualityScore = feedback['content_quality'];
           _clarityStructureScore = feedback['clarity_structure'];
@@ -229,7 +231,6 @@ class PublicSpeakingController
     notifyListeners();
   }
 
-  // FIX: Implement clearSessionData required by PublicSpeakingGameplay mixin
   @override
   void clearSessionData() {
     _userTranscript = null;
@@ -243,10 +244,10 @@ class PublicSpeakingController
     return Session(
       id: '',
       modeId: 'public',
-      topic: topic ?? 'Topic', // Replace with topic
+      topic: topic ?? 'Topic',
       generatedQuestion:
           questionGenerated ??
-          'Question Generated', // Replace with generated question
+          'Question Generated',
       timestamp: DateTime.now(),
       modeEXP: ProgressionConversionHelper.convertOverallRatingToEXP(
         overallScore,

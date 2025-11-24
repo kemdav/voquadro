@@ -32,10 +32,12 @@ class PublicSpeakingHub extends StatelessWidget {
         return EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
+        return EmptyNavigationActions();
       case PublicSpeakingState.readying:
+        return const EmptyActions();
       case PublicSpeakingState.speaking:
         // For any gameplay state, show the gameplay-specific buttons.
-        return const GameplayActions();
+        return GameplayActions();
       case PublicSpeakingState.inFeedback:
         return EmptyNavigationActions();
     }
@@ -53,6 +55,7 @@ class PublicSpeakingHub extends StatelessWidget {
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
+      return const EmptyActions();
       case PublicSpeakingState.speaking:
         // For any gameplay state, show the gameplay-specific buttons.
         return const EmptyActions(); // The NEW, dumb version]
@@ -71,9 +74,11 @@ class PublicSpeakingHub extends StatelessWidget {
         return [0, 180];
 
       case PublicSpeakingState.micTest:
+        return [140, 40];
       case PublicSpeakingState.readying:
+        return [120, 40];
       case PublicSpeakingState.speaking:
-        return [140, 180];
+        return [40, 70];
       case PublicSpeakingState.inFeedback:
         return [0, 180];
     }
