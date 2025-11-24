@@ -22,7 +22,11 @@ class NavigationIcons extends StatelessWidget {
         // Home icon
         IconButton(
           onPressed: () {
-            logger.d('Home icon pressed!');
+            logger.d('Home icon pressed -> act as back');
+            // Only pop if there is a route to pop; otherwise do nothing.
+            if (Navigator.canPop(context)) {
+              Navigator.of(context).pop();
+            }
           },
           icon: SvgPicture.asset(
             'assets/homepage_assets/house.svg',

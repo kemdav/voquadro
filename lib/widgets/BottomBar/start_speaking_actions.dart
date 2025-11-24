@@ -52,8 +52,8 @@ class StartSpeakingActions extends StatelessWidget {
           elevation: 3.0,
           child: SvgPicture.asset(
             'assets/homepage_assets/mode_switcher.svg',
-            width: 60,
-            height: 60,
+            width: 25,
+            height: 25,
           ),
         ),
       ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
-import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
-import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 var logger = Logger();
@@ -26,66 +25,37 @@ class DefaultActions extends StatelessWidget {
     return Positioned(
       top: visibleBarHeight - (buttonSize / 2),
       left: 20,
-      right: 20,
+      right: 5,
       height: buttonSize,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton.filled(
-            onPressed:
-                onBackPressed ??
-                () {
-                  if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                  }
-                },
-            icon: const Icon(Icons.arrow_back),
-            iconSize: 50,
-            style: IconButton.styleFrom(
-              backgroundColor: "7962A5".toColor(),
-              foregroundColor: Colors.white,
-            ),
-          ),
+          // Only show the right-side burger FAB in the top area; left is intentionally empty.
+          const Expanded(child: SizedBox()),
 
-          Row(
-            children: [
-              IconButton.filled(
-                onPressed:
-                    onProfilePressed ??
-                    () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const PublicSpeakingProfileStage(),
-                        ),
-                      );
-                    },
-                icon: const Icon(Icons.person),
-                iconSize: 50,
-                style: IconButton.styleFrom(
-                  backgroundColor: "7962A5".toColor(),
-                  foregroundColor: Colors.white,
+          // Burger button on the right inside a circular FAB for easy editing later.
+          SizedBox(
+            width: 70,
+            height: 70,
+            child: FloatingActionButton(
+              heroTag: 'burger_icon_fab',
+              shape: const CircleBorder(),
+              onPressed: () {
+                // no-op for now
+              },
+              backgroundColor: "7962A5".toColor(),
+              elevation: 3.0,
+              child: SvgPicture.asset(
+                'assets/homepage_assets/burger.svg',
+                width: 30,
+                height: 30,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
                 ),
               ),
-              const SizedBox(width: 10),
-              IconButton.filled(
-                onPressed:
-                    onSettingsPressed ??
-                    () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsStage(),
-                        ),
-                      );
-                    },
-                icon: const Icon(Icons.settings),
-                iconSize: 50,
-                style: IconButton.styleFrom(
-                  backgroundColor: "7962A5".toColor(),
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

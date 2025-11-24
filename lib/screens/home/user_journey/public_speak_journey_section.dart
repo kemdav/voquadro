@@ -6,6 +6,8 @@ import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/src/models/session_model.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
 import 'package:voquadro/widgets/AppBar/default_actions.dart';
+import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
+import 'package:voquadro/widgets/BottomBar/empty_actions.dart';
 import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/services/user_service.dart';
@@ -17,13 +19,11 @@ class PublicSpeakJourneySection extends StatefulWidget {
   final String currentLevel;
   final int averageWPM;
   final int averageFillers;
-  //final List<SessionFeedback> sessionFeedbacks;
   final VoidCallback? onBackPressed;
   final VoidCallback? onProfilePressed;
   final VoidCallback? onSettingsPressed;
 
   const PublicSpeakJourneySection({
-    //change when needed this is only for the ui
     super.key,
     required this.username,
     required this.currentXP,
@@ -31,7 +31,6 @@ class PublicSpeakJourneySection extends StatefulWidget {
     required this.currentLevel,
     required this.averageWPM,
     required this.averageFillers,
-    //required this.sessionFeedbacks,
     this.onBackPressed,
     this.onProfilePressed,
     this.onSettingsPressed,
@@ -44,7 +43,6 @@ class PublicSpeakJourneySection extends StatefulWidget {
 
 class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   final ScrollController _feedbackScrollController = ScrollController();
-
   late Future<List<Session>> _sessionHistoryFuture;
 
   @override
@@ -56,7 +54,6 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   Future<List<Session>> _fetchSessionHistory() {
     final user = context.read<AppFlowController>().currentUser;
     if (user == null) {
-      // Return a future that completes with an error if the user is not logged in
       return Future.error('User not found. Cannot fetch session history.');
     }
     return UserService.getSessionsForUser(user.id);
@@ -76,43 +73,65 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
     return Scaffold(
       backgroundColor: pageBg,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppBarGeneral(
-                actionButtons: DefaultActions(
-                  onBackPressed: widget.onBackPressed,
-                  onProfilePressed: widget.onProfilePressed,
-                  onSettingsPressed: widget.onSettingsPressed,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
+      body: Stack(
+        children: [
+          // Main content
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                bottom: 55,
+              ), // Change from 80 to match navBarVisualHeight
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Your Journey',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: purpleDark,
-                        height: 1.1,
+                    AppBarGeneral(
+                      actionButtons: DefaultActions(
+                        onBackPressed: widget.onBackPressed,
+                        onProfilePressed: widget.onProfilePressed,
+                        onSettingsPressed: widget.onSettingsPressed,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    progressCard(purpleDark, cardBg),
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Journey',
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: purpleDark,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          progressCard(purpleDark, cardBg),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          // Bottom navigation bar
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: GeneralNavigationBar(
+              actions:
+                  null, // Don't pass EmptyNavigationActions, just pass null
+              navBarVisualHeight: 80,
+              totalHitTestHeight: 80,
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // ... rest of your existing methods remain the same ...
 
   Widget progressCard(Color titleColor, Color cardBg) {
     return Container(
@@ -121,17 +140,14 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Progress Section
           _buildProgressSection(titleColor),
           const SizedBox(height: 32),
           const Divider(height: 1, thickness: 1),
           const SizedBox(height: 32),
-          // Stats Section
           _buildStatsSection(titleColor),
           const SizedBox(height: 32),
           const Divider(height: 1, thickness: 1),
           const SizedBox(height: 32),
-          // Feedback Section
           _buildFeedbackSection(titleColor),
         ],
       ),
@@ -146,7 +162,6 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
       children: [
         Row(
           children: [
-            // Rank Emblem
             Container(
               width: 90,
               height: 90,
@@ -167,7 +182,6 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
               ),
             ),
             const SizedBox(width: 24),
-            // User Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,23 +303,19 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
         SizedBox(
           height: 300,
           child: FutureBuilder<List<Session>>(
-            future: _sessionHistoryFuture, // Use the future from our state
+            future: _sessionHistoryFuture,
             builder: (context, snapshot) {
-              // Case 1: Still loading data from the database
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              // Case 2: An error occurred during the fetch
               if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
               }
 
-              // Case 3: Data has arrived successfully
               if (snapshot.hasData) {
                 final sessionHistory = snapshot.data!;
 
-                // Case 3a: The data is an empty list
                 if (sessionHistory.isEmpty) {
                   return const Center(
                     child: Text(
@@ -315,11 +325,9 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                   );
                 }
 
-                // Case 3b: We have data, so build the list
                 return _buildTimelineList(sessionHistory, titleColor);
               }
 
-              // Fallback case
               return const Center(child: Text('No sessions found.'));
             },
           ),
@@ -331,14 +339,12 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   Widget _buildTimelineList(List<Session> sessionHistory, Color titleColor) {
     return Stack(
       children: [
-        // Timeline line
         Positioned(
           left: 4,
           top: 0,
           bottom: 0,
           child: Container(width: 2, color: titleColor),
         ),
-        // Feedback list with custom scrollbar
         Row(
           children: [
             const SizedBox(width: 24),
@@ -360,7 +366,6 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             ),
           ],
         ),
-        // Timeline dot for first item
         Positioned(
           left: 0,
           top: 24,
@@ -420,9 +425,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             Text(
               sublabel,
               style: TextStyle(
-                color: '6C53A1'.toColor().withValues(
-                  alpha: 179,
-                ), // Changed from withOpacity(0.7)
+                color: '6C53A1'.toColor().withValues(alpha: 179),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -434,17 +437,12 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   }
 
   Widget _buildEnhancedFeedbackList(List<Session> sessionHistory) {
-    // For exceljos: Replace this with the servie that returns List<Session> for a specific mode
-    // Examole: publicMode would query for the session history that belongs to public speaking mode
-    // to differentiate, make the id for the sessions begin with like pubmode_[id_number] or interviewmode_[id_number]
-    //List<Session> sessionHistory = getModeSessionHistory(mode);
-
     return ListView.separated(
       controller: _feedbackScrollController,
-      itemCount: sessionHistory.length, // Use widget's list directly
+      itemCount: sessionHistory.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final session = sessionHistory[index]; // Use widget's list directly
+        final session = sessionHistory[index];
         return GestureDetector(
           onTap: () {
             showDialog(
@@ -522,11 +520,4 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
       ],
     );
   }
-}
-
-// Data model for session feedback
-class SessionFeedback {
-  final String date;
-
-  SessionFeedback({required this.date});
 }
