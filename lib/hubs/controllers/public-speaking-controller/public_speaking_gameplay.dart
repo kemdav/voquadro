@@ -4,18 +4,10 @@ import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'public_speaking_state_manager.dart';
 
 mixin PublicSpeakingGameplay on ChangeNotifier {
-  // --- REQUIRED DEPENDENCIES (to be provided by the controller) ---
-
-  /// Provides the audio controller for recording.
+  // --- REQUIRED DEPENDENCIES ---
   AudioController get audioController;
-
-  /// A method to change the overall state of the public speaking feature.
   void setPublicSpeakingState(PublicSpeakingState newState);
-
-  /// A method to transition to the feedback view.
   void showFeedback();
-
-  /// A method to clear session data when starting a new session.
   void clearSessionData();
 
   // --- INTERNAL STATE & METHODS ---
@@ -23,34 +15,70 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
   Timer? _readyingTimer;
   Timer? _speakingTimer;
 
-  static const readyingDuration = Duration(seconds: 5);
-  static const speakingDuration = Duration(seconds: 10);
+  static const readyingDuration = Duration(seconds: 30);
+  static const speakingDuration = Duration(seconds: 60);
 
   double _speakingProgress = 0.0;
   double get speakingProgress => _speakingProgress;
 
-  void startGameplaySequence() {
-    cancelGameplaySequence(); // Stop any previous timers
-    clearSessionData(); // Clear previous session data including transcript
+  // NEW: Track the actual time spoken
+  Duration _elapsedSpeakingDuration = Duration.zero;
 
-    // Now correctly calls the method provided by the controller
+  // NEW: Getter for the controller to access
+  double get actualSpeakingDurationInSeconds => 
+      _elapsedSpeakingDuration.inMilliseconds / 1000.0;
+
+  int _readyingTimeRemaining = 0;
+  int get readyingTimeRemaining => _readyingTimeRemaining;
+  int get maxReadyingDuration => readyingDuration.inSeconds;
+
+  void startGameplaySequence() {
+    cancelGameplaySequence();
+    clearSessionData();
+
     setPublicSpeakingState(PublicSpeakingState.readying);
 
-    _readyingTimer = Timer(readyingDuration, _startSpeakingCountdown);
+    _readyingTimeRemaining = readyingDuration.inSeconds;
+    notifyListeners();
+
+    _readyingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_readyingTimeRemaining > 0) {
+        _readyingTimeRemaining--;
+        notifyListeners();
+      } else {
+        timer.cancel();
+        _startSpeakingCountdown();
+      }
+    });
+  }
+
+  void skipReadying() {
+    _readyingTimer?.cancel();
+    _readyingTimeRemaining = 0;
+    notifyListeners();
+    _startSpeakingCountdown();
   }
 
   void _startSpeakingCountdown() {
     setPublicSpeakingState(PublicSpeakingState.speaking);
     _speakingProgress = 0.0;
+    
+    // NEW: Reset elapsed time
+    _elapsedSpeakingDuration = Duration.zero;
 
     audioController.startRecording();
 
-    int elapsedMilliseconds = 0;
+    // Use a simpler integer for progress calculation stability
+    int elapsedMilliseconds = 0; 
     const tickInterval = Duration(milliseconds: 50);
 
     _speakingTimer = Timer.periodic(tickInterval, (timer) {
+      // 1. Update local counter for progress calculation
       elapsedMilliseconds += tickInterval.inMilliseconds;
       _speakingProgress = elapsedMilliseconds / speakingDuration.inMilliseconds;
+
+      // 2. NEW: Update the class-level duration tracker
+      _elapsedSpeakingDuration += tickInterval;
 
       if (_speakingProgress >= 1.0) {
         _speakingProgress = 1.0;
@@ -62,22 +90,28 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
     });
   }
 
+  Future<void> finishSpeechEarly() async {
+    _speakingTimer?.cancel();
+    _speakingProgress = 1.0;
+    notifyListeners();
+    // The _elapsedSpeakingDuration now holds the exact time stopped at.
+    await _onGameplayTimerEnd();
+  }
+
   Future<void> _onGameplayTimerEnd() async {
     _speakingTimer?.cancel();
     await audioController.stopRecording();
-    // Now correctly calls the method provided by the controller
     showFeedback();
   }
 
-  /// Stops any active timers for the gameplay sequence.
-  /// This is public so the controller can call it when needed (e.g., in endGameplay).
   void cancelGameplaySequence() {
     _readyingTimer?.cancel();
     _speakingTimer?.cancel();
     _speakingProgress = 0.0;
+    _readyingTimeRemaining = 0;
+    _elapsedSpeakingDuration = Duration.zero; // Reset on cancel
   }
 
-  /// Cleans up resources when the controller is disposed.
   void disposeGameplay() {
     cancelGameplaySequence();
   }

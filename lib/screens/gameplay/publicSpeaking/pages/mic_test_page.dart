@@ -1,10 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:logger/logger.dart';
-
-var logger = Logger();
+import 'package:voquadro/src/hex_color.dart'; 
 
 class MicTestPage extends StatefulWidget {
   const MicTestPage({super.key});
@@ -14,14 +13,14 @@ class MicTestPage extends StatefulWidget {
 }
 
 class _MicTestPageState extends State<MicTestPage> {
-  late AudioController _audioController;
+  bool _isNavigating = false;
+  bool _successDetected = false;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
-    _audioController = context.read<AudioController>();
-    // Start the volume test as soon as the page is visible
-    // Use addPostFrameCallback to ensure the context is ready
+    // Start listening to the mic immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AudioController>().startAmplitudeStream();
     });
@@ -29,8 +28,23 @@ class _MicTestPageState extends State<MicTestPage> {
 
   @override
   void dispose() {
-    _audioController.stopAmplitudeStream();
+    _navigationTimer?.cancel();
     super.dispose();
+  }
+
+  void _handleSuccess(PublicSpeakingController psController, AudioController audioController) {
+    if (_isNavigating) return;
+
+    setState(() {
+      _isNavigating = true;
+      _successDetected = true;
+    });
+
+    // Wait 1.5 seconds so user sees the "Success" animation, then proceed
+    _navigationTimer = Timer(const Duration(milliseconds: 1500), () async {
+      audioController.stopAmplitudeStream();
+      await psController.generateRandomQuestionAndStart();
+    });
   }
 
   @override
@@ -38,67 +52,154 @@ class _MicTestPageState extends State<MicTestPage> {
     final audioController = context.watch<AudioController>();
     final publicSpeakingController = context.read<PublicSpeakingController>();
 
-    String feedbackText;
-    Color progressColor;
+    final double amplitude = audioController.currentAmplitude;
+    
+    // Thresholds
+    final bool isTooQuiet = amplitude < 0.2;
+    final bool isGood = amplitude >= 0.2;
 
-    if (audioController.currentAmplitude < 0.2) {
-      feedbackText = 'A little louder...';
-      progressColor = Colors.blue;
-    } else if (audioController.currentAmplitude < 0.8) {
-      feedbackText = 'Perfect!';
-      progressColor = Colors.green;
-    } else {
-      feedbackText = 'A little quieter...';
-      progressColor = Colors.red;
+    // Colors
+    final Color primaryPurple = "49416D".toColor();
+    final Color accentCyan = "23B5D3".toColor();
+    final Color activeColor = _successDetected ? accentCyan : (isGood ? accentCyan : Colors.grey.shade300);
+
+    // Auto-trigger success if volume is good and we haven't triggered yet
+    if (isGood && !_isNavigating && !_successDetected) {
+      Future.microtask(() => _handleSuccess(publicSpeakingController, audioController));
     }
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'Let\'s test your mic',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            feedbackText,
-            style: TextStyle(fontSize: 20, color: progressColor),
-          ),
-          const SizedBox(height: 30),
 
-          // The visual volume meter
-          SizedBox(
-            width: 250,
-            height: 40,
-            child: LinearProgressIndicator(
-              value: audioController.currentAmplitude,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 1. INSTRUCTION TEXT
+            Text(
+              _successDetected ? "Perfect!" : "Say something...",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: primaryPurple,
+              ),
             ),
-          ),
-
-          const SizedBox(height: 60),
-
-          // The Continue button, enabled only after good volume is detected
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+            const SizedBox(height: 12),
+            Text(
+              _successDetected 
+                  ? "Microphone is ready." 
+                  : "We need to check your microphone.",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+              ),
             ),
-            // Use the property from the controller to enable/disable the button
-            onPressed: audioController.hasReachedGoodVolume
-                ? () async {
-                    // When continue is pressed, stop the test and request a question
-                    // from the AI service and start the actual game. This ensures
-                    // the speaking page has a question to display instead of
-                    // showing "Waiting for question...".
-                    audioController.stopAmplitudeStream();
-                    await publicSpeakingController
-                        .generateRandomQuestionAndStart();
-                  }
-                : null, // null disables the button
-            child: const Text('Continue', style: TextStyle(fontSize: 20)),
-          ),
-        ],
+
+            const SizedBox(height: 60),
+
+            // 2. PULSING MIC ANIMATION
+            SizedBox(
+              height: 250,
+              width: 250,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Outer Glow (Reacts to Volume)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    width: _successDetected ? 220 : 120 + (amplitude * 200),
+                    height: _successDetected ? 220 : 120 + (amplitude * 200),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      // UPDATED: Replaced withOpacity with withValues
+                      color: activeColor.withValues(alpha: _successDetected ? 0.2 : 0.1),
+                    ),
+                  ),
+                  // Middle Glow
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    width: _successDetected ? 180 : 100 + (amplitude * 100),
+                    height: _successDetected ? 180 : 100 + (amplitude * 100),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      // UPDATED: Replaced withOpacity with withValues
+                      color: activeColor.withValues(alpha: _successDetected ? 0.3 : 0.2),
+                    ),
+                  ),
+                  // The Mic Icon Container
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: activeColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        )
+                      ],
+                    ),
+                    child: Icon(
+                      _successDetected ? Icons.check_rounded : Icons.mic_rounded,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 60),
+
+            // 3. STATUS INDICATOR
+            if (_successDetected)
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 500),
+                builder: (context, value, _) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20, 
+                            height: 20, 
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2, 
+                              color: primaryPurple
+                            )
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Starting Session...",
+                            style: TextStyle(
+                              color: primaryPurple,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              )
+            else
+              // Visual "Volume Bar" substitute text
+              Text(
+                 isTooQuiet ? "Louder..." : "Listening...",
+                 style: TextStyle(
+                   color: Colors.grey.shade400,
+                   fontWeight: FontWeight.bold,
+                   letterSpacing: 1.2,
+                 ),
+              ),
+          ],
+        ),
       ),
     );
   }
