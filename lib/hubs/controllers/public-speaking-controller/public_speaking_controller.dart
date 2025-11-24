@@ -66,6 +66,9 @@ class PublicSpeakingController
   int? _overallScore;
   int? _contentQualityScore;
   int? _clarityStructureScore;
+  // Additional detailed metric scores from AI
+  double? _vocalDeliveryScore;
+  double? _messageDepthScore;
 
   // General Info
   String? _topic;
@@ -82,6 +85,8 @@ class PublicSpeakingController
   int? get overallScore => _overallScore;
   int? get contentQualityScore => _contentQualityScore;
   int? get clarityStructureScore => _clarityStructureScore;
+  double? get vocalDeliveryScore => _vocalDeliveryScore;
+  double? get messageDepthScore => _messageDepthScore;
   int? get fillerWordCount => _fillerWordCount;
   double? get wordsPerMinute => _wordsPerMinute;
 
@@ -159,6 +164,11 @@ class PublicSpeakingController
           _fillerWordCount = feedback['filler_count'];
           _topic = feedback['topic'];
           _questionGenerated = feedback['question'];
+          // Capture additional AI metric scores for display and persistence
+          _vocalDeliveryScore = (feedback['vocal_delivery_score'] as num?)
+              ?.toDouble();
+          _messageDepthScore = (feedback['message_depth_score'] as num?)
+              ?.toDouble();
         }
       }
 
@@ -254,6 +264,8 @@ class PublicSpeakingController
       overallRating: overallScore?.toDouble() ?? 0.0,
       contentClarityScore: contentQualityScore?.toDouble() ?? 0.0,
       clarityStructureScore: clarityStructureScore?.toDouble() ?? 0.0,
+      vocalDeliveryScore: _vocalDeliveryScore?.toDouble() ?? 0.0,
+      messageDepthScore: _messageDepthScore?.toDouble() ?? 0.0,
       transcript: userTranscript.toString(),
       feedback: aiFeedback.toString(),
     );

@@ -13,9 +13,8 @@ class StatFeedbackPage extends StatefulWidget {
   });
 
   final Color cardBackground;
-  final Color primaryPurple; 
-  final bool isVisible; 
-
+  final Color primaryPurple;
+  final bool isVisible;
 
   @override
   State<StatFeedbackPage> createState() => _StatFeedbackPageState();
@@ -39,7 +38,7 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
     }
   }
 
-   @override
+  @override
   void didUpdateWidget(covariant StatFeedbackPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isVisible && !oldWidget.isVisible) {
@@ -47,7 +46,6 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
       _controller.forward();
     }
   }
-
 
   @override
   void dispose() {
@@ -67,7 +65,7 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
     // ------------------------------------------------------
     // 1. PREPARE DATA (Normalize to 0.0 - 1.0)
     // ------------------------------------------------------
-    
+
     // A. Filler Control (Top)
     // Assuming EXP is 0-100, divide by 100.
     final double scoreFiller = (session.fillerControlEXP / 100).clamp(0.0, 1.0);
@@ -76,14 +74,23 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
     final double scorePace = (session.paceControlEXP / 100).clamp(0.0, 1.0);
 
     // C. Clarity & Flow (Bottom Right)
-    final double scoreClarity = (session.clarityStructureScore / 100).clamp(0.0, 1.0);
+    final double scoreClarity = (session.clarityStructureScore / 100).clamp(
+      0.0,
+      1.0,
+    );
 
     // D. Vocal Delivery (Bottom Left)
     // Mapping 'Overall Rating' (assuming 0-10) to 0-1. Adjust if your scale differs.
-    final double scoreVocal = (session.overallRating / 10).clamp(0.0, 1.0);
+    final double scoreVocal = (session.vocalDeliveryScore / 100).clamp(
+      0.0,
+      1.0,
+    );
 
     // E. Message Depth (Left)
-    final double scoreContent = (session.contentClarityScore / 100).clamp(0.0, 1.0);
+    final double scoreContent = (session.messageDepthScore / 100).clamp(
+      0.0,
+      1.0,
+    );
 
     return Scaffold(
       // Using a very light purple background for the whole screen if needed
@@ -91,7 +98,6 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
       body: Column(
         children: [
           const SizedBox(height: 60), // Top spacing
-          
           // 2. MAIN TITLE
           FadeSlideTransition(
             controller: _controller,
@@ -107,7 +113,7 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
 
           // 3. THE CARD
@@ -137,7 +143,7 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
                 child: Column(
                   children: [
                     const SizedBox(height: 30),
-                    
+
                     // CARD SUBTITLE
                     Text(
                       "How did you do, really?",
@@ -147,14 +153,17 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    
+
                     // 4. THE RADAR CHART
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           // Calculate size to fit nicely
-                          final size = math.min(constraints.maxWidth, constraints.maxHeight);
-                          
+                          final size = math.min(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          );
+
                           return Center(
                             child: AnimatedBuilder(
                               animation: _controller,
@@ -162,7 +171,11 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
                                 // Curved animation for the chart growth
                                 final progress = CurvedAnimation(
                                   parent: _controller,
-                                  curve: const Interval(0.4, 1.0, curve: Curves.easeOutBack),
+                                  curve: const Interval(
+                                    0.4,
+                                    1.0,
+                                    curve: Curves.easeOutBack,
+                                  ),
                                 ).value;
 
                                 return CustomPaint(
@@ -172,10 +185,10 @@ class _StatFeedbackPageState extends State<StatFeedbackPage>
                                     animationValue: progress,
                                     // Pass the 5 scores in clockwise order starting from Top
                                     scores: [
-                                      scoreFiller,  // Top
-                                      scorePace,    // Right
+                                      scoreFiller, // Top
+                                      scorePace, // Right
                                       scoreClarity, // Bottom Right
-                                      scoreVocal,   // Bottom Left
+                                      scoreVocal, // Bottom Left
                                       scoreContent, // Left
                                     ],
                                     labels: [
@@ -228,12 +241,14 @@ class RadarChartPainter extends CustomPainter {
 
     // Styles
     final paintGrid = Paint()
-      ..color = primaryColor.withValues(alpha: 0.2) // Faint lines for inner rings
+      ..color = primaryColor
+          .withValues(alpha: 0.2) // Faint lines for inner rings
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
     final paintOuterBorder = Paint()
-      ..color = primaryColor.withValues(alpha: 0.5) // Darker line for outer border
+      ..color = primaryColor
+          .withValues(alpha: 0.5) // Darker line for outer border
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -248,8 +263,10 @@ class RadarChartPainter extends CustomPainter {
       final angle = (i * 72 - 90) * (math.pi / 180);
       final x = center.dx + radius * math.cos(angle);
       final y = center.dy + radius * math.sin(angle);
-      if (i == 0) pathBackground.moveTo(x, y);
-      else pathBackground.lineTo(x, y);
+      if (i == 0)
+        pathBackground.moveTo(x, y);
+      else
+        pathBackground.lineTo(x, y);
     }
     pathBackground.close();
     canvas.drawPath(pathBackground, paintFill); // Draw white background
@@ -257,7 +274,7 @@ class RadarChartPainter extends CustomPainter {
     // 2. DRAW CONCENTRIC GRID LINES
     // Now we draw the lines on TOP of the white background
     int gridSteps = 4; // How many rings you want
-    
+
     for (int step = 1; step <= gridSteps; step++) {
       double currentRadius = radius * (step / gridSteps);
       final pathGrid = Path();
@@ -266,13 +283,18 @@ class RadarChartPainter extends CustomPainter {
         final angle = (i * 72 - 90) * (math.pi / 180);
         final x = center.dx + currentRadius * math.cos(angle);
         final y = center.dy + currentRadius * math.sin(angle);
-        if (i == 0) pathGrid.moveTo(x, y);
-        else pathGrid.lineTo(x, y);
+        if (i == 0)
+          pathGrid.moveTo(x, y);
+        else
+          pathGrid.lineTo(x, y);
       }
       pathGrid.close();
 
       // Use darker border for the outermost ring, lighter for inner rings
-      canvas.drawPath(pathGrid, step == gridSteps ? paintOuterBorder : paintGrid);
+      canvas.drawPath(
+        pathGrid,
+        step == gridSteps ? paintOuterBorder : paintGrid,
+      );
     }
 
     // 3. DRAW SPOKES (Lines from center to corners)
@@ -293,7 +315,8 @@ class RadarChartPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round;
 
       final paintDataFill = Paint()
-        ..color = primaryColor.withValues(alpha: 0.2) // Semi-transparent fill
+        ..color = primaryColor
+            .withValues(alpha: 0.2) // Semi-transparent fill
         ..style = PaintingStyle.fill;
 
       for (int i = 0; i < 5; i++) {
@@ -305,8 +328,10 @@ class RadarChartPainter extends CustomPainter {
         final x = center.dx + r * math.cos(angle);
         final y = center.dy + r * math.sin(angle);
 
-        if (i == 0) pathData.moveTo(x, y);
-        else pathData.lineTo(x, y);
+        if (i == 0)
+          pathData.moveTo(x, y);
+        else
+          pathData.lineTo(x, y);
       }
       pathData.close();
 
@@ -344,7 +369,7 @@ class RadarChartPainter extends CustomPainter {
       );
     }
   }
-  
+
   @override
   bool shouldRepaint(covariant RadarChartPainter oldDelegate) {
     return oldDelegate.animationValue != animationValue;
