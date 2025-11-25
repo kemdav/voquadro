@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
-import 'package:voquadro/screens/home/settings/settings_stage.dart';
+// [ADDED] Import PublicSpeakingController so we can change the tab state
+import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
@@ -20,37 +20,35 @@ class NavigationIcons extends StatefulWidget {
 class _NavigationIconsState extends State<NavigationIcons> {
   static final Logger _logger = Logger();
 
-  // Overlay management
   OverlayEntry? _overlayEntry;
-  bool _isOptionTrayMenuOpen = false;
+  bool _isMenuOpen = false;
 
-  /// Height of the bottom area to leave untouched (Navbar + Padding).
   final double _navbarHeight = 90.0;
   final double _iconSize = 50.0;
 
   @override
   void dispose() {
-    if (_isOptionTrayMenuOpen) {
+    if (_isMenuOpen) {
       _overlayEntry?.remove();
     }
     super.dispose();
   }
 
-  void _toggleOptionTrayMenu() {
-    if (_isOptionTrayMenuOpen) {
-      _closeOptionTrayMenu();
+  void _toggleMenu() {
+    if (_isMenuOpen) {
+      _closeMenu();
     } else {
-      _openOptionTrayMenu();
+      _openMenu();
     }
   }
 
-  void _openOptionTrayMenu() {
+  void _openMenu() {
     _overlayEntry = OverlayEntry(
       builder: (context) => _OptionsTrayOverlay(
         navbarHeight: _navbarHeight,
-        onClose: _closeOptionTrayMenu,
+        onClose: _closeMenu,
         onNavigate: (Widget page) {
-          _closeOptionTrayMenu();
+          _closeMenu();
           Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (context) => page));
@@ -60,71 +58,42 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
     Overlay.of(context).insert(_overlayEntry!);
     setState(() {
-      _isOptionTrayMenuOpen = true;
+      _isMenuOpen = true;
     });
   }
 
-  void _closeOptionTrayMenu() {
+  void _closeMenu() {
     _overlayEntry?.remove();
     _overlayEntry = null;
     setState(() {
-      _isOptionTrayMenuOpen = false;
+      _isMenuOpen = false;
     });
   }
 
   void _onIconPressed(String logMessage, VoidCallback action) {
     _logger.d(logMessage);
-    if (_isOptionTrayMenuOpen) _closeOptionTrayMenu();
+    if (_isMenuOpen) _closeMenu();
     action();
   }
 
   void _handleHomePress() {
-    _onIconPressed('Home icon pressed -> act as back', () {
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
-      }
+    _onIconPressed('Home icon pressed', () {
+      // [CHANGED] Removed Navigator.pop logic.
+      // Instead, we explicitly tell the controller to show the Home tab.
+      // This works regardless of whether you are currently on Home, Profile, or Journey.
+      context.read<PublicSpeakingController>().showHome();
     });
   }
 
   void _handleUserJourneyPress() {
     _logger.d('User Journey icon pressed!');
-    if (_isOptionTrayMenuOpen) _closeOptionTrayMenu();
+    if (_isMenuOpen) _closeMenu();
 
-    final appFlow = context.read<AppFlowController>();
-
-    if (appFlow.currentMode == AppMode.publicSpeaking) {
-      final user = appFlow.currentUser;
-
-      if (user != null) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => PublicSpeakJourneySection(
-              username: user.username,
-              currentXP: 69, // TODO: Retrieve dynamic XP
-              maxXP: 200,
-              currentLevel: 'Level 69', // TODO: Retrieve dynamic Level
-              averageWPM: 0,
-              averageFillers: 0,
-              onBackPressed: () => Navigator.of(context).pop(),
-              onProfilePressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const PublicSpeakingProfileStage(),
-                  ),
-                );
-              },
-              onSettingsPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsStage(),
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      }
-    }
+    // [CHANGED] Removed Navigator.push(...).
+    // We no longer push a new MaterialPageRoute. Instead, we call 'showJourney()'.
+    // This updates the IndexedStack in the Hub to show the Journey widget.
+    // Since it's just a state change, it prevents duplicates.
+    context.read<PublicSpeakingController>().showJourney();
   }
 
   @override
@@ -152,7 +121,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
           assetPath: 'assets/homepage_assets/home_options.svg',
           onTap: () {
             _logger.d('Options Tray icon pressed!');
-            _toggleOptionTrayMenu();
+            _toggleMenu();
           },
         ),
       ],

@@ -10,6 +10,8 @@ import 'package:voquadro/screens/gameplay/publicSpeaking/pages/readying_prompt_p
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/speaking_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/status_page.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
+// [ADDED] Import the Journey screen so we can place it in the stack
+import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
 import 'package:voquadro/widgets/AppBar/empty_actions.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
 import 'package:voquadro/widgets/AppBar/default_actions.dart';
@@ -29,6 +31,11 @@ class PublicSpeakingHub extends StatelessWidget {
         return const StartSpeakingActions();
 
       case PublicSpeakingState.profile:
+      // [CHANGED] Added 'journey' here.
+      // We return EmptyNavigationActions() because the navigation icons are handled
+      // by the GeneralNavigationBar wrapper, not this specific action widget.
+      // The Journey screen shouldn't cover the nav bar buttons.
+      case PublicSpeakingState.journey:
         return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
@@ -46,16 +53,15 @@ class PublicSpeakingHub extends StatelessWidget {
     switch (state) {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
-        return const DefaultActions();
-
       case PublicSpeakingState.profile:
+      // [CHANGED] Added 'journey' here.
+      // When viewing the journey, we still want to see the top-right settings/profile icons.
+      case PublicSpeakingState.journey:
         return const DefaultActions();
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
-        return const EmptyActions();
-
       case PublicSpeakingState.inFeedback:
         return const EmptyActions();
     }
@@ -67,6 +73,8 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
+      // [CHANGED] Added 'journey'. The bottom nav bar must be visible so the user can switch back.
+      case PublicSpeakingState.journey:
         return true;
 
       case PublicSpeakingState.micTest:
@@ -82,16 +90,16 @@ class PublicSpeakingHub extends StatelessWidget {
     switch (state) {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
-        return [80, 180]; // navBarVisualHeight, totalHitTestHeight
-
       case PublicSpeakingState.profile:
-        return [80, 180]; // Show navigation bar in profile/journey
+      // [CHANGED] Added 'journey'. We keep the standard height [80, 180] to match other main tabs.
+      case PublicSpeakingState.journey:
+        return [80, 180];
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
       case PublicSpeakingState.inFeedback:
-        return [0, 0]; // Hide completely during gameplay and feedback
+        return [0, 0];
     }
   }
 
@@ -135,12 +143,18 @@ class PublicSpeakingHub extends StatelessWidget {
                     // Main content area
                     Padding(
                       padding: const EdgeInsets.only(top: customAppBarHeight),
+                      // [CRITICAL CHANGE] IndexedStack is the key to fixing your issue.
+                      // It keeps all children alive but only paints the one at 'index'.
+                      // We added PublicSpeakJourneySection() to this list.
                       child: IndexedStack(
                         index: controller.currentState.index,
                         children: const [
                           PublicSpeakingHomePage(),
                           PublicSpeakingProfileStage(),
                           PublicSpeakingStatusPage(),
+                          // [ADDED] Journey Screen is now part of the persistent stack.
+                          // It will not reload or push a duplicate when you switch to it.
+                          PublicSpeakJourneySection(),
                           MicTestPage(),
                           ReadyingPromptPage(),
                           SpeakingPage(),
@@ -148,7 +162,7 @@ class PublicSpeakingHub extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Bottom navigation bar (only shown when appropriate)
+                    // ... (Bottom Navigation Bar logic remains the same, just uses updated state checks)
                     if (showBottomBar)
                       Align(
                         alignment: Alignment.bottomCenter,

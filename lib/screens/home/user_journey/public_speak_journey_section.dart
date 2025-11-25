@@ -1,40 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-import 'package:voquadro/screens/home/user_journey/user_journey_data.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/src/models/session_model.dart';
-import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
-import 'package:voquadro/widgets/AppBar/default_actions.dart';
-import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
-import 'package:voquadro/widgets/BottomBar/empty_actions.dart';
 import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/services/user_service.dart';
 
+// [CHANGED] Constructor is now const and empty.
+// We removed 'required this.username', 'required this.currentXP', etc.
+// The widget is now "smart" enough to find its own data.
 class PublicSpeakJourneySection extends StatefulWidget {
-  final String username;
-  final int currentXP;
-  final int maxXP;
-  final String currentLevel;
-  final int averageWPM;
-  final int averageFillers;
-  final VoidCallback? onBackPressed;
-  final VoidCallback? onProfilePressed;
-  final VoidCallback? onSettingsPressed;
-
-  const PublicSpeakJourneySection({
-    super.key,
-    required this.username,
-    required this.currentXP,
-    required this.maxXP,
-    required this.currentLevel,
-    required this.averageWPM,
-    required this.averageFillers,
-    this.onBackPressed,
-    this.onProfilePressed,
-    this.onSettingsPressed,
-  });
+  const PublicSpeakJourneySection({super.key});
 
   @override
   State<PublicSpeakJourneySection> createState() =>
@@ -54,7 +31,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   Future<List<Session>> _fetchSessionHistory() {
     final user = context.read<AppFlowController>().currentUser;
     if (user == null) {
-      return Future.error('User not found. Cannot fetch session history.');
+      return Future.error('User not found.');
     }
     return UserService.getSessionsForUser(user.id);
   }
@@ -67,85 +44,101 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
   @override
   Widget build(BuildContext context) {
+    // [ADDED] Watch the AppFlowController.
+    // This allows us to get the 'currentUser' directly.
+    final appFlow = context.watch<AppFlowController>();
+    final user = appFlow.currentUser;
+
+    // [ADDED] Safety check. If user is null, show loading or error.
+    if (user == null) return const Center(child: Text("User not loaded"));
+
+    // [ADDED] Local variables to replace the old constructor fields.
+    // We extract data from the 'user' object we just retrieved.
+    final username = user.username;
+    final currentXP = user.publicSpeakingEXP; // Example mapping
+    const maxXP = 200;
+    const currentLevel = 'Rookie';
+    const averageWPM = 0;
+    const averageFillers = 0;
+
     final Color purpleDark = '49416D'.toColor();
     const Color cardBg = Color(0xFFF0E6F6);
     const Color pageBg = Color(0xFFF7F3FB);
 
-    return Scaffold(
-      backgroundColor: pageBg,
-      body: Stack(
-        children: [
-          // Main content
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.only(
-                bottom: 55,
-              ), // Change from 80 to match navBarVisualHeight
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppBarGeneral(
-                      actionButtons: DefaultActions(
-                        onBackPressed: widget.onBackPressed,
-                        onProfilePressed: widget.onProfilePressed,
-                        onSettingsPressed: widget.onSettingsPressed,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Your Journey',
-                            style: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                              color: purpleDark,
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          progressCard(purpleDark, cardBg),
-                        ],
-                      ),
-                    ),
-                  ],
+    // [CHANGED] Replaced Scaffold with Container.
+    // The parent 'PublicSpeakingHub' already has a Scaffold and AppBar.
+    // If we kept the Scaffold here, we would get double headers.
+    // NOTE: No Scaffold or AppBar here, as PublicSpeakingHub provides them.
+    return Container(
+      color: pageBg,
+      child: SingleChildScrollView(
+        child: Padding(
+          // [CHANGED] Added bottom padding (100) to ensure content isn't hidden
+          // behind the floating bottom navigation bar.
+          padding: const EdgeInsets.only(
+            bottom: 100, // Extra padding for bottom nav bar
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your Journey',
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w900,
+                  color: purpleDark,
+                  height: 1.1,
                 ),
               ),
-            ),
+              const SizedBox(height: 24),
+              // [CHANGED] Pass the local variables into the helper method
+              progressCard(
+                purpleDark,
+                cardBg,
+                username,
+                currentXP,
+                maxXP,
+                currentLevel,
+                averageWPM,
+                averageFillers,
+              ),
+            ],
           ),
-          // Bottom navigation bar
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: GeneralNavigationBar(
-              actions:
-                  null, // Don't pass EmptyNavigationActions, just pass null
-              navBarVisualHeight: 80,
-              totalHitTestHeight: 80,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  // ... rest of your existing methods remain the same ...
-
-  Widget progressCard(Color titleColor, Color cardBg) {
+  Widget progressCard(
+    Color titleColor,
+    Color cardBg,
+    String username,
+    int currentXP,
+    int maxXP,
+    String currentLevel,
+    int averageWPM,
+    int averageFillers,
+  ) {
     return Container(
       decoration: _buildCardDecoration(cardBg),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildProgressSection(titleColor),
+          _buildProgressSection(
+            titleColor,
+            username,
+            currentXP,
+            maxXP,
+            currentLevel,
+          ),
           const SizedBox(height: 32),
           const Divider(height: 1, thickness: 1),
           const SizedBox(height: 32),
-          _buildStatsSection(titleColor),
+          _buildStatsSection(titleColor, averageWPM, averageFillers),
           const SizedBox(height: 32),
           const Divider(height: 1, thickness: 1),
           const SizedBox(height: 32),
@@ -155,8 +148,14 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
     );
   }
 
-  Widget _buildProgressSection(Color titleColor) {
-    final progress = widget.currentXP / widget.maxXP;
+  Widget _buildProgressSection(
+    Color titleColor,
+    String username,
+    int currentXP,
+    int maxXP,
+    String currentLevel,
+  ) {
+    final progress = (maxXP > 0) ? currentXP / maxXP : 0.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +187,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.username,
+                    username,
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
@@ -200,7 +199,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        '${widget.currentXP}/${widget.maxXP}',
+                        '$currentXP/$maxXP',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -217,7 +216,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                       decoration: const BoxDecoration(color: Colors.white),
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: progress,
+                        widthFactor: progress.clamp(0.0, 1.0),
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0xFF00C8C8),
@@ -237,7 +236,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                           style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                         TextSpan(
-                          text: widget.currentLevel.toUpperCase(),
+                          text: currentLevel.toUpperCase(),
                           style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                       ],
@@ -252,7 +251,11 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
     );
   }
 
-  Widget _buildStatsSection(Color titleColor) {
+  Widget _buildStatsSection(
+    Color titleColor,
+    int averageWPM,
+    int averageFillers,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -270,7 +273,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             Expanded(
               child: _buildStatTile(
                 label: 'WPM',
-                value: widget.averageWPM.toString(),
+                value: averageWPM.toString(),
                 sublabel: 'Pace Control',
               ),
             ),
@@ -278,7 +281,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             Expanded(
               child: _buildStatTile(
                 label: 'Avg. Fillers',
-                value: widget.averageFillers.toString(),
+                value: averageFillers.toString(),
                 sublabel: 'Filler Word Control',
               ),
             ),
