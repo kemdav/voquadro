@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 // [ADDED] Import PublicSpeakingController so we can change the tab state
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
+import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
+import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
@@ -20,9 +22,11 @@ class NavigationIcons extends StatefulWidget {
 class _NavigationIconsState extends State<NavigationIcons> {
   static final Logger _logger = Logger();
 
+  // Overlay management
   OverlayEntry? _overlayEntry;
   bool _isMenuOpen = false;
 
+  /// Height of the bottom area to leave untouched (Navbar + Padding).
   final double _navbarHeight = 90.0;
   final double _iconSize = 50.0;
 
@@ -72,15 +76,30 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   void _onIconPressed(String logMessage, VoidCallback action) {
     _logger.d(logMessage);
+    // 1. Close the "Options Tray" if it is open
     if (_isMenuOpen) _closeMenu();
     action();
   }
 
   void _handleHomePress() {
-    _onIconPressed('Home icon pressed', () {
-      // [CHANGED] Removed Navigator.pop logic.
-      // Instead, we explicitly tell the controller to show the Home tab.
-      // This works regardless of whether you are currently on Home, Profile, or Journey.
+    _onIconPressed('Home icon pressed -> Master Reset', () {
+      // 2. Close the "Burger Menu" (Drawer) if it is open
+      // We check for both standard Drawer and EndDrawer just in case.
+      final scaffoldState = Scaffold.maybeOf(context);
+      if (scaffoldState != null) {
+        if (scaffoldState.isDrawerOpen) {
+          scaffoldState.closeDrawer();
+        }
+        if (scaffoldState.isEndDrawerOpen) {
+          scaffoldState.closeEndDrawer();
+        }
+      }
+
+      // 3. Pop any pushed screens (Dialogs, Modals, or Pages pushed on top of Hub)
+      // This ensures we return to the "Root" of the main view (the Hub).
+      Navigator.of(context).popUntil((route) => route.isFirst);
+
+      // 4. Finally, switch the tab to Home
       context.read<PublicSpeakingController>().showHome();
     });
   }
@@ -89,10 +108,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
     _logger.d('User Journey icon pressed!');
     if (_isMenuOpen) _closeMenu();
 
-    // [CHANGED] Removed Navigator.push(...).
-    // We no longer push a new MaterialPageRoute. Instead, we call 'showJourney()'.
-    // This updates the IndexedStack in the Hub to show the Journey widget.
-    // Since it's just a state change, it prevents duplicates.
     context.read<PublicSpeakingController>().showJourney();
   }
 
@@ -140,6 +155,8 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 }
 
+// ... (Rest of the file: _OptionsTrayOverlay class remains unchanged) ...
+// Paste the rest of the _OptionsTrayOverlay class here if you are replacing the whole file
 class _OptionsTrayOverlay extends StatefulWidget {
   final double navbarHeight;
   final VoidCallback onClose;
