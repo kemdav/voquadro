@@ -4,10 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
-import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
-
-var logger = Logger();
 
 class DefaultActions extends StatefulWidget {
   const DefaultActions({
@@ -26,8 +23,20 @@ class DefaultActions extends StatefulWidget {
 }
 
 class _DefaultActionsState extends State<DefaultActions> {
+  static final Logger _logger = Logger();
+
   final GlobalKey _burgerKey = GlobalKey();
   OverlayEntry? _overlayEntry;
+
+  static const double _fabSize = 60.0;
+  static const double _visibleBarHeight = 80.0;
+  static const Color _fabColor = Color(0xFF7962A5);
+
+  @override
+  void dispose() {
+    _removeMenu();
+    super.dispose();
+  }
 
   void _toggleMenu() {
     if (_overlayEntry != null) {
@@ -45,123 +54,197 @@ class _DefaultActionsState extends State<DefaultActions> {
   void _showMenu() {
     final renderBox =
         _burgerKey.currentContext?.findRenderObject() as RenderBox?;
-    final overlay = Overlay.of(context);
-    if (renderBox == null || overlay == null) return;
+    final overlayState = Overlay.of(context);
+
+    if (renderBox == null) return;
 
     final size = renderBox.size;
     final pos = renderBox.localToGlobal(Offset.zero);
+
     const double menuWidth = 140;
-    const double menuHeight = 140;
-    // Align right edge of menu to right edge of button, then nudge left a bit
-    double left = pos.dx + size.width - menuWidth - 24; // shift left by 24px
+
+    double left = pos.dx + size.width - menuWidth - 24;
     if (left < 8) left = 8;
-    final double top = pos.dy + size.height + 8; // below the button
+    final double top = pos.dy + size.height + 8;
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: _removeMenu,
-        child: Stack(
-          children: [
-            // Menu positioned below the burger button
-            Positioned(
-              left: left,
-              top: top,
-              width: menuWidth,
-              child: Material(
-                color: Colors.transparent,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // small pointer triangle shifted left so it sits on the bubble edge
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 1.0),
-                        child: CustomPaint(
-                          size: const Size(30, 20),
-                          painter: _TrianglePainter(color: "49416D".toColor()),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        decoration: BoxDecoration(
-                          color: "49416D".toColor(),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(14),
-                            topRight: Radius.zero,
-                            bottomLeft: Radius.circular(14),
-                            bottomRight: Radius.circular(14),
-                          ),
-                          border: Border.all(
-                            color: "6C53A1".toColor().withOpacity(0.12),
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _menuItem(
-                              label: 'Settings',
-                              asset: 'assets/homepage_assets/settings.svg',
-                              onTap: () {
-                                _removeMenu();
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const SettingsStage(),
-                                  ),
-                                );
-                              },
-                            ),
-                            _divider(),
-                            _menuItem(
-                              label: 'Log out',
-                              asset: 'assets/homepage_assets/exit_door.svg',
-                              onTap: () async {
-                                _removeMenu();
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => ConfirmationDialog(
-                                    onConfirm: () {
-                                      context
-                                          .read<AppFlowController>()
-                                          .logout();
-                                      Navigator.of(ctx).pop();
-                                      Navigator.of(
-                                        context,
-                                      ).popUntil((r) => r.isFirst);
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      builder: (context) => _MenuOverlay(
+        top: top,
+        left: left,
+        width: menuWidth,
+        onClose: _removeMenu,
+        onLogout: _handleLogout,
+        onSettings: _handleSettings,
       ),
     );
 
-    overlay.insert(_overlayEntry!);
+    overlayState.insert(_overlayEntry!);
   }
 
-  Widget _divider() =>
-      Container(height: 1, color: "6C53A1".toColor().withOpacity(0.25));
+  void _handleSettings() {
+    _removeMenu();
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SettingsStage()));
+  }
 
-  Widget _menuItem({
+  Future<void> _handleLogout() async {
+    _removeMenu();
+    showDialog(
+      context: context,
+      builder: (ctx) => ConfirmationDialog(
+        onConfirm: () {
+          context.read<AppFlowController>().logout();
+
+          Navigator.of(ctx).pop();
+
+          Navigator.of(context).popUntil((r) => r.isFirst);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: _visibleBarHeight - (_fabSize / 2),
+      left: 20,
+      right: 5,
+      height: _fabSize,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Expanded(child: SizedBox()),
+
+          SizedBox(
+            width: 70,
+            height: 70,
+            child: FloatingActionButton(
+              key: _burgerKey,
+              heroTag: 'burger_icon_fab',
+              shape: const CircleBorder(),
+              onPressed: () {
+                _logger.d('Burger menu pressed');
+                _toggleMenu();
+              },
+              backgroundColor: _fabColor,
+              elevation: 3.0,
+              child: SvgPicture.asset(
+                'assets/homepage_assets/burger.svg',
+                width: 30,
+                height: 30,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuOverlay extends StatelessWidget {
+  final double top;
+  final double left;
+  final double width;
+  final VoidCallback onClose;
+  final VoidCallback onSettings;
+  final VoidCallback onLogout;
+
+  const _MenuOverlay({
+    required this.top,
+    required this.left,
+    required this.width,
+    required this.onClose,
+    required this.onSettings,
+    required this.onLogout,
+  });
+
+  // Colors
+  static const Color _menuBgColor = Color(0xFF49416D);
+  static const Color _borderColor = Color(0xFF6C53A1);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: onClose,
+      child: Stack(
+        children: [
+          Positioned(
+            left: left,
+            top: top,
+            width: width,
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 1.0),
+                      child: CustomPaint(
+                        size: const Size(30, 20),
+                        painter: _TrianglePainter(color: _menuBgColor),
+                      ),
+                    ),
+                  ),
+
+                  Transform.translate(
+                    offset: const Offset(0, -1),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _menuBgColor,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(14),
+                          topRight: Radius.zero,
+                          bottomLeft: Radius.circular(14),
+                          bottomRight: Radius.circular(14),
+                        ),
+                        border: Border.all(
+                          color: _borderColor.withOpacity(0.12),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildMenuItem(
+                            label: 'Settings',
+                            asset: 'assets/homepage_assets/settings.svg',
+                            onTap: onSettings,
+                          ),
+                          _buildDivider(),
+                          _buildMenuItem(
+                            label: 'Log out',
+                            asset: 'assets/homepage_assets/exit_door.svg',
+                            onTap: onLogout,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() =>
+      Container(height: 1, color: _borderColor.withOpacity(0.25));
+
+  Widget _buildMenuItem({
     required String label,
     required String asset,
-    VoidCallback? onTap,
+    required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
@@ -192,59 +275,11 @@ class _DefaultActionsState extends State<DefaultActions> {
       ),
     );
   }
-
-  @override
-  void dispose() {
-    _removeMenu();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const double buttonSize = 60.0;
-    const double visibleBarHeight = 80;
-
-    return Positioned(
-      top: visibleBarHeight - (buttonSize / 2),
-      left: 20,
-      right: 5,
-      height: buttonSize,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Expanded(child: SizedBox()),
-          SizedBox(
-            width: 70,
-            height: 70,
-            child: FloatingActionButton(
-              key: _burgerKey,
-              heroTag: 'burger_icon_fab',
-              shape: const CircleBorder(),
-              onPressed: _toggleMenu,
-              backgroundColor: "7962A5".toColor(),
-              elevation: 3.0,
-              child: SvgPicture.asset(
-                'assets/homepage_assets/burger.svg',
-                width: 30,
-                height: 30,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-// small triangle painter for menu pointer
 class _TrianglePainter extends CustomPainter {
   final Color color;
-  _TrianglePainter({required this.color});
+  const _TrianglePainter({required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -258,5 +293,6 @@ class _TrianglePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _TrianglePainter oldDelegate) =>
+      color != oldDelegate.color;
 }
