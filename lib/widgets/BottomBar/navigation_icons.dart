@@ -25,7 +25,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
   bool _isMenuOpen = false;
 
   // Height of the bottom area to leave untouched (Navbar + Padding).
-  // Adjust this if your actual navbar is taller/shorter.
   final double _navbarHeight = 90.0;
 
   void _toggleMenu() {
@@ -81,7 +80,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
         IconButton(
           onPressed: () {
             logger.d('Home icon pressed -> act as back');
-            // Closing menu if open, then performing action
             if (_isMenuOpen) _closeMenu();
             if (Navigator.canPop(context)) {
               Navigator.of(context).pop();
@@ -190,7 +188,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 }
 
-/// The Overlay logic remains mostly the same, ensuring it doesn't cover the navbar.
 class _OptionsTrayOverlay extends StatefulWidget {
   final double navbarHeight;
   final VoidCallback onClose;
@@ -265,9 +262,10 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
 
         // The Menu Panel
         Positioned(
-          left: 16,
-          right: 16,
-          bottom: widget.navbarHeight - 10,
+          left: 0, // UPDATED: 0 makes it start at the very left edge
+          right: 0, // UPDATED: 0 makes it end at the very right edge
+          bottom:
+              widget.navbarHeight - 10, // UPDATED: Flush with the top of navbar
           child: SlideTransition(
             position: _slideAnimation,
             child: FadeTransition(
@@ -275,10 +273,17 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
               child: Material(
                 color: Colors.transparent,
                 child: Container(
+                  // Use margin if you want it 'floating' but full width,
+                  // currently 0 creates a full-width block.
+                  margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
                     color: const Color(0xFF2C2C3E),
-                    borderRadius: BorderRadius.circular(20),
-
+                    // If you want it to look connected to the navbar, you might
+                    // want to set bottom radius to 0. Keeping it circular for now
+                    // as per the "floating" style originally requested.
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(10),
+                    ),
                     border: Border.all(color: Colors.white.withOpacity(0.1)),
                   ),
                   child: Column(
@@ -322,9 +327,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      // Radius adjusted for full-width look if needed, or keep consistent
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Row(
           children: [
             SvgPicture.asset(
