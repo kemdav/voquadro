@@ -117,10 +117,22 @@ class _DefaultActionsState extends State<DefaultActions> {
       height: _fabSize,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center, // Centered vertically
         children: [
-          const Expanded(child: SizedBox()),
+          // --- NEW LEVEL BAR SECTION ---
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+              child: _LevelProgressBar(
+                // Placeholders for now (replace with real data later)
+                currentLevel: 5,
+                currentXp: 750,
+                requiredXp: 1200,
+              ),
+            ),
+          ),
 
+          // -----------------------------
           SizedBox(
             width: 70,
             height: 70,
@@ -150,6 +162,87 @@ class _DefaultActionsState extends State<DefaultActions> {
     );
   }
 }
+
+// --- NEW WIDGET: Level Progress Bar ---
+class _LevelProgressBar extends StatelessWidget {
+  final int currentLevel;
+  final int currentXp;
+  final int requiredXp;
+
+  const _LevelProgressBar({
+    required this.currentLevel,
+    required this.currentXp,
+    required this.requiredXp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Calculate percentage (clamp to 0.0 - 1.0 to prevent errors)
+    final double progress = (currentXp / requiredXp).clamp(0.0, 1.0);
+
+    // Using your app's color palette
+    final Color textColor = "49416D".toColor();
+    final Color barColor = "7962A5".toColor();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(
+          0.9,
+        ), // Slight transparency for overlay feel
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Text Row: "Lvl 5" ------- "750/1200 XP"
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Lvl $currentLevel',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: textColor,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                '$currentXp / $requiredXp XP',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textColor.withOpacity(0.7),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // The Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: textColor.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(barColor),
+              minHeight: 8, // Thicker bar looks more "game-like"
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ... (The _BurgerMenuOverlay and _TrianglePainter classes remain exactly the same as your original code) ...
 
 class _BurgerMenuOverlay extends StatefulWidget {
   final double top;

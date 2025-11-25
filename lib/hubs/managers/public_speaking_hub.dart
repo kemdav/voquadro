@@ -10,7 +10,6 @@ import 'package:voquadro/screens/gameplay/publicSpeaking/pages/readying_prompt_p
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/speaking_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/status_page.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
-// [ADDED] Import the Journey screen so we can place it in the stack
 import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
 import 'package:voquadro/widgets/AppBar/empty_actions.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
@@ -31,11 +30,8 @@ class PublicSpeakingHub extends StatelessWidget {
         return const StartSpeakingActions();
 
       case PublicSpeakingState.profile:
-      // [CHANGED] Added 'journey' here.
-      // We return EmptyNavigationActions() because the navigation icons are handled
-      // by the GeneralNavigationBar wrapper, not this specific action widget.
-      // The Journey screen shouldn't cover the nav bar buttons.
-      case PublicSpeakingState.journey:
+      case PublicSpeakingState
+          .journey: // Journey uses empty bottom actions (nav bar handles it)
         return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
@@ -54,11 +50,9 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
-      // [CHANGED] Added 'journey' here.
-      // When viewing the journey, we still want to see the top-right settings/profile icons.
-      case PublicSpeakingState.journey:
         return const DefaultActions();
 
+      case PublicSpeakingState.journey:
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
@@ -73,7 +67,6 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
-      // [CHANGED] Added 'journey'. The bottom nav bar must be visible so the user can switch back.
       case PublicSpeakingState.journey:
         return true;
 
@@ -91,8 +84,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
-      // [CHANGED] Added 'journey'. We keep the standard height [80, 180] to match other main tabs.
-      case PublicSpeakingState.journey:
+      case PublicSpeakingState.journey: // Standard size
         return [80, 180];
 
       case PublicSpeakingState.micTest:
@@ -143,18 +135,13 @@ class PublicSpeakingHub extends StatelessWidget {
                     // Main content area
                     Padding(
                       padding: const EdgeInsets.only(top: customAppBarHeight),
-                      // [CRITICAL CHANGE] IndexedStack is the key to fixing your issue.
-                      // It keeps all children alive but only paints the one at 'index'.
-                      // We added PublicSpeakJourneySection() to this list.
                       child: IndexedStack(
                         index: controller.currentState.index,
                         children: const [
                           PublicSpeakingHomePage(),
                           PublicSpeakingProfileStage(),
                           PublicSpeakingStatusPage(),
-                          // [ADDED] Journey Screen is now part of the persistent stack.
-                          // It will not reload or push a duplicate when you switch to it.
-                          PublicSpeakJourneySection(),
+                          PublicSpeakJourneySection(), // Added to stack
                           MicTestPage(),
                           ReadyingPromptPage(),
                           SpeakingPage(),
@@ -162,7 +149,7 @@ class PublicSpeakingHub extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // ... (Bottom Navigation Bar logic remains the same, just uses updated state checks)
+                    // Bottom navigation bar (only shown when appropriate)
                     if (showBottomBar)
                       Align(
                         alignment: Alignment.bottomCenter,
