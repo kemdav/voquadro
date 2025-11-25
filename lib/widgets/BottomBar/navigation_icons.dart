@@ -203,7 +203,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
     );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
+      begin: const Offset(0, 0.09),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
@@ -278,14 +278,13 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                       _buildMenuItem(
                         iconPath: 'assets/homepage_assets/mic_test.svg',
                         label: 'Mic Test',
-                        onTap: () => widget.onNavigate(const MicTestPage()),
+                        onTap: () {},
                       ),
                       const Divider(height: 1, color: _dividerColor),
                       _buildMenuItem(
                         iconPath: 'assets/homepage_assets/podium.svg',
                         label: 'Practice',
-                        onTap: () =>
-                            widget.onNavigate(const PublicSpeakingHomePage()),
+                        onTap: () {},
                       ),
                     ],
                   ),
