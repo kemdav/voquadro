@@ -27,7 +27,7 @@ class _DefaultActionsState extends State<DefaultActions> {
   static final Logger _logger = Logger();
 
   final GlobalKey _burgerKey = GlobalKey();
-  OverlayEntry? _overlayEntry;
+  OverlayEntry? _burgerMenuOverlayEntry;
 
   static const double _fabSize = 60.0;
   static const double _visibleBarHeight = 80.0;
@@ -36,24 +36,24 @@ class _DefaultActionsState extends State<DefaultActions> {
 
   @override
   void dispose() {
-    _removeMenu();
+    _removeBurgerMenu();
     super.dispose();
   }
 
-  void _toggleMenu() {
-    if (_overlayEntry != null) {
-      _removeMenu();
+  void _toggleBurgerMenu() {
+    if (_burgerMenuOverlayEntry != null) {
+      _removeBurgerMenu();
     } else {
-      _showMenu();
+      _showBurgerMenu();
     }
   }
 
-  void _removeMenu() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+  void _removeBurgerMenu() {
+    _burgerMenuOverlayEntry?.remove();
+    _burgerMenuOverlayEntry = null;
   }
 
-  void _showMenu() {
+  void _showBurgerMenu() {
     final renderBox =
         _burgerKey.currentContext?.findRenderObject() as RenderBox?;
     final overlayState = Overlay.of(context);
@@ -71,29 +71,29 @@ class _DefaultActionsState extends State<DefaultActions> {
 
     final double top = pos.dy + size.height + 8;
 
-    _overlayEntry = OverlayEntry(
-      builder: (context) => _MenuOverlay(
+    _burgerMenuOverlayEntry = OverlayEntry(
+      builder: (context) => _BurgerMenuOverlay(
         top: top,
         left: left,
         width: menuWidth,
-        onClose: _removeMenu,
+        onClose: _removeBurgerMenu,
         onLogout: _handleLogout,
         onSettings: _handleSettings,
       ),
     );
 
-    overlayState.insert(_overlayEntry!);
+    overlayState.insert(_burgerMenuOverlayEntry!);
   }
 
   void _handleSettings() {
-    _removeMenu();
+    _removeBurgerMenu();
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const SettingsStage()));
   }
 
   Future<void> _handleLogout() async {
-    _removeMenu();
+    _removeBurgerMenu();
     showDialog(
       context: context,
       builder: (ctx) => ConfirmationDialog(
@@ -130,7 +130,7 @@ class _DefaultActionsState extends State<DefaultActions> {
               shape: const CircleBorder(),
               onPressed: () {
                 _logger.d('Burger menu pressed');
-                _toggleMenu();
+                _toggleBurgerMenu();
               },
               backgroundColor: _fabColor,
               elevation: 3.0,
@@ -151,7 +151,7 @@ class _DefaultActionsState extends State<DefaultActions> {
   }
 }
 
-class _MenuOverlay extends StatelessWidget {
+class _BurgerMenuOverlay extends StatefulWidget {
   final double top;
   final double left;
   final double width;
@@ -159,7 +159,7 @@ class _MenuOverlay extends StatelessWidget {
   final VoidCallback onSettings;
   final VoidCallback onLogout;
 
-  const _MenuOverlay({
+  const _BurgerMenuOverlay({
     required this.top,
     required this.left,
     required this.width,
@@ -168,71 +168,135 @@ class _MenuOverlay extends StatelessWidget {
     required this.onLogout,
   });
 
+  @override
+  State<_BurgerMenuOverlay> createState() => _BurgerMenuOverlayState();
+}
+
+class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  // Using hex_color extension
   static final Color _menuBgColor = "49416D".toColor();
   static final Color _borderColor = "6C53A1".toColor();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+
+    // Slide: Starts slightly above (-0.1) and slides down to 0
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    // Fade: Starts invisible (0.0) and fades to visible (1.0)
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // Handles the exit animation before removing the overlay
+  Future<void> _handleClose() async {
+    await _controller.reverse();
+    widget.onClose();
+  }
+
+  Future<void> _handleSelection(VoidCallback action) async {
+    await _controller.reverse();
+    action();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTap: onClose,
+      onTap: _handleClose,
       child: Stack(
         children: [
           Positioned(
-            left: left,
-            top: top,
-            width: width,
-            child: Material(
-              color: Colors.transparent,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 1.0),
-                      child: CustomPaint(
-                        size: const Size(30, 20),
-                        painter: _TrianglePainter(color: _menuBgColor),
+            left: widget.left,
+            top: widget.top,
+            width: widget.width,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 1. Triangle Pointer
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 1.0),
+                          child: CustomPaint(
+                            size: const Size(30, 20),
+                            painter: _TrianglePainter(color: _menuBgColor),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
 
-                  Transform.translate(
-                    offset: const Offset(0, -1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _menuBgColor,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(14),
-                          topRight: Radius.zero,
-                          bottomLeft: Radius.circular(14),
-                          bottomRight: Radius.circular(14),
-                        ),
-                        border: Border.all(
-                          color: _borderColor.withOpacity(0.12),
+                      // 2. Menu Content Box
+                      // Offset vertically to overlap slightly or sit flush with triangle
+                      Transform.translate(
+                        offset: const Offset(
+                          0,
+                          -1,
+                        ), // pull up slightly to connect
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _menuBgColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(14),
+                              topRight: Radius.zero,
+                              bottomLeft: Radius.circular(14),
+                              bottomRight: Radius.circular(14),
+                            ),
+                            border: Border.all(
+                              color: _borderColor.withOpacity(0.12),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildMenuItem(
+                                label: 'Settings',
+                                asset: 'assets/homepage_assets/settings.svg',
+                                onTap: () =>
+                                    _handleSelection(widget.onSettings),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                label: 'Log out',
+                                asset: 'assets/homepage_assets/exit_door.svg',
+                                onTap: () => _handleSelection(widget.onLogout),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildMenuItem(
-                            label: 'Settings',
-                            asset: 'assets/homepage_assets/settings.svg',
-                            onTap: onSettings,
-                          ),
-                          _buildDivider(),
-                          _buildMenuItem(
-                            label: 'Log out',
-                            asset: 'assets/homepage_assets/exit_door.svg',
-                            onTap: onLogout,
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
