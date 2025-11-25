@@ -22,7 +22,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   // Overlay management
   OverlayEntry? _overlayEntry;
-  bool _isMenuOpen = false;
+  bool _isOptionTrayMenuOpen = false;
 
   /// Height of the bottom area to leave untouched (Navbar + Padding).
   final double _navbarHeight = 90.0;
@@ -30,27 +30,27 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   @override
   void dispose() {
-    if (_isMenuOpen) {
+    if (_isOptionTrayMenuOpen) {
       _overlayEntry?.remove();
     }
     super.dispose();
   }
 
-  void _toggleMenu() {
-    if (_isMenuOpen) {
-      _closeMenu();
+  void _toggleOptionTrayMenu() {
+    if (_isOptionTrayMenuOpen) {
+      _closeOptionTrayMenu();
     } else {
-      _openMenu();
+      _openOptionTrayMenu();
     }
   }
 
-  void _openMenu() {
+  void _openOptionTrayMenu() {
     _overlayEntry = OverlayEntry(
       builder: (context) => _OptionsTrayOverlay(
         navbarHeight: _navbarHeight,
-        onClose: _closeMenu,
+        onClose: _closeOptionTrayMenu,
         onNavigate: (Widget page) {
-          _closeMenu();
+          _closeOptionTrayMenu();
           Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (context) => page));
@@ -60,21 +60,21 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
     Overlay.of(context).insert(_overlayEntry!);
     setState(() {
-      _isMenuOpen = true;
+      _isOptionTrayMenuOpen = true;
     });
   }
 
-  void _closeMenu() {
+  void _closeOptionTrayMenu() {
     _overlayEntry?.remove();
     _overlayEntry = null;
     setState(() {
-      _isMenuOpen = false;
+      _isOptionTrayMenuOpen = false;
     });
   }
 
   void _onIconPressed(String logMessage, VoidCallback action) {
     _logger.d(logMessage);
-    if (_isMenuOpen) _closeMenu();
+    if (_isOptionTrayMenuOpen) _closeOptionTrayMenu();
     action();
   }
 
@@ -88,7 +88,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   void _handleUserJourneyPress() {
     _logger.d('User Journey icon pressed!');
-    if (_isMenuOpen) _closeMenu();
+    if (_isOptionTrayMenuOpen) _closeOptionTrayMenu();
 
     final appFlow = context.read<AppFlowController>();
 
@@ -152,7 +152,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
           assetPath: 'assets/homepage_assets/home_options.svg',
           onTap: () {
             _logger.d('Options Tray icon pressed!');
-            _toggleMenu();
+            _toggleOptionTrayMenu();
           },
         ),
       ],
@@ -193,7 +193,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   late Animation<double> _opacityAnimation;
 
   // Use hex_color extension (removed 'const' as .toColor() is calculated)
-  static final Color _menuBackgroundColor = "2C2C3E".toColor();
+  static final Color _optionTrayMenuBackgroundColor = "2C2C3E".toColor();
   static const Color _dividerColor = Colors.white12;
 
   @override
@@ -260,7 +260,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
-                    color: _menuBackgroundColor,
+                    color: _optionTrayMenuBackgroundColor,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(10),
                     ),
@@ -269,7 +269,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildMenuItem(
+                      _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/profile.svg',
                         label: 'Profile',
                         onTap: () => widget.onNavigate(
@@ -277,13 +277,13 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                         ),
                       ),
                       const Divider(height: 1, color: _dividerColor),
-                      _buildMenuItem(
+                      _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/mic_test.svg',
                         label: 'Mic Test',
                         onTap: () {},
                       ),
                       const Divider(height: 1, color: _dividerColor),
-                      _buildMenuItem(
+                      _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/podium.svg',
                         label: 'Practice',
                         onTap: () {},
@@ -299,7 +299,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildOptionTrayMenuItem({
     required String iconPath,
     required String label,
     required VoidCallback onTap,
