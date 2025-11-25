@@ -8,6 +8,7 @@ import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
+import 'package:voquadro/src/hex_color.dart';
 
 class NavigationIcons extends StatefulWidget {
   const NavigationIcons({super.key});
@@ -191,7 +192,8 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _opacityAnimation;
 
-  static const Color _menuBackgroundColor = Color(0xFF2C2C3E);
+  // Use hex_color extension (removed 'const' as .toColor() is calculated)
+  static final Color _menuBackgroundColor = "2C2C3E".toColor();
   static const Color _dividerColor = Colors.white12;
 
   @override

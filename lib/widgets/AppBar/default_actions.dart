@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
+import 'package:voquadro/src/hex_color.dart';
 
 class DefaultActions extends StatefulWidget {
   const DefaultActions({
@@ -30,7 +31,8 @@ class _DefaultActionsState extends State<DefaultActions> {
 
   static const double _fabSize = 60.0;
   static const double _visibleBarHeight = 80.0;
-  static const Color _fabColor = Color(0xFF7962A5);
+
+  static final Color _fabColor = "7962A5".toColor();
 
   @override
   void dispose() {
@@ -64,7 +66,9 @@ class _DefaultActionsState extends State<DefaultActions> {
     const double menuWidth = 140;
 
     double left = pos.dx + size.width - menuWidth - 24;
+
     if (left < 8) left = 8;
+
     final double top = pos.dy + size.height + 8;
 
     _overlayEntry = OverlayEntry(
@@ -164,9 +168,8 @@ class _MenuOverlay extends StatelessWidget {
     required this.onLogout,
   });
 
-  // Colors
-  static const Color _menuBgColor = Color(0xFF49416D);
-  static const Color _borderColor = Color(0xFF6C53A1);
+  static final Color _menuBgColor = "49416D".toColor();
+  static final Color _borderColor = "6C53A1".toColor();
 
   @override
   Widget build(BuildContext context) {
