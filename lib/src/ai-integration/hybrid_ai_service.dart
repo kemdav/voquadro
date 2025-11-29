@@ -281,8 +281,18 @@ class HybridAIService with ChangeNotifier {
               'clarity_structure':
                   (scores?['clarity_structure'] as num?)?.round() ?? 0,
             },
+            // session model fields
+            'pace_control_exp': comprehensive['pace_control_exp'],
+            'filler_control_exp': comprehensive['filler_control_exp'],
+            'clarity_structure_score': comprehensive['clarity_structure_score'],
+            'content_clarity_score': comprehensive['content_clarity_score'],
+            'overall_rating': comprehensive['overall_rating'],
+            'words_per_minute': comprehensive['words_per_minute'],
+            'filler_control': comprehensive['filler_control'],
             'topic': session.topic,
             'question': session.generatedQuestion,
+            'vocal_delivery_score': comprehensive['vocal_delivery_score'],
+            'message_depth_score': comprehensive['message_depth_score'],
           };
         } catch (e) {
           debugPrint('Cloud AI failed: $e, trying Ollama');

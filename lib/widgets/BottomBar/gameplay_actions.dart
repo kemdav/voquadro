@@ -5,82 +5,161 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
 
-/// A "dumb" widget that displays buttons for the gameplay phase.
-/// All logic is handled by the PublicSpeakingController.
 class GameplayActions extends StatelessWidget {
   const GameplayActions({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Consume the controller to know which specific set of buttons to show
+    final primaryPurple = "49416D".toColor();
+    final accentCyan = "23B5D3".toColor();
+
     return Consumer<PublicSpeakingController>(
       builder: (context, controller, child) {
-        // Show a big Play button during the mic test
-        if (controller.currentState == PublicSpeakingState.micTest) {
-          return _micTestActions(context);
-        }
-
-        // Show restart/close buttons during readying and speaking
-        return _speakingActions(context);
+        
+        // Use AnimatedSwitcher for smooth transitions between buttons
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+          child: _buildActionForState(context, controller, primaryPurple, accentCyan),
+        );
       },
     );
   }
 
-  /// The big "Play" button shown on the Mic Test screen.
-  Widget _micTestActions(BuildContext context) {
-    return Center(
-      child: IconButton.filled(
-        onPressed: () {
-          // Generate a random question and start the timed sequence
-          context
-              .read<PublicSpeakingController>()
-              .generateRandomQuestionAndStart();
-        },
-        icon: const Icon(Icons.play_arrow),
-        iconSize: 100,
-        style: IconButton.styleFrom(
-          backgroundColor: "23B5D3".toColor(),
+  Widget _buildActionForState(
+      BuildContext context, 
+      PublicSpeakingController controller,
+      Color primaryColor,
+      Color accentColor
+  ) {
+    switch (controller.currentState) {
+      
+      // --- STATE: MIC TEST ---
+      case PublicSpeakingState.micTest:
+        // NOTE: Since your MicTestPage now auto-navigates, you might not need a button here.
+        // But if you want a manual override, here it is:
+        return SizedBox.shrink(); // Hiding it because MicTestPage handles logic now.
+        // Or uncomment below to keep a manual button:
+        /*
+        return FloatingActionButton.large(
+          key: const ValueKey('micTestBtn'),
+          onPressed: () => controller.generateRandomQuestionAndStart(),
+          backgroundColor: accentColor,
           foregroundColor: Colors.white,
+          child: const Icon(Icons.mic, size: 40),
+        );
+        */
+
+      // --- STATE: READYING (Countdown) ---
+      case PublicSpeakingState.readying:
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Cancel Button (Small)
+            _buildCircleButton(
+              icon: Icons.close,
+              color: Colors.redAccent,
+              onPressed: () => controller.endGameplay(),
+              tooltip: "Quit",
+            ),
+            const SizedBox(width: 20),
+            // "I'm Ready" Button (Large)
+            _buildPillButton(
+              label: "I'm Ready Now",
+              icon: Icons.play_arrow_rounded,
+              color: accentColor,
+              onPressed: () => controller.skipReadying(),
+            ),
+          ],
+        );
+
+      // --- STATE: SPEAKING (Recording) ---
+      case PublicSpeakingState.speaking:
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Cancel Button (Small)
+            _buildCircleButton(
+              icon: Icons.close,
+              color: Colors.redAccent,
+              onPressed: () => controller.endGameplay(), // Go back home
+              tooltip: "Quit",
+            ),
+            const SizedBox(width: 20),
+            // "Done" Button (Large)
+            _buildPillButton(
+              label: "Done Speaking",
+              icon: Icons.check_circle_outline,
+              color: const Color(0xFF6CCC51), // Green
+              onPressed: () => controller.finishSpeechEarly(), // Go to feedback
+            ),
+          ],
+        );
+
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // --- HELPER: Large Text Button (The "Good" Action) ---
+  Widget _buildPillButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      height: 55, // Nice and tall for easy tapping
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 26),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shadowColor: color.withValues(alpha: 0.4),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
         ),
       ),
     );
   }
 
-  /// The buttons shown during the 'readying' and 'speaking' phases.
-  Widget _speakingActions(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        IconButton.filled(
-          onPressed: () {
-            // Tell the controller to restart the sequence
-            context.read<PublicSpeakingController>().startGameplaySequence();
-          },
-          icon: const Icon(Icons.loop),
-          iconSize: 50,
-          style: IconButton.styleFrom(
-            backgroundColor: "00A9A5".toColor(),
-            foregroundColor: Colors.white,
+  // --- HELPER: Small Circle Button (The "Cancel" Action) ---
+  Widget _buildCircleButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return Container(
+      height: 55,
+      width: 55,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        tooltip: tooltip,
+        icon: Icon(icon, color: color, size: 28),
+        style: IconButton.styleFrom(
+          shape: const CircleBorder(),
         ),
-        IconButton.filled(
-          onPressed: () {
-            // Tell the controller to stop the sequence and go home
-            context.read<PublicSpeakingController>().endGameplay();
-          },
-          icon: const Icon(Icons.close),
-          iconSize: 100,
-          style: IconButton.styleFrom(
-            backgroundColor: "23B5D3".toColor(),
-            foregroundColor: Colors.white,
-          ),
-        ),
-        // A placeholder to balance the layout, matching the size of the restart button.
-        const SizedBox(
-          width: 66,
-        ), // Approx size of IconButton.filled with iconSize 50
-      ],
+      ),
     );
   }
 }

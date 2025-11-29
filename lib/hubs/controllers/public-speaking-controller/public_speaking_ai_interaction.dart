@@ -381,6 +381,14 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         'words_per_minute': wordsPerMinute.toInt(),
         'question': result['question'],
         'topic': result['topic'],
+        // Pass through Session model fields
+        'pace_control_exp': result['pace_control_exp'],
+        'filler_control_exp': result['filler_control_exp'],
+        'clarity_structure_score': result['clarity_structure_score'],
+        'content_clarity_score': result['content_clarity_score'],
+        'overall_rating': result['overall_rating'],
+        'vocal_delivery_score': result['vocal_delivery_score'],
+        'message_depth_score': result['message_depth_score'],
       };
     } catch (e) {
       debugPrint('Error generating scores: $e');
