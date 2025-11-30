@@ -137,7 +137,7 @@ class _MicTestPageState extends State<MicTestPage> {
         // This will change the state to 'readying' (or similar).
         // Once that happens, '_onStateChanged' will fire, and
         // '_stopEverything()' will run automatically.
-        await psController.generateRandomQuestionAndStart(context);
+        await psController.generateRandomQuestionAndStart();
       } catch (e) {
         debugPrint("Error starting session: $e");
         // If AI fails, restart the sequence so user can try again
