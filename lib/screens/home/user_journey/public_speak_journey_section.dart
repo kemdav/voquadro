@@ -17,7 +17,6 @@ class PublicSpeakJourneySection extends StatefulWidget {
 }
 
 class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
-  final ScrollController _feedbackScrollController = ScrollController();
   late Future<List<Session>> _sessionHistoryFuture;
 
   @override
@@ -36,7 +35,6 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
   @override
   void dispose() {
-    _feedbackScrollController.dispose();
     super.dispose();
   }
 
@@ -348,51 +346,110 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Session Feedbacks',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: titleColor,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Sessions',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: titleColor,
+              ),
+            ),
+            if (snapshot.hasData && snapshot.data!.length > 3)
+              TextButton(
+                onPressed: () {
+                  _showAllSessionsModal(context, snapshot.data!, titleColor);
+                },
+                child: const Text('View All'),
+              ),
+          ],
         ),
         const SizedBox(height: 20),
-        SizedBox(
-          height: 300,
-          child: Builder(
-            builder: (context) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+        Builder(
+          builder: (context) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+
+            if (snapshot.hasData) {
+              final sessionHistory = snapshot.data!;
+
+              if (sessionHistory.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No practice sessions recorded yet.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                );
               }
 
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+              // Show only top 3
+              final recentSessions = sessionHistory.take(3).toList();
+              return _buildTimelineList(recentSessions, titleColor,
+                  isScrollable: false);
+            }
 
-              if (snapshot.hasData) {
-                final sessionHistory = snapshot.data!;
-
-                if (sessionHistory.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No practice sessions recorded yet.',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  );
-                }
-
-                return _buildTimelineList(sessionHistory, titleColor);
-              }
-
-              return const Center(child: Text('No sessions found.'));
-            },
-          ),
+            return const Center(child: Text('No sessions found.'));
+          },
         ),
       ],
     );
   }
 
-  Widget _buildTimelineList(List<Session> sessionHistory, Color titleColor) {
+  void _showAllSessionsModal(
+      BuildContext context, List<Session> sessions, Color titleColor) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF7F3FB),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'All Sessions',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: titleColor,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: _buildTimelineList(sessions, titleColor, isScrollable: true),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimelineList(
+    List<Session> sessionHistory,
+    Color titleColor, {
+    bool isScrollable = true,
+  }) {
     return Stack(
       children: [
         Positioned(
@@ -404,21 +461,8 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
         Row(
           children: [
             const SizedBox(width: 24),
-            Expanded(child: _buildEnhancedFeedbackList(sessionHistory)),
-            Container(
-              width: 8,
-              margin: const EdgeInsets.only(left: 12),
-              decoration: BoxDecoration(
-                color: titleColor.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Scrollbar(
-                controller: _feedbackScrollController,
-                thumbVisibility: true,
-                radius: const Radius.circular(4),
-                thickness: 8,
-                child: Container(),
-              ),
+            Expanded(
+              child: _buildEnhancedFeedbackList(sessionHistory, isScrollable),
             ),
           ],
         ),
@@ -492,9 +536,15 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
     );
   }
 
-  Widget _buildEnhancedFeedbackList(List<Session> sessionHistory) {
+  Widget _buildEnhancedFeedbackList(
+    List<Session> sessionHistory,
+    bool isScrollable,
+  ) {
     return ListView.separated(
-      controller: _feedbackScrollController,
+      shrinkWrap: !isScrollable,
+      physics: isScrollable
+          ? const AlwaysScrollableScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
       itemCount: sessionHistory.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -513,47 +563,63 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 230),
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 20),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Session on ${session.topic}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: '49416D'.toColor(),
-                      ),
-                    ),
-                    Text(
-                      DateFormat('MMMM d, y').format(session.timestamp),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: '49416D'.toColor().withValues(alpha: 204),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tap to view detailed feedback',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: '49416D'.toColor().withValues(alpha: 179),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: '49416D'.toColor().withValues(alpha: 0.1), // ~10% opacity
+                    shape: BoxShape.circle,
                   ),
+                  child: Icon(
+                    Icons.mic,
+                    color: '49416D'.toColor(),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        session.topic,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: '49416D'.toColor(),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat('MMM d, y • h:mm a')
+                            .format(session.timestamp),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: '49416D'.toColor().withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right,
+                  color: '49416D'.toColor().withValues(alpha: 0.4),
                 ),
               ],
             ),
