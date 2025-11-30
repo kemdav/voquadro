@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:voquadro/src/hex_color.dart'; 
+import 'package:voquadro/src/hex_color.dart';
 
 class MicTestPage extends StatefulWidget {
   const MicTestPage({super.key});
@@ -15,6 +15,7 @@ class MicTestPage extends StatefulWidget {
 class _MicTestPageState extends State<MicTestPage> {
   bool _isNavigating = false;
   bool _successDetected = false;
+  bool _isReadyToListen = false;
   Timer? _navigationTimer;
 
   @override
@@ -24,6 +25,14 @@ class _MicTestPageState extends State<MicTestPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AudioController>().startAmplitudeStream();
     });
+
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) {
+        setState(() {
+          _isReadyToListen = true;
+        });
+      }
+    });
   }
 
   @override
@@ -32,7 +41,10 @@ class _MicTestPageState extends State<MicTestPage> {
     super.dispose();
   }
 
-  void _handleSuccess(PublicSpeakingController psController, AudioController audioController) {
+  void _handleSuccess(
+    PublicSpeakingController psController,
+    AudioController audioController,
+  ) {
     if (_isNavigating) return;
 
     setState(() {
@@ -43,7 +55,18 @@ class _MicTestPageState extends State<MicTestPage> {
     // Wait 1.5 seconds so user sees the "Success" animation, then proceed
     _navigationTimer = Timer(const Duration(milliseconds: 1500), () async {
       audioController.stopAmplitudeStream();
-      await psController.generateRandomQuestionAndStart();
+      try {
+        await psController.generateRandomQuestionAndStart();
+      } catch (e) {
+        debugPrint("Error starting session: $e");
+        // Optional: Reset state here if navigation fails so user can try again
+        if (mounted) {
+          setState(() {
+            _isNavigating = false;
+            _successDetected = false;
+          });
+        }
+      }
     });
   }
 
@@ -53,19 +76,23 @@ class _MicTestPageState extends State<MicTestPage> {
     final publicSpeakingController = context.read<PublicSpeakingController>();
 
     final double amplitude = audioController.currentAmplitude;
-    
+
     // Thresholds
     final bool isTooQuiet = amplitude < 0.2;
-    final bool isGood = amplitude >= 0.2;
+    final bool isGood = amplitude >= 0.2 && _isReadyToListen;
 
     // Colors
     final Color primaryPurple = "49416D".toColor();
     final Color accentCyan = "23B5D3".toColor();
-    final Color activeColor = _successDetected ? accentCyan : (isGood ? accentCyan : Colors.grey.shade300);
+    final Color activeColor = _successDetected
+        ? accentCyan
+        : (isGood ? accentCyan : Colors.grey.shade300);
 
     // Auto-trigger success if volume is good and we haven't triggered yet
     if (isGood && !_isNavigating && !_successDetected) {
-      Future.microtask(() => _handleSuccess(publicSpeakingController, audioController));
+      Future.microtask(
+        () => _handleSuccess(publicSpeakingController, audioController),
+      );
     }
 
     return Scaffold(
@@ -85,13 +112,12 @@ class _MicTestPageState extends State<MicTestPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              _successDetected 
-                  ? "Microphone is ready." 
-                  : "We need to check your microphone.",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              _successDetected
+                  ? "Microphone is ready."
+                  : (!_isReadyToListen
+                        ? "Calibrating..."
+                        : "We need to check your microphone."),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
 
             const SizedBox(height: 60),
@@ -111,7 +137,9 @@ class _MicTestPageState extends State<MicTestPage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       // UPDATED: Replaced withOpacity with withValues
-                      color: activeColor.withValues(alpha: _successDetected ? 0.2 : 0.1),
+                      color: activeColor.withValues(
+                        alpha: _successDetected ? 0.2 : 0.1,
+                      ),
                     ),
                   ),
                   // Middle Glow
@@ -122,7 +150,9 @@ class _MicTestPageState extends State<MicTestPage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       // UPDATED: Replaced withOpacity with withValues
-                      color: activeColor.withValues(alpha: _successDetected ? 0.3 : 0.2),
+                      color: activeColor.withValues(
+                        alpha: _successDetected ? 0.3 : 0.2,
+                      ),
                     ),
                   ),
                   // The Mic Icon Container
@@ -137,11 +167,13 @@ class _MicTestPageState extends State<MicTestPage> {
                           color: activeColor.withValues(alpha: 0.4),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
-                        )
+                        ),
                       ],
                     ),
                     child: Icon(
-                      _successDetected ? Icons.check_rounded : Icons.mic_rounded,
+                      _successDetected
+                          ? Icons.check_rounded
+                          : Icons.mic_rounded,
                       size: 50,
                       color: Colors.white,
                     ),
@@ -166,12 +198,12 @@ class _MicTestPageState extends State<MicTestPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           SizedBox(
-                            width: 20, 
-                            height: 20, 
+                            width: 20,
+                            height: 20,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2, 
-                              color: primaryPurple
-                            )
+                              strokeWidth: 2,
+                              color: primaryPurple,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Text(
@@ -179,9 +211,9 @@ class _MicTestPageState extends State<MicTestPage> {
                             style: TextStyle(
                               color: primaryPurple,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16
+                              fontSize: 16,
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -191,12 +223,12 @@ class _MicTestPageState extends State<MicTestPage> {
             else
               // Visual "Volume Bar" substitute text
               Text(
-                 isTooQuiet ? "Louder..." : "Listening...",
-                 style: TextStyle(
-                   color: Colors.grey.shade400,
-                   fontWeight: FontWeight.bold,
-                   letterSpacing: 1.2,
-                 ),
+                isTooQuiet ? "Louder..." : "Listening...",
+                style: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
               ),
           ],
         ),
