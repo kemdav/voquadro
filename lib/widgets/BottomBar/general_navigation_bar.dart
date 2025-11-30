@@ -8,11 +8,13 @@ class GeneralNavigationBar extends StatelessWidget {
     this.actions,
     this.navBarVisualHeight = 80,
     this.totalHitTestHeight = 180,
+    this.showIcons = true,
   });
 
   final Widget? actions;
   final double navBarVisualHeight;
   final double totalHitTestHeight;
+  final bool showIcons;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class GeneralNavigationBar extends StatelessWidget {
               ),
             ),
           // Navigation icons (centered inside purple bar at bottom) - only show if navBarVisualHeight > 0
-          if (navBarVisualHeight > 0)
+          if (navBarVisualHeight > 0 && showIcons)
             Positioned(
               bottom: 0,
               left: 0,

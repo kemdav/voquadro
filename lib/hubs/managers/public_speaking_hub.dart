@@ -75,6 +75,24 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey:
       case PublicSpeakingState.underConstruction:
+      case PublicSpeakingState.speaking:
+        return true;
+
+      case PublicSpeakingState.micTest:
+      case PublicSpeakingState.readying:
+      case PublicSpeakingState.inFeedback:
+        return false;
+    }
+  }
+
+  /// Determine if the navigation icons should be visible
+  bool _shouldShowNavigationIcons(PublicSpeakingState state) {
+    switch (state) {
+      case PublicSpeakingState.home:
+      case PublicSpeakingState.status:
+      case PublicSpeakingState.profile:
+      case PublicSpeakingState.journey:
+      case PublicSpeakingState.underConstruction:
         return true;
 
       case PublicSpeakingState.micTest:
@@ -100,7 +118,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.readying:
         return [120, 40];
       case PublicSpeakingState.speaking:
-        return [40, 70];
+        return [40, 150];
       case PublicSpeakingState.inFeedback:
         return [0, 0];
     }
@@ -137,6 +155,9 @@ class PublicSpeakingHub extends StatelessWidget {
                 final showBottomBar = _shouldShowBottomBar(
                   controller.currentState,
                 );
+                final showIcons = _shouldShowNavigationIcons(
+                  controller.currentState,
+                );
                 final dimensions = _bottomNavigationBarDimensions(
                   controller.currentState,
                 );
@@ -169,6 +190,7 @@ class PublicSpeakingHub extends StatelessWidget {
                           actions: _buildBottomActions(controller.currentState),
                           navBarVisualHeight: dimensions[0],
                           totalHitTestHeight: dimensions[1],
+                          showIcons: showIcons,
                         ),
                       ),
                     // Top app bar
