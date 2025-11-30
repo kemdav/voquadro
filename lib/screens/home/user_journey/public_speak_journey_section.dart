@@ -9,20 +9,61 @@ import 'package:voquadro/services/user_service.dart';
 import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 
 class PublicSpeakJourneySection extends StatefulWidget {
-  const PublicSpeakJourneySection({super.key});
+  final bool isVisible;
+  const PublicSpeakJourneySection({super.key, this.isVisible = false});
 
   @override
   State<PublicSpeakJourneySection> createState() =>
       _PublicSpeakJourneySectionState();
 }
 
-class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
+class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
+    with SingleTickerProviderStateMixin {
   late Future<List<Session>> _sessionHistoryFuture;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  int _animationTriggerCount = 0;
 
   @override
   void initState() {
     super.initState();
     _sessionHistoryFuture = _fetchSessionHistory();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    ));
+
+    if (widget.isVisible) {
+      _animationController.forward();
+      _animationTriggerCount++;
+    }
+  }
+
+  @override
+  void didUpdateWidget(PublicSpeakJourneySection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible && !oldWidget.isVisible) {
+      _animationController.reset();
+      _animationController.forward();
+      setState(() {
+        _animationTriggerCount++;
+      });
+    }
   }
 
   Future<List<Session>> _fetchSessionHistory() {
@@ -35,6 +76,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
   @override
   void dispose() {
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -69,54 +111,61 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             right: 24,
             top: 24,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Your Journey',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.w900,
-                  color: purpleDark,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 24),
-              FutureBuilder<List<Session>>(
-                future: _sessionHistoryFuture,
-                builder: (context, snapshot) {
-                  int averageWPM = 0;
-                  int averageFillers = 0;
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your Journey',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      color: purpleDark,
+                      height: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  FutureBuilder<List<Session>>(
+                    future: _sessionHistoryFuture,
+                    builder: (context, snapshot) {
+                      int averageWPM = 0;
+                      int averageFillers = 0;
 
-                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                    final sessions = snapshot.data!;
-                    final totalWPM = sessions.fold(
-                      0.0,
-                      (sum, session) => sum + session.wordsPerMinute,
-                    );
-                    final totalFillers = sessions.fold(
-                      0.0,
-                      (sum, session) => sum + session.fillerControl,
-                    );
-                    averageWPM = (totalWPM / sessions.length).round();
-                    averageFillers = (totalFillers / sessions.length).round();
-                  }
+                      if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                        final sessions = snapshot.data!;
+                        final totalWPM = sessions.fold(
+                          0.0,
+                          (sum, session) => sum + session.wordsPerMinute,
+                        );
+                        final totalFillers = sessions.fold(
+                          0.0,
+                          (sum, session) => sum + session.fillerControl,
+                        );
+                        averageWPM = (totalWPM / sessions.length).round();
+                        averageFillers =
+                            (totalFillers / sessions.length).round();
+                      }
 
-                  return progressCard(
-                    purpleDark,
-                    cardBg,
-                    username,
-                    currentLevelExp,
-                    expToNextLevel,
-                    currentRank,
-                    currentLevel,
-                    averageWPM,
-                    averageFillers,
-                    snapshot,
-                  );
-                },
+                      return progressCard(
+                        purpleDark,
+                        cardBg,
+                        username,
+                        currentLevelExp,
+                        expToNextLevel,
+                        currentRank,
+                        currentLevel,
+                        averageWPM,
+                        averageFillers,
+                        snapshot,
+                      );
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -246,13 +295,21 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                           color: titleColor,
                         ),
                       ),
-                      Text(
-                        '$currentLevelExp/$expToNextLevel XP',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: titleColor,
-                        ),
+                      TweenAnimationBuilder<int>(
+                        key: ValueKey('xp_text_$_animationTriggerCount'),
+                        tween: IntTween(begin: 0, end: currentLevelExp),
+                        duration: const Duration(milliseconds: 1500),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, child) {
+                          return Text(
+                            '$value/$expToNextLevel XP',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: titleColor,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -262,15 +319,24 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                     child: Container(
                       height: 16,
                       decoration: const BoxDecoration(color: Colors.white),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: progress.clamp(0.0, 1.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00C8C8),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                      child: TweenAnimationBuilder<double>(
+                        key: ValueKey('xp_bar_$_animationTriggerCount'),
+                        tween: Tween<double>(
+                            begin: 0, end: progress.clamp(0.0, 1.0)),
+                        duration: const Duration(milliseconds: 1500),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, child) {
+                          return FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: value,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF00C8C8),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -321,7 +387,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             Expanded(
               child: _buildStatTile(
                 label: 'WPM',
-                value: averageWPM.toString(),
+                value: averageWPM,
                 sublabel: 'Pace Control',
               ),
             ),
@@ -329,7 +395,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             Expanded(
               child: _buildStatTile(
                 label: 'Avg. Fillers',
-                value: averageFillers.toString(),
+                value: averageFillers,
                 sublabel: 'Filler Word Control',
               ),
             ),
@@ -484,7 +550,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
   Widget _buildStatTile({
     required String label,
-    required String value,
+    required int value,
     String? sublabel,
   }) {
     return Container(
@@ -512,13 +578,21 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: '6C53A1'.toColor(),
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-            ),
+          TweenAnimationBuilder<int>(
+            key: ValueKey('stat_tile_${label}_$_animationTriggerCount'),
+            tween: IntTween(begin: 0, end: value),
+            duration: const Duration(milliseconds: 1500),
+            curve: Curves.easeOutCubic,
+            builder: (context, animatedValue, child) {
+              return Text(
+                animatedValue.toString(),
+                style: TextStyle(
+                  color: '6C53A1'.toColor(),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                ),
+              );
+            },
           ),
           if (sublabel != null) ...{
             const SizedBox(height: 4),

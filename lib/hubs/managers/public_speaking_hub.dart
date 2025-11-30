@@ -169,16 +169,19 @@ class PublicSpeakingHub extends StatelessWidget {
                       padding: const EdgeInsets.only(top: customAppBarHeight),
                       child: IndexedStack(
                         index: controller.currentState.index,
-                        children: const [
-                          PublicSpeakingHomePage(),
-                          PublicSpeakingProfileStage(),
-                          PublicSpeakingStatusPage(),
-                          PublicSpeakJourneySection(), // Added to stack
-                          MicTestPage(),
-                          ReadyingPromptPage(),
-                          SpeakingPage(),
-                          FeedbackFlowPage(),
-                          UnderConstructionPage(), // [ADDED] Under Construction Page
+                        children: [
+                          const PublicSpeakingHomePage(),
+                          const PublicSpeakingProfileStage(),
+                          const PublicSpeakingStatusPage(),
+                          PublicSpeakJourneySection(
+                            isVisible: controller.currentState ==
+                                PublicSpeakingState.journey,
+                          ),
+                          const MicTestPage(),
+                          const ReadyingPromptPage(),
+                          const SpeakingPage(),
+                          const FeedbackFlowPage(),
+                          const UnderConstructionPage(), // [ADDED] Under Construction Page
                         ],
                       ),
                     ),
