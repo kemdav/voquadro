@@ -157,6 +157,7 @@ class PublicSpeakingHub extends StatelessWidget {
                           ReadyingPromptPage(),
                           SpeakingPage(),
                           FeedbackFlowPage(),
+                          UnderConstructionPage(), // [ADDED] Under Construction Page
                         ],
                       ),
                     ),

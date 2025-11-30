@@ -8,26 +8,23 @@ class UnderConstructionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color backgroundColor = "2C2C3E".toColor();
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: Center(
+    // CHANGED: Removed Scaffold and AppBar.
+    // This allows the parent (PublicSpeakingHub) to show its own bars.
+    return Container(
+      color: backgroundColor,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // The Dolphin Hard Hat Image
+            // Added padding so content isn't hidden behind the top bar
+            const SizedBox(height: 60),
+
             Image.asset(
               'assets/images/dolph_hardhat.png',
-              width: 250, // Adjusted size for visibility
+              width: 250,
               fit: BoxFit.contain,
-              // Add error builder just in case the file isn't moved yet
               errorBuilder: (context, error, stackTrace) {
                 return const Column(
                   children: [
@@ -42,7 +39,6 @@ class UnderConstructionPage extends StatelessWidget {
               },
             ),
             const SizedBox(height: 30),
-            // The Text
             const Text(
               "UNDER CONSTRUCTION",
               style: TextStyle(
@@ -61,6 +57,8 @@ class UnderConstructionPage extends StatelessWidget {
                 color: Colors.white.withOpacity(0.7),
               ),
             ),
+            // Added padding for bottom bar
+            const SizedBox(height: 100),
           ],
         ),
       ),

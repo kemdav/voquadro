@@ -116,9 +116,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   // [ADDED] Helper method to navigate to Under Construction Page
   void _navigateToUnderConstruction() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const UnderConstructionPage()),
-    );
+    context.read<PublicSpeakingController>().showUnderConstruction();
   }
 
   @override
