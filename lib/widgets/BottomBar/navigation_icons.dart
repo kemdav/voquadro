@@ -12,6 +12,9 @@ import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dar
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
 import 'package:voquadro/src/hex_color.dart';
 
+// [ADDED] Import the new UnderConstructionPage
+import 'package:voquadro/screens/misc/under_construction.dart';
+
 class NavigationIcons extends StatefulWidget {
   const NavigationIcons({super.key});
 
@@ -111,6 +114,13 @@ class _NavigationIconsState extends State<NavigationIcons> {
     context.read<PublicSpeakingController>().showJourney();
   }
 
+  // [ADDED] Helper method to navigate to Under Construction Page
+  void _navigateToUnderConstruction() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const UnderConstructionPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -122,11 +132,15 @@ class _NavigationIconsState extends State<NavigationIcons> {
         ),
         _buildNavIcon(
           assetPath: 'assets/homepage_assets/faq.svg',
-          onTap: () => _onIconPressed('FAQ icon pressed!', () {}),
+          onTap: () => _onIconPressed('FAQ icon pressed!', () {
+            _navigateToUnderConstruction();
+          }),
         ),
         _buildNavIcon(
           assetPath: 'assets/homepage_assets/adventure_mode.svg',
-          onTap: () => _onIconPressed('Adventure mode icon pressed!', () {}),
+          onTap: () => _onIconPressed('Adventure mode icon pressed!', () {
+            _navigateToUnderConstruction();
+          }),
         ),
         _buildNavIcon(
           assetPath: 'assets/homepage_assets/user_journal.svg',

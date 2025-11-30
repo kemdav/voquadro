@@ -18,6 +18,7 @@ import 'package:voquadro/widgets/BottomBar/empty_actions.dart';
 import 'package:voquadro/widgets/BottomBar/gameplay_actions.dart';
 import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
 import 'package:voquadro/widgets/BottomBar/start_speaking_actions.dart';
+import 'package:voquadro/screens/misc/under_construction.dart'; // [ADDED] Import
 
 class PublicSpeakingHub extends StatelessWidget {
   const PublicSpeakingHub({super.key});
@@ -31,7 +32,8 @@ class PublicSpeakingHub extends StatelessWidget {
 
       case PublicSpeakingState.profile:
       case PublicSpeakingState
-          .journey: // Journey uses empty bottom actions (nav bar handles it)
+          .journey: // Journey uses empty bottom actions (nav bar handles it)\
+      case PublicSpeakingState.UnderConstructionPage:
         return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
@@ -52,12 +54,13 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
+      case PublicSpeakingState.UnderConstructionPage:
         return const DefaultActions();
 
       case PublicSpeakingState.journey:
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.readying:
-      return const EmptyActions();
+        return const EmptyActions();
       case PublicSpeakingState.speaking:
       case PublicSpeakingState.inFeedback:
         return const EmptyActions();
@@ -71,6 +74,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey:
+      case PublicSpeakingState.UnderConstructionPage:
         return true;
 
       case PublicSpeakingState.micTest:
@@ -88,6 +92,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey: // Standard size
+      case PublicSpeakingState.UnderConstructionPage:
         return [80, 180];
 
       case PublicSpeakingState.micTest:

@@ -12,6 +12,7 @@ enum PublicSpeakingState {
   readying,
   speaking,
   inFeedback,
+  UnderConstructionPage,
 }
 
 enum FeedbackStep {
@@ -72,6 +73,11 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
 
   void setFeedbackStep(FeedbackStep newStep) {
     _currentFeedbackStep = newStep;
+    notifyListeners();
+  }
+
+  void showUnderConstruction() {
+    _currentState = PublicSpeakingState.UnderConstructionPage;
     notifyListeners();
   }
 }
