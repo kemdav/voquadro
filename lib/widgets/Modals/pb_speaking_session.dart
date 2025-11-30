@@ -45,18 +45,38 @@ class _PublicSpeakingFeedbackModalState
             // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    widget.session.topic,
-                    style: TextStyle(
-                      color: purpleDark,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.session.topic,
+                        style: TextStyle(
+                          color: purpleDark,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      if (widget.session.generatedQuestion.isNotEmpty &&
+                          widget.session.generatedQuestion !=
+                              widget.session.topic) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.session.generatedQuestion,
+                          style: TextStyle(
+                            color: purpleDark.withValues(alpha: 0.7),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
+                const SizedBox(width: 16),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close, color: Colors.white),
