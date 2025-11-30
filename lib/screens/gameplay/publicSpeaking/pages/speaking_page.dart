@@ -19,7 +19,7 @@ class SpeakingPage extends StatelessWidget {
     // Calculate time left (Assuming 60s total, or just use percentage)
     // If you want exact seconds, you'd need to expose the duration from the controller.
     // For now, we visualize the percentage.
-    
+
     return Scaffold(
       backgroundColor: bgGrey,
       body: SafeArea(
@@ -51,16 +51,13 @@ class SpeakingPage extends StatelessWidget {
                 alignment: Alignment.bottomCenter,
                 children: [
                   // Animated Pulse (Simulating voice activity)
-                  const Positioned(
-                    bottom: 40,
-                    child: PulsingWave(),
-                  ),
+                  const Positioned(bottom: 40, child: PulsingWave()),
                   // Character Image
                   Positioned(
                     bottom: 0,
                     child: Image.asset(
-                      'assets/images/tempCharacter.png',
-                      height: 220, 
+                      'assets/images/dolph.png',
+                      height: 220,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -84,7 +81,10 @@ class SpeakingPage extends StatelessWidget {
             children: [
               // Recording Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),

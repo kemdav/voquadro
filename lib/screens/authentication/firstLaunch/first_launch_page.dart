@@ -25,9 +25,7 @@ class FirstLaunchPage extends StatelessWidget {
               child: CircleAvatar(
                 radius: 96,
                 backgroundColor: Colors.grey.shade600,
-                backgroundImage: const AssetImage(
-                  'assets/images/tempCharacter.png',
-                ),
+                backgroundImage: const AssetImage('assets/images/dolph.png'),
               ),
             ),
 

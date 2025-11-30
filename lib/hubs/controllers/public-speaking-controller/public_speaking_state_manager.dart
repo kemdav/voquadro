@@ -4,10 +4,15 @@ enum PublicSpeakingState {
   home,
   profile,
   status,
+  // [ADDED] 'journey' state.
+  // We add this so the PublicSpeakingController can track when the user
+  // is viewing the Journey screen. This allows us to switch tabs instead of pushing pages.
+  journey,
   micTest,
   readying,
   speaking,
   inFeedback,
+  underConstruction,
 }
 
 enum FeedbackStep {
@@ -29,6 +34,15 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
     notifyListeners();
   }
 
+  // [ADDED] showJourney method.
+  // This method is called by the bottom navigation bar. It simply updates the state variable.
+  // Because this uses 'notifyListeners()', the PublicSpeakingHub will rebuild and show the
+  // Journey screen instantly via the IndexedStack.
+  void showJourney() {
+    _currentState = PublicSpeakingState.journey;
+    notifyListeners();
+  }
+
   void showStatus() {
     _currentState = PublicSpeakingState.status;
     notifyListeners();
@@ -38,7 +52,7 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
     _currentState = PublicSpeakingState.micTest;
     notifyListeners();
   }
-  
+
   void goToNextFeedbackStep() {
     if (_currentFeedbackStep == FeedbackStep.progressionDisplay) {
       // Assuming endGameplay() is in the main controller
@@ -52,8 +66,6 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
     notifyListeners();
   }
 
-  // This method would be called by other parts of the controller
-  // to change the state.
   void setPublicSpeakingState(PublicSpeakingState newState) {
     _currentState = newState;
     notifyListeners();
@@ -61,6 +73,11 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
 
   void setFeedbackStep(FeedbackStep newStep) {
     _currentFeedbackStep = newStep;
+    notifyListeners();
+  }
+
+  void showUnderConstruction() {
+    _currentState = PublicSpeakingState.underConstruction;
     notifyListeners();
   }
 }

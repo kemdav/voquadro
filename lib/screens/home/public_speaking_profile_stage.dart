@@ -96,7 +96,7 @@ class _PublicSpeakingProfileStageState
               _localAvatarImage ??
               (profileData.avatarUrl != null
                       ? NetworkImage(profileData.avatarUrl!)
-                      : const AssetImage('assets/images/tempCharacter.png'))
+                      : const AssetImage('assets/images/dolph.png'))
                   as ImageProvider;
 
           final bannerImage =

@@ -85,7 +85,7 @@ class _RegistrationUsernameStageState extends State<RegistrationUsernameStage> {
                     radius: 56,
                     backgroundColor: Colors.grey.shade600,
                     backgroundImage: const AssetImage(
-                      'assets/images/tempCharacter.png',
+                      'assets/images/dolph.png',
                     ),
                   ),
                 ),
