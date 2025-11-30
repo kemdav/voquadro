@@ -7,10 +7,7 @@ import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 class ProgressionPage extends StatefulWidget {
   final bool isVisible;
 
-  const ProgressionPage({
-    super.key,
-    this.isVisible = true,
-  });
+  const ProgressionPage({super.key, this.isVisible = true});
 
   @override
   State<ProgressionPage> createState() => _ProgressionPageState();
@@ -19,7 +16,7 @@ class ProgressionPage extends StatefulWidget {
 class _ProgressionPageState extends State<ProgressionPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  Key _progressAnimationKey = UniqueKey(); 
+  Key _progressAnimationKey = UniqueKey();
 
   @override
   void initState() {
@@ -45,7 +42,6 @@ class _ProgressionPageState extends State<ProgressionPage>
         _progressAnimationKey = UniqueKey();
       });
     }
-    
   }
 
   @override
@@ -67,18 +63,30 @@ class _ProgressionPageState extends State<ProgressionPage>
     }
 
     // 1. Current Stats
-    final publicLevelInfo = ProgressionConversionHelper.getLevelProgressInfo(user.publicSpeakingEXP);
-    final paceControlInfo = ProgressionConversionHelper.getLevelProgressInfo(user.paceControlEXP);
-    final fillerWordInfo = ProgressionConversionHelper.getLevelProgressInfo(user.fillerControlEXP);
+    final publicLevelInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.publicSpeakingEXP,
+    );
+    final paceControlInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.paceControlEXP,
+    );
+    final fillerWordInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.fillerControlEXP,
+    );
 
     // 2. Calculate Previous Stats
     final prevPublicExp = user.publicSpeakingEXP - result.modeEXP;
     final prevPaceExp = user.paceControlEXP - result.paceControlEXP;
     final prevFillerExp = user.fillerControlEXP - result.fillerControlEXP;
 
-    final prevPublicLevel = ProgressionConversionHelper.getLevelProgressInfo(prevPublicExp.toInt()).level;
-    final prevPaceLevel = ProgressionConversionHelper.getLevelProgressInfo(prevPaceExp.toInt()).level;
-    final prevFillerLevel = ProgressionConversionHelper.getLevelProgressInfo(prevFillerExp.toInt()).level;
+    final prevPublicLevel = ProgressionConversionHelper.getLevelProgressInfo(
+      prevPublicExp.toInt(),
+    ).level;
+    final prevPaceLevel = ProgressionConversionHelper.getLevelProgressInfo(
+      prevPaceExp.toInt(),
+    ).level;
+    final prevFillerLevel = ProgressionConversionHelper.getLevelProgressInfo(
+      prevFillerExp.toInt(),
+    ).level;
 
     // 3. Determine if Level Up happened
     final bool isPublicUp = publicLevelInfo.level > prevPublicLevel;
@@ -99,11 +107,9 @@ class _ProgressionPageState extends State<ProgressionPage>
           builder: (context, constraints) {
             return SingleChildScrollView(
               // Only scrolls if content is bigger than screen
-              physics: const ClampingScrollPhysics(), 
+              physics: const ClampingScrollPhysics(),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
@@ -120,14 +126,14 @@ class _ProgressionPageState extends State<ProgressionPage>
                             style: TextStyle(
                               color: primaryPurple,
                               // REDUCED SIZE: 32 -> 28 to save space
-                              fontSize: 28, 
+                              fontSize: 28,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.5,
                             ),
                           ),
                         ),
-                        
-                        const Spacer(flex: 1), 
+
+                        const Spacer(flex: 1),
 
                         // 2. HERO RANK CIRCLE
                         FadeSlideTransition(
@@ -139,13 +145,13 @@ class _ProgressionPageState extends State<ProgressionPage>
                             result.modeEXP.toInt(),
                             primaryPurple,
                             progressTeal,
-                            isPublicUp, 
+                            isPublicUp,
                           ),
                         ),
 
                         // REDUCED SIZE: 30 -> 24. Prevents clipping but saves 6px.
-                        const SizedBox(height: 24), 
-                        const Spacer(flex: 1), 
+                        const SizedBox(height: 24),
+                        const Spacer(flex: 1),
 
                         // 3. PUBLIC SPEAKING MAIN BAR
                         FadeSlideTransition(
@@ -163,7 +169,7 @@ class _ProgressionPageState extends State<ProgressionPage>
                             progressColor: progressTeal,
                             textColor: primaryPurple,
                             isLarge: true,
-                            isLevelUp: isPublicUp, 
+                            isLevelUp: isPublicUp,
                           ),
                         ),
 
@@ -183,9 +189,11 @@ class _ProgressionPageState extends State<ProgressionPage>
                                     title: 'Pace\nControl',
                                     level: paceControlInfo.level,
                                     currentExp: paceControlInfo.currentLevelExp,
-                                    maxExp: paceControlInfo.cumulativeExpForNextLevel,
+                                    maxExp: paceControlInfo
+                                        .cumulativeExpForNextLevel,
                                     xpGain: result.paceControlEXP.toInt(),
-                                    progress: paceControlInfo.progressPercentage,
+                                    progress:
+                                        paceControlInfo.progressPercentage,
                                     progressColor: progressTeal,
                                     textColor: primaryPurple,
                                     compact: true,
@@ -204,7 +212,8 @@ class _ProgressionPageState extends State<ProgressionPage>
                                     title: 'Filler\nControl',
                                     level: fillerWordInfo.level,
                                     currentExp: fillerWordInfo.currentLevelExp,
-                                    maxExp: fillerWordInfo.cumulativeExpForNextLevel,
+                                    maxExp: fillerWordInfo
+                                        .cumulativeExpForNextLevel,
                                     xpGain: result.fillerControlEXP.toInt(),
                                     progress: fillerWordInfo.progressPercentage,
                                     progressColor: progressTeal,
@@ -239,7 +248,7 @@ class _ProgressionPageState extends State<ProgressionPage>
   ) {
     return Stack(
       alignment: Alignment.center,
-      clipBehavior: Clip.none, 
+      clipBehavior: Clip.none,
       children: [
         // Background Shadow
         Container(
@@ -270,7 +279,11 @@ class _ProgressionPageState extends State<ProgressionPage>
           child: Center(
             child: isLevelUp
                 // Icons scaled down slightly
-                ? Icon(Icons.keyboard_double_arrow_up, size: 50, color: accentColor)
+                ? Icon(
+                    Icons.keyboard_double_arrow_up,
+                    size: 50,
+                    color: accentColor,
+                  )
                 : Icon(Icons.shield, size: 50, color: Colors.grey.shade400),
           ),
         ),
@@ -315,7 +328,7 @@ class _ProgressionPageState extends State<ProgressionPage>
                     color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ],
               ),
               child: Text(
@@ -344,7 +357,7 @@ class _ProgressionPageState extends State<ProgressionPage>
                     color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ],
               ),
               child: const Text(
@@ -443,7 +456,7 @@ class AnimatedProgressBar extends StatelessWidget {
                           if (isLevelUp) _buildLevelUpBadge(),
                         ],
                       ),
-                    ]
+                    ],
                   ],
                 ),
               ),
@@ -462,7 +475,7 @@ class AnimatedProgressBar extends StatelessWidget {
                         ),
                       ),
                       // If isLevelUp, the badge adds height here, causing the unevenness.
-                      // IntrinsicHeight in the parent fixes the card height, 
+                      // IntrinsicHeight in the parent fixes the card height,
                       // Spacer() below fixes the content alignment.
                       if (isLevelUp) _buildLevelUpBadge(),
                     ],
@@ -470,7 +483,7 @@ class AnimatedProgressBar extends StatelessWidget {
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
 
           // PROGRESS BAR
@@ -490,7 +503,7 @@ class AnimatedProgressBar extends StatelessWidget {
               );
             },
           ),
-          
+
           // FIX: Use Spacer instead of SizedBox(height: 10).
           // This pushes the footer to the bottom of the stretched card.
           if (compact) const Spacer() else const SizedBox(height: 10),
@@ -572,6 +585,7 @@ class AnimatedProgressBar extends StatelessWidget {
     );
   }
 }
+
 class FadeSlideTransition extends StatelessWidget {
   final AnimationController controller;
   final double intervalStart;

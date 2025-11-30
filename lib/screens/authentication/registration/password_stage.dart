@@ -6,16 +6,14 @@ class RegistrationPasswordStage extends StatefulWidget {
   const RegistrationPasswordStage({super.key});
 
   @override
-  State<RegistrationPasswordStage> createState() =>
-      _RegistrationPasswordStageState();
+  State<RegistrationPasswordStage> createState() => _RegistrationPasswordStageState();
 }
 
 class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
@@ -45,123 +43,129 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
     const Color accentTeal = Color(0xFF00A9A5);
     const Color buttonPurple = Color(0xFF7962A5);
     const Color chipBorder = Color(0xFFEDD5F6);
-    return Form(
-      key: _formKey,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 30),
-            Row(
-              children: [
-                IconButton(
-                  onPressed: _goBack,
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  style: IconButton.styleFrom(backgroundColor: buttonPurple),
-                  iconSize: 30,
-                ),
-              ],
-            ),
-            const SizedBox(height: 100),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Form(
+                key: _formKey,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 30),
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: _goBack,
+                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            style: IconButton.styleFrom(backgroundColor: buttonPurple),
+                            iconSize: 30,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 100),
 
-            Center(
-              child: CircleAvatar(
-                radius: 56,
-                backgroundColor: Colors.grey.shade600,
-                backgroundImage: const AssetImage('assets/images/dolph.png'),
-              ),
-            ),
+                      Center(
+                        child: CircleAvatar(
+                          radius: 56,
+                          backgroundColor: Colors.grey.shade600,
+                          backgroundImage: const AssetImage('assets/images/tempCharacter.png'),
+                        ),
+                      ),
 
-            const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: buttonPurple, width: 1.0),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  value: 0.65,
-                  color: accentTeal,
-                  backgroundColor: chipBorder.withAlpha(128),
-                  minHeight: 12,
-                ),
-              ),
-            ),
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: buttonPurple, width: 1.0),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: 0.65,
+                            color: accentTeal,
+                            backgroundColor: chipBorder.withAlpha(128),
+                            minHeight: 12,
+                          ),
+                        ),
+                      ),
 
-            const SizedBox(height: 45),
-            Text(
-              "You're getting there! 🐬",
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: primaryText,
-              ),
-            ),
+                      const SizedBox(height: 45),
+                      Text(
+                        "You're getting there! 🐬",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: primaryText,
+                            ),
+                      ),
 
-            const SizedBox(height: 40),
+                      const SizedBox(height: 40),
 
-            _PasswordField(
-              controller: _passwordController,
-              hintText: 'Password',
-              isVisible: _isPasswordVisible,
-              onToggleVisibility: () =>
-                  setState(() => _isPasswordVisible = !_isPasswordVisible),
-              validator: (value) {
-                if (value == null || value.length < 8) {
-                  return 'Password must be at least 8 characters';
-                }
-                return null;
-              },
-            ),
+                      _PasswordField(
+                        controller: _passwordController,
+                        hintText: 'Password',
+                        isVisible: _isPasswordVisible,
+                        onToggleVisibility: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                        validator: (value) {
+                          if (value == null || value.length < 8) {
+                            return 'Password must be at least 8 characters';
+                          }
+                          return null;
+                        },
+                      ),
 
-            const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-            _PasswordField(
-              controller: _confirmPasswordController,
-              hintText: 'Confirm Password',
-              isVisible: _isConfirmPasswordVisible,
-              onToggleVisibility: () => setState(
-                () => _isConfirmPasswordVisible = !_isConfirmPasswordVisible,
-              ),
-              validator: (value) {
-                if (value != _passwordController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
-            ),
+                      _PasswordField(
+                        controller: _confirmPasswordController,
+                        hintText: 'Confirm Password',
+                        isVisible: _isConfirmPasswordVisible,
+                        onToggleVisibility: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                        validator: (value) {
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
 
-            const Spacer(),
+                      const Spacer(),
 
-            const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-            SizedBox(
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: buttonPurple,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: _submit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: buttonPurple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                            elevation: 6,
+                            shadowColor: buttonPurple.withAlpha(102),
+                          ),
+                          child: const Text(
+                            'Continue',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
                   ),
-                  elevation: 6,
-                  shadowColor: buttonPurple.withAlpha(102),
-                ),
-                child: const Text(
-                  'Continue',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
-
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -183,7 +187,7 @@ class _PasswordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return TextFormField( 
       controller: controller,
       obscureText: !isVisible,
       decoration: InputDecoration(
@@ -199,10 +203,7 @@ class _PasswordField extends StatelessWidget {
         ),
         filled: true,
         fillColor: const Color(0xFFE5D3EC),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 18,
-          horizontal: 16,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: Color(0xFFE5D3EC)),
@@ -217,7 +218,7 @@ class _PasswordField extends StatelessWidget {
         ),
       ),
       textInputAction: TextInputAction.done,
-      validator: validator,
+      validator: validator, 
     );
   }
 }

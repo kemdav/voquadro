@@ -357,7 +357,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
               width: 8,
               margin: const EdgeInsets.only(left: 12),
               decoration: BoxDecoration(
-                color: titleColor.withOpacity(0.3),
+                color: titleColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Scrollbar(

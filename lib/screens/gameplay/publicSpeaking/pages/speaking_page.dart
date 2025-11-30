@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'dart:math' as math;
-
 class SpeakingPage extends StatelessWidget {
   const SpeakingPage({super.key});
 

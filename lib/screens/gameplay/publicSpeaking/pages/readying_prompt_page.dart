@@ -10,13 +10,17 @@ class ReadyingPromptPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<PublicSpeakingController>();
     final currentQuestion = controller.currentQuestion;
-    
+
     // Get time data
     final int timeLeft = controller.readyingTimeRemaining;
     final int totalTime = controller.maxReadyingDuration;
-    
+
     // Calculate progress (1.0 -> 0.0)
     final double progress = totalTime == 0 ? 0 : timeLeft / totalTime;
+
+    if (controller.currentState != PublicSpeakingState.readying) {
+      return const SizedBox();
+    }
 
     // Primary color for this screen
     final Color primaryPurple = "49416D".toColor();
@@ -125,7 +129,7 @@ class ReadyingPromptPage extends StatelessWidget {
                         "I'm Ready Now",
                         style: TextStyle(color: primaryPurple),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

@@ -6,8 +6,9 @@ enum ExpType { mode, pace, filler }
 class LevelProgressInfo {
   final int level;
   final String rank;
-  final int currentLevelExp;      // e.g., 50 (progress into the current level)
-  final int expToNextLevel;       // e.g., 200 (the size of the current level's EXP bar)
+  final int currentLevelExp; // e.g., 50 (progress into the current level)
+  final int
+  expToNextLevel; // e.g., 200 (the size of the current level's EXP bar)
   final int cumulativeExpForNextLevel;
   final double progressPercentage; // e.g., 0.25 (for a progress bar)
 
@@ -16,7 +17,7 @@ class LevelProgressInfo {
     required this.rank,
     required this.currentLevelExp,
     required this.expToNextLevel,
-     required this.cumulativeExpForNextLevel,
+    required this.cumulativeExpForNextLevel,
     required this.progressPercentage,
   });
 }
@@ -59,7 +60,7 @@ class ProgressionConversionHelper {
 
   static int _getTotalExpForLevelStart(int level) {
     if (level <= 1) return 0;
-    
+
     int totalExp = 0;
     // Sum the EXP cost of all preceding levels.
     for (int i = 1; i < level; i++) {
@@ -86,7 +87,7 @@ class ProgressionConversionHelper {
     }
     return expLeft;
   }
-  
+
   static LevelProgressInfo getLevelProgressInfo(int totalExp) {
     final int currentLevel = getLevelFromTotalExp(totalExp);
     final int currentExpInLevel = getCurrentExpInLevel(totalExp);
@@ -99,16 +100,22 @@ class ProgressionConversionHelper {
       currentLevelExp: currentExpInLevel,
       expToNextLevel: expNeededForLevelUp,
       cumulativeExpForNextLevel: cumulativeTarget,
-      progressPercentage: expNeededForLevelUp == 0 ? 1.0 : currentExpInLevel / expNeededForLevelUp,
+      progressPercentage: expNeededForLevelUp == 0
+          ? 1.0
+          : currentExpInLevel / expNeededForLevelUp,
     );
   }
 
-// --- EXP CONVERSION FUNCTIONS ---
+  // --- EXP CONVERSION FUNCTIONS ---
 
   /// Converts the user's speaking pace (WPM) into EXP.
   static int convertPaceControlToEXP(int? paceControl) {
     // Handle null input safely
     if (paceControl == null) {
+      return 0;
+    }
+
+    if (paceControl == 0) {
       return 0;
     }
 
@@ -163,13 +170,13 @@ class ProgressionConversionHelper {
     if (fillerWordPercentage < 1.0) {
       return 100; // Excellent
     } else if (fillerWordPercentage < 2.0) {
-      return 75;  // Good
+      return 75; // Good
     } else if (fillerWordPercentage < 4.0) {
-      return 50;  // Acceptable
+      return 50; // Acceptable
     } else if (fillerWordPercentage < 6.0) {
-      return 25;  // Needs Improvement
+      return 25; // Needs Improvement
     } else {
-      return 10;  // Significant Room for Improvement
+      return 10; // Significant Room for Improvement
     }
   }
 
@@ -197,12 +204,20 @@ class ProgressionConversionHelper {
 
     return calculatedEXP;
   }
-  
+
   static String convertLevelToRank(int level) {
-    const ranks = ["Novice", "Apprentice", "Communicator", "Adept", "Virtuoso", "Orator", "Master"];
-    if (level > 0 && level <= ranks.length) {
-      return ranks[level - 1];
+    const ranks = ["Novice", "Communicator", "Adept", "Orator", "Virtuoso"];
+    if (level > 0 && level <= 9) {
+      return ranks[0];
+    } else if (level > 9 && level <= 24) {
+      return ranks[1];
+    } else if (level > 24 && level <= 49) {
+      return ranks[2];
+    } else if (level > 49 && level <= 79) {
+      return ranks[3];
+    } else if (level > 80) {
+      return ranks[4];
     }
-    return "Legend";
+    return "Null";
   }
 }

@@ -53,8 +53,6 @@ class _LoginPageState extends State<LoginPage> {
     const Color inputFill = Color(0xFFEADDF0);
     const Color accentTeal = Color(0xFF00A9A5);
     const Color buttonPurple = Color(0xFF7962A5);
-    const Color chipBorder = Color(0xFFEDD5F6);
-    const Color chipFill = Color(0xFFF8F0FB);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -302,85 +300,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // Or with divider
-                Row(
-                  children: const [
-                    Expanded(child: Divider(color: primaryText, thickness: 1)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Text(
-                        'Or with',
-                        style: TextStyle(
-                          color: primaryText,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Expanded(child: Divider(color: primaryText, thickness: 1)),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Social buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.facebook,
-                          color: Colors.blue,
-                          size: 28,
-                        ),
-                        label: const Text(
-                          'Facebook',
-                          style: TextStyle(
-                            color: primaryText,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: chipBorder, width: 2),
-                          backgroundColor: chipFill,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.g_mobiledata_outlined,
-                          color: primaryText,
-                          size: 24,
-                        ),
-                        label: const Text(
-                          'Google',
-                          style: TextStyle(
-                            color: primaryText,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: chipBorder, width: 2),
-                          backgroundColor: chipFill,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
 
                 const SizedBox(height: 24),

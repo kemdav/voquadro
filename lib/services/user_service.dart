@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     hide AuthException, Session;
-import 'package:bcrypt/bcrypt.dart';
 import 'package:voquadro/src/models/session_model.dart';
 import 'dart:io';
 
@@ -71,9 +70,6 @@ class ProfileData {
 
 class UserService {
   static final SupabaseClient _supabase = Supabase.instance.client;
-
-  static const String _kPostgrestErrorNoExactRow = 'PGRST116';
-  static const String _kPostgresErrorUniqueViolation = '23505';
 
   static Future<void> addExp(
     String userId, {
@@ -384,6 +380,10 @@ class UserService {
     } catch (e) {
       debugPrint("Error signing out: $e");
     }
+  }
+
+  static String? getCurrentUserId() {
+    return _supabase.auth.currentUser?.id;
   }
 
   static Future<bool> isUsernameTaken(String username) async {
