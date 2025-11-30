@@ -628,10 +628,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
             showDialog(
               context: context,
               builder: (context) => PublicSpeakingFeedbackModal(
-                sessionDate: DateFormat('MMMM d, y').format(session.timestamp),
-                paceWPM: session.wordsPerMinute.toInt(),
-                fillerCount: session.fillerControl.toInt(),
-                qualitativeFeedback: session.feedback,
+                session: session,
               ),
             );
           },
