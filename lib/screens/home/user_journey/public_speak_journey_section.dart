@@ -6,10 +6,8 @@ import 'package:voquadro/src/models/session_model.dart';
 import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/services/user_service.dart';
+import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 
-// [CHANGED] Constructor is now const and empty.
-// We removed 'required this.username', 'required this.currentXP', etc.
-// The widget is now "smart" enough to find its own data.
 class PublicSpeakJourneySection extends StatefulWidget {
   const PublicSpeakJourneySection({super.key});
 
@@ -44,39 +42,31 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
 
   @override
   Widget build(BuildContext context) {
-    // [ADDED] Watch the AppFlowController.
-    // This allows us to get the 'currentUser' directly.
     final appFlow = context.watch<AppFlowController>();
     final user = appFlow.currentUser;
 
-    // [ADDED] Safety check. If user is null, show loading or error.
     if (user == null) return const Center(child: Text("User not loaded"));
 
-    // [ADDED] Local variables to replace the old constructor fields.
-    // We extract data from the 'user' object we just retrieved.
     final username = user.username;
-    final currentXP = user.publicSpeakingEXP; // Example mapping
-    const maxXP = 200;
-    const currentLevel = 'Rookie';
-    const averageWPM = 0;
-    const averageFillers = 0;
+    final currentXP = user.publicSpeakingEXP;
+
+    // Use helper to get level info
+    final levelInfo = ProgressionConversionHelper.getLevelProgressInfo(currentXP);
+    final currentLevel = levelInfo.level;
+    final currentRank = levelInfo.rank;
+    final currentLevelExp = levelInfo.currentLevelExp;
+    final expToNextLevel = levelInfo.expToNextLevel;
 
     final Color purpleDark = '49416D'.toColor();
     const Color cardBg = Color(0xFFF0E6F6);
     const Color pageBg = Color(0xFFF7F3FB);
 
-    // [CHANGED] Replaced Scaffold with Container.
-    // The parent 'PublicSpeakingHub' already has a Scaffold and AppBar.
-    // If we kept the Scaffold here, we would get double headers.
-    // NOTE: No Scaffold or AppBar here, as PublicSpeakingHub provides them.
     return Container(
       color: pageBg,
       child: SingleChildScrollView(
         child: Padding(
-          // [CHANGED] Added bottom padding (100) to ensure content isn't hidden
-          // behind the floating bottom navigation bar.
           padding: const EdgeInsets.only(
-            bottom: 100, // Extra padding for bottom nav bar
+            bottom: 100,
             left: 24,
             right: 24,
             top: 24,
@@ -94,16 +84,39 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                 ),
               ),
               const SizedBox(height: 24),
-              // [CHANGED] Pass the local variables into the helper method
-              progressCard(
-                purpleDark,
-                cardBg,
-                username,
-                currentXP,
-                maxXP,
-                currentLevel,
-                averageWPM,
-                averageFillers,
+              FutureBuilder<List<Session>>(
+                future: _sessionHistoryFuture,
+                builder: (context, snapshot) {
+                  int averageWPM = 0;
+                  int averageFillers = 0;
+
+                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    final sessions = snapshot.data!;
+                    final totalWPM = sessions.fold(
+                      0.0,
+                      (sum, session) => sum + session.wordsPerMinute,
+                    );
+                    final totalFillers = sessions.fold(
+                      0.0,
+                      (sum, session) => sum + session.fillerControl,
+                    );
+                    averageWPM = (totalWPM / sessions.length).round();
+                    averageFillers = (totalFillers / sessions.length).round();
+                  }
+
+                  return progressCard(
+                    purpleDark,
+                    cardBg,
+                    username,
+                    currentLevelExp,
+                    expToNextLevel,
+                    currentRank,
+                    currentLevel,
+                    averageWPM,
+                    averageFillers,
+                    snapshot,
+                  );
+                },
               ),
             ],
           ),
@@ -116,11 +129,13 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
     Color titleColor,
     Color cardBg,
     String username,
-    int currentXP,
-    int maxXP,
-    String currentLevel,
+    int currentLevelExp,
+    int expToNextLevel,
+    String currentRank,
+    int currentLevel,
     int averageWPM,
     int averageFillers,
+    AsyncSnapshot<List<Session>> snapshot,
   ) {
     return Container(
       decoration: _buildCardDecoration(cardBg),
@@ -131,8 +146,9 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
           _buildProgressSection(
             titleColor,
             username,
-            currentXP,
-            maxXP,
+            currentLevelExp,
+            expToNextLevel,
+            currentRank,
             currentLevel,
           ),
           const SizedBox(height: 32),
@@ -142,7 +158,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
           const SizedBox(height: 32),
           const Divider(height: 1, thickness: 1),
           const SizedBox(height: 32),
-          _buildFeedbackSection(titleColor),
+          _buildFeedbackSection(titleColor, snapshot),
         ],
       ),
     );
@@ -151,37 +167,63 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
   Widget _buildProgressSection(
     Color titleColor,
     String username,
-    int currentXP,
-    int maxXP,
-    String currentLevel,
+    int currentLevelExp,
+    int expToNextLevel,
+    String currentRank,
+    int currentLevel,
   ) {
-    final progress = (maxXP > 0) ? currentXP / maxXP : 0.0;
+    final progress =
+        (expToNextLevel > 0) ? currentLevelExp / expToNextLevel : 1.0;
+
+    // Determine emblem asset based on rank
+    String emblemAsset = 'assets/rank_emblem_assets/novice.png';
+    switch (currentRank.toLowerCase()) {
+      case 'novice':
+        emblemAsset = 'assets/rank_emblem_assets/novice.png';
+        break;
+      case 'communicator':
+        emblemAsset = 'assets/rank_emblem_assets/communicator.png';
+        break;
+      case 'adept':
+        emblemAsset = 'assets/rank_emblem_assets/adept.png';
+        break;
+      case 'orator':
+        emblemAsset = 'assets/rank_emblem_assets/orator.png';
+        break;
+      case 'virtuoso':
+        emblemAsset = 'assets/rank_emblem_assets/virtuoso.png';
+        break;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Container(
-              width: 90,
-              height: 90,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE53935),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text(
-                  'Rank\nEmblem',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+            Transform.scale(
+              scale: 1.45,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Image.asset(
+                    emblemAsset,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.emoji_events,
+                        size: 50,
+                        color: Colors.amber,
+                      );
+                    },
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: 32),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,10 +238,18 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                   ),
                   const SizedBox(height: 24),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '$currentXP/$maxXP',
+                        'Level $currentLevel',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: titleColor,
+                        ),
+                      ),
+                      Text(
+                        '$currentLevelExp/$expToNextLevel XP',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -232,11 +282,11 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
                       style: TextStyle(fontSize: 16, color: titleColor),
                       children: [
                         const TextSpan(
-                          text: 'Current Level: ',
+                          text: 'Current Rank: ',
                           style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                         TextSpan(
-                          text: currentLevel.toUpperCase(),
+                          text: currentRank,
                           style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                       ],
@@ -291,7 +341,10 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
     );
   }
 
-  Widget _buildFeedbackSection(Color titleColor) {
+  Widget _buildFeedbackSection(
+    Color titleColor,
+    AsyncSnapshot<List<Session>> snapshot,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -306,9 +359,8 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
         const SizedBox(height: 20),
         SizedBox(
           height: 300,
-          child: FutureBuilder<List<Session>>(
-            future: _sessionHistoryFuture,
-            builder: (context, snapshot) {
+          child: Builder(
+            builder: (context) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
