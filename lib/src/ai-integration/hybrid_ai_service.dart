@@ -227,6 +227,16 @@ class HybridAIService with ChangeNotifier {
                 },
               );
 
+          debugPrint(
+            'HybridAIService: Received comprehensive feedback from CloudAI',
+          );
+          debugPrint(
+            '  vocal_delivery_score: ${comprehensive['vocal_delivery_score']}',
+          );
+          debugPrint(
+            '  message_depth_score: ${comprehensive['message_depth_score']}',
+          );
+
           final feedbackText = comprehensive['feedback_text'];
           final scores = comprehensive['scores'] as Map<String, dynamic>?;
 

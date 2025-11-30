@@ -411,6 +411,15 @@ Return ONLY a JSON object in this exact format:
       final double upliftedVocal = (vocalBase * 0.85) + (55.0 * 0.15);
       final int vocalDelivery = upliftedVocal.round().clamp(0, 100);
 
+      debugPrint('CloudAI: Vocal Delivery Calculation:');
+      debugPrint('  wpmScore: $wpmScore');
+      debugPrint('  fillerScore: $fillerScore');
+      debugPrint('  modelClarity: $modelClarity');
+      debugPrint('  audienceScore: $audienceScore');
+      debugPrint('  vocalBase: $vocalBase');
+      debugPrint('  upliftedVocal: $upliftedVocal');
+      debugPrint('  final vocalDelivery: $vocalDelivery');
+
       // 2. Calculate Message Depth (The "What")
       // Derived primarily from the AI's content quality score. To avoid
       // making this metric always the lowest (especially for short responses)
@@ -430,6 +439,14 @@ Return ONLY a JSON object in this exact format:
       if (effectiveWordCount < 10) lengthMultiplier = 0.85;
 
       int messageDepth = (depthBase * lengthMultiplier).round().clamp(0, 100);
+
+      debugPrint('CloudAI: Message Depth Calculation (Initial):');
+      debugPrint('  modelContent: $modelContent');
+      debugPrint('  blendedContent: $blendedContent');
+      debugPrint('  wpmScore: $wpmScore');
+      debugPrint('  depthBase: $depthBase');
+      debugPrint('  lengthMultiplier: $lengthMultiplier');
+      debugPrint('  initial messageDepth: $messageDepth');
 
       // --- Additional heuristics: transitions and grammar ---
       // Reward use of transition devices (first, however, moreover, etc.)
@@ -509,6 +526,12 @@ Return ONLY a JSON object in this exact format:
         messageDepth = (messageDepth * 0.7 + 40 * 0.3).round();
       }
 
+      debugPrint('CloudAI: Message Depth Calculation (Final):');
+      debugPrint('  transitionsScore: $transitionsScore');
+      debugPrint('  grammarScore: $grammarScore');
+      debugPrint('  blendedMessageDepth: $blendedMessageDepth');
+      debugPrint('  final messageDepth: $messageDepth');
+
       final finalScores = {
         'overall': blendedOverall,
         'content_quality': blendedContent,
@@ -527,6 +550,8 @@ Return ONLY a JSON object in this exact format:
               (finalScores['content_quality'] as num?)?.toInt() ?? 70,
           'clarity_structure':
               (finalScores['clarity_structure'] as num?)?.toInt() ?? 70,
+          'vocal_delivery': vocalDelivery,
+          'message_depth': messageDepth,
         },
         //session model fields
         'pace_control_exp': wpmScore,
