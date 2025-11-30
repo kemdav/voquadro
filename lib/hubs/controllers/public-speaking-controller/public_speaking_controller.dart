@@ -110,7 +110,7 @@ class PublicSpeakingController
 
   // 3. ORCHESTRATION & METHODS
 
-  Future<void> generateRandomQuestionAndStart() async {
+  Future<void> generateRandomQuestionAndStart(BuildContext context) async {
     final topic = _getRandomTopic();
     await generateQuestionAndStart(topic, startGameplaySequence);
   }

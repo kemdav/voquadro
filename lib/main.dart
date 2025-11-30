@@ -4,7 +4,11 @@ import 'package:voquadro/data/notifiers.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/managers/app_flow_manager.dart';
-import 'package:voquadro/services/supabase_service.dart'; 
+import 'package:voquadro/services/supabase_service.dart';
+
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
@@ -32,6 +36,7 @@ class MyApp extends StatelessWidget {
       builder: (context, value, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
+          navigatorObservers: [routeObserver],
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
           ),
