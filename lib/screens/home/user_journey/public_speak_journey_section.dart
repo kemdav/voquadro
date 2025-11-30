@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-import 'package:voquadro/screens/home/user_journey/user_journey_data.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/src/models/session_model.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
@@ -347,7 +346,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection> {
               width: 8,
               margin: const EdgeInsets.only(left: 12),
               decoration: BoxDecoration(
-                color: titleColor.withOpacity(0.3),
+                color: titleColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Scrollbar(

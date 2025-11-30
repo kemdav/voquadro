@@ -53,8 +53,6 @@ class _LoginPageState extends State<LoginPage> {
     const Color inputFill = Color(0xFFEADDF0);
     const Color accentTeal = Color(0xFF00A9A5);
     const Color buttonPurple = Color(0xFF7962A5);
-    const Color chipBorder = Color(0xFFEDD5F6);
-    const Color chipFill = Color(0xFFF8F0FB);
 
     return Scaffold(
       backgroundColor: bgColor,
