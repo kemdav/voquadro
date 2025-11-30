@@ -2,15 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
-import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
-import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
-import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
 import 'package:voquadro/src/hex_color.dart';
-import 'package:voquadro/screens/misc/under_construction.dart';
 
 class NavigationIcons extends StatefulWidget {
   const NavigationIcons({super.key});

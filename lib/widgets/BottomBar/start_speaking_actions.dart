@@ -49,7 +49,6 @@ class StartSpeakingActions extends StatelessWidget {
           shape: const CircleBorder(),
           onPressed: () {
             _logger.d('Mode switcher button pressed!');
-            // TODO: Implement mode switching functionality
           },
           backgroundColor: "50D8D6".toColor(),
           elevation: 3.0,
