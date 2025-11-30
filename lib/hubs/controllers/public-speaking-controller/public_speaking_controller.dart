@@ -161,6 +161,7 @@ class PublicSpeakingController
           final feedback = await getAIFeedback(
             durationSeconds: durationToUse.toInt(),
           );
+
           _overallScore = feedback['overall'];
           _contentQualityScore = feedback['content_quality'];
           _clarityStructureScore = feedback['clarity_structure'];
@@ -169,9 +170,10 @@ class PublicSpeakingController
           _topic = feedback['topic'];
           _questionGenerated = feedback['question'];
           // Capture additional AI metric scores for display and persistence
-          _vocalDeliveryScore = (feedback['vocal_delivery'] as num?)
+          _vocalDeliveryScore = (feedback['vocal_delivery_score'] as num?)
               ?.toDouble();
-          _messageDepthScore = (feedback['message_depth'] as num?)?.toDouble();
+          _messageDepthScore = (feedback['message_depth_score'] as num?)
+              ?.toDouble();
         }
       }
 
