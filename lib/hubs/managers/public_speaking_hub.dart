@@ -33,7 +33,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.profile:
       case PublicSpeakingState
           .journey: // Journey uses empty bottom actions (nav bar handles it)\
-      case PublicSpeakingState.UnderConstructionPage:
+      case PublicSpeakingState.underConstruction:
         return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
@@ -54,7 +54,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
-      case PublicSpeakingState.UnderConstructionPage:
+      case PublicSpeakingState.underConstruction:
         return const DefaultActions();
 
       case PublicSpeakingState.journey:
@@ -74,7 +74,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey:
-      case PublicSpeakingState.UnderConstructionPage:
+      case PublicSpeakingState.underConstruction:
         return true;
 
       case PublicSpeakingState.micTest:
@@ -92,7 +92,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey: // Standard size
-      case PublicSpeakingState.UnderConstructionPage:
+      case PublicSpeakingState.underConstruction:
         return [80, 180];
 
       case PublicSpeakingState.micTest:

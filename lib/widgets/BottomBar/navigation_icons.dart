@@ -191,7 +191,6 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   late Animation<double> _opacityAnimation;
 
   // Use hex_color extension (removed 'const' as .toColor() is calculated)
-  static final Color _optionTrayMenuBackgroundColor = "2C2C3E".toColor();
   static const Color _dividerColor = Colors.white12;
 
   @override
@@ -231,6 +230,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // The Scrim (Dimmer) - Stops ABOVE the navbar
         Positioned(
           top: 0,
           left: 0,
@@ -240,7 +240,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
             onTap: _animateOut,
             child: FadeTransition(
               opacity: _opacityAnimation,
-              child: Container(color: Colors.black.withOpacity(0.5)),
+              child: Container(
+                color: Colors.black.withValues(alpha: 128), // 0.5 * 255 ≈ 128
+              ),
             ),
           ),
         ),
@@ -258,11 +260,11 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
-                    color: _optionTrayMenuBackgroundColor,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(10),
-                    ),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    color: const Color(0xFF2C2C3E),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 26),
+                    ), // 0.1 * 255 ≈ 26
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

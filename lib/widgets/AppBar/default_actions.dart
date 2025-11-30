@@ -187,13 +187,11 @@ class _LevelProgressBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(
-          0.9,
-        ), // Slight transparency for overlay feel
+        color: Colors.white.withValues(alpha: 230), // 0.9 * 255 ≈ 230
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 26), // 0.1 * 255 ≈ 26
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -219,7 +217,7 @@ class _LevelProgressBar extends StatelessWidget {
                 '$currentXp / $requiredXp XP',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: textColor.withOpacity(0.7),
+                  color: textColor.withValues(alpha: 179), // 0.7 * 255 ≈ 179
                   fontSize: 11,
                 ),
               ),
@@ -231,7 +229,9 @@ class _LevelProgressBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: textColor.withOpacity(0.1),
+              backgroundColor: textColor.withValues(
+                alpha: 26,
+              ), // 0.1 * 255 ≈ 26
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
               minHeight: 8, // Thicker bar looks more "game-like"
             ),
@@ -365,7 +365,9 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                               bottomRight: Radius.circular(14),
                             ),
                             border: Border.all(
-                              color: _borderColor.withOpacity(0.12),
+                              color: _borderColor.withValues(
+                                alpha: 31,
+                              ), // 0.12 * 255 ≈ 31
                             ),
                           ),
                           child: Column(
@@ -398,8 +400,10 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
     );
   }
 
-  Widget _buildDivider() =>
-      Container(height: 1, color: _borderColor.withOpacity(0.25));
+  Widget _buildDivider() => Container(
+    height: 1,
+    color: _borderColor.withValues(alpha: 64),
+  ); // 0.25 * 255 ≈ 64
 
   Widget _buildMenuItem({
     required String label,
