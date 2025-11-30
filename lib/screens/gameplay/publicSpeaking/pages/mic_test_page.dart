@@ -20,13 +20,17 @@ class _MicTestPageState extends State<MicTestPage> {
   bool _isProcessingAI = false;
 
   Timer? _visualTimer;
+  late PublicSpeakingController _publicSpeakingController;
+  late AudioController _audioController;
 
   @override
   void initState() {
     super.initState();
+    _publicSpeakingController = context.read<PublicSpeakingController>();
+    _audioController = context.read<AudioController>();
+
     // 1. Listen to the controller immediately
-    final controller = context.read<PublicSpeakingController>();
-    controller.addListener(_onStateChanged);
+    _publicSpeakingController.addListener(_onStateChanged);
 
     // 2. Run initial check (in case we start on this page)
     _onStateChanged();
@@ -35,8 +39,8 @@ class _MicTestPageState extends State<MicTestPage> {
   @override
   void dispose() {
     // 3. Clean up listener
-    context.read<PublicSpeakingController>().removeListener(_onStateChanged);
-    _stopEverything();
+    _publicSpeakingController.removeListener(_onStateChanged);
+    _stopEverything(fromDispose: true);
     super.dispose();
   }
 
@@ -44,11 +48,9 @@ class _MicTestPageState extends State<MicTestPage> {
   void _onStateChanged() {
     if (!mounted) return;
 
-    final controller = context.read<PublicSpeakingController>();
-
     // Check if we are the active page in the IndexedStack
     final bool shouldBeActive =
-        controller.currentState == PublicSpeakingState.micTest;
+        _publicSpeakingController.currentState == PublicSpeakingState.micTest;
 
     if (shouldBeActive && !_isActive) {
       // CASE A: We just became active (User entered Mic Page)
@@ -63,12 +65,12 @@ class _MicTestPageState extends State<MicTestPage> {
 
   /// Kills all mic streams, timers, and resets flags.
   /// This ensures the page is "dead" when hidden in the IndexedStack.
-  void _stopEverything() {
+  void _stopEverything({bool fromDispose = false}) {
     _visualTimer?.cancel();
-    // Use read() here to avoid triggering rebuilds during dispose/backgrounding
-    context.read<AudioController>().stopAmplitudeStream();
+    // Use stored reference to avoid triggering rebuilds during dispose/backgrounding
+    _audioController.stopAmplitudeStream();
 
-    if (mounted) {
+    if (!fromDispose && mounted) {
       setState(() {
         _successDetected = false;
         _isReadyToListen = false;
@@ -87,16 +89,14 @@ class _MicTestPageState extends State<MicTestPage> {
       _isProcessingAI = false;
     });
 
-    final audioController = context.read<AudioController>();
-
     // Clean Hardware Restart
-    await audioController.stopAmplitudeStream();
+    await _audioController.stopAmplitudeStream();
     // Tiny delay to let hardware release
     await Future.delayed(const Duration(milliseconds: 200));
 
     // Only start if we are still the active state (user didn't leave immediately)
     if (_isActive && mounted) {
-      audioController.startAmplitudeStream();
+      _audioController.startAmplitudeStream();
     }
 
     // Visual Timer for "Calibrating..."

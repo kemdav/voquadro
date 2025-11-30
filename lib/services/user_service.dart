@@ -386,6 +386,10 @@ class UserService {
     }
   }
 
+  static String? getCurrentUserId() {
+    return _supabase.auth.currentUser?.id;
+  }
+
   static Future<bool> isUsernameTaken(String username) async {
     try {
       final response = await _supabase
