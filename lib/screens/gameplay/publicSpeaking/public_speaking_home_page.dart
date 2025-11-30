@@ -16,7 +16,7 @@ class _ModePageState extends State<PublicSpeakingHomePage> {
         children: [
           ElevatedButton(
             onPressed: () {},
-            child: Image.asset('assets/images/tempCharacter.png'),
+            child: Image.asset('assets/images/dolph.png'),
           ),
         ],
       ),

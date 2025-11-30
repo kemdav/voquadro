@@ -13,15 +13,15 @@ class RegistrationConfirmationStage extends StatelessWidget {
   Future<void> _completeRegistration(BuildContext context) async {
     final registrationController = context.read<RegistrationController>();
     final appFlowController = context.read<AppFlowController>();
-    
+
     await registrationController.completeRegistration();
 
     if (context.mounted) {
       // Check if registration was successful (no error message)
       if (registrationController.errorMessage == null) {
         appFlowController.login(
-          registrationController.username!, 
-          registrationController.password!
+          registrationController.username!,
+          registrationController.password!,
         );
       }
     }
@@ -56,7 +56,7 @@ class RegistrationConfirmationStage extends StatelessWidget {
             child: CircleAvatar(
               radius: 56,
               backgroundColor: Colors.grey.shade600,
-              backgroundImage: const AssetImage('assets/images/tempCharacter.png'),
+              backgroundImage: const AssetImage('assets/images/dolph.png'),
             ),
           ),
 
@@ -84,9 +84,9 @@ class RegistrationConfirmationStage extends StatelessWidget {
             "Bravo! Let's start.🐬",
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: primaryText,
-                ),
+              fontWeight: FontWeight.w800,
+              color: primaryText,
+            ),
           ),
 
           const SizedBox(height: 40),
@@ -126,10 +126,7 @@ class RegistrationConfirmationStage extends StatelessWidget {
                   ),
                   child: Text(
                     controller.errorMessage!,
-                    style: TextStyle(
-                      color: Colors.red.shade700,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.red.shade700, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 );
@@ -147,7 +144,9 @@ class RegistrationConfirmationStage extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: buttonPurple,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
                 elevation: 6,
                 shadowColor: buttonPurple.withAlpha(102),
               ),
