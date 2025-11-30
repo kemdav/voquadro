@@ -62,6 +62,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
       _animationController.forward();
       setState(() {
         _animationTriggerCount++;
+        _sessionHistoryFuture = _fetchSessionHistory();
       });
     }
   }
