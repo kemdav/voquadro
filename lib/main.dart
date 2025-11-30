@@ -16,10 +16,8 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // These providers are now available to the ENTIRE application.
         ChangeNotifierProvider(create: (_) => AppFlowController()),
         ChangeNotifierProvider(create: (_) => AudioController()),
-        // Add any other global services here.
       ],
       child: const MyApp(),
     ),
