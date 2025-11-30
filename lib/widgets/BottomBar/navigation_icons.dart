@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-// [ADDED] Import PublicSpeakingController so we can change the tab state
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/user_journey/public_speak_journey_section.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
@@ -11,8 +10,6 @@ import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
 import 'package:voquadro/src/hex_color.dart';
-
-// [ADDED] Import the new UnderConstructionPage
 import 'package:voquadro/screens/misc/under_construction.dart';
 
 class NavigationIcons extends StatefulWidget {
@@ -25,11 +22,8 @@ class NavigationIcons extends StatefulWidget {
 class _NavigationIconsState extends State<NavigationIcons> {
   static final Logger _logger = Logger();
 
-  // Overlay management
   OverlayEntry? _overlayEntry;
   bool _isMenuOpen = false;
-
-  /// Height of the bottom area to leave untouched (Navbar + Padding).
   final double _navbarHeight = 90.0;
   final double _iconSize = 50.0;
 
@@ -54,11 +48,9 @@ class _NavigationIconsState extends State<NavigationIcons> {
       builder: (context) => _OptionsTrayOverlay(
         navbarHeight: _navbarHeight,
         onClose: _closeMenu,
-        onNavigate: (Widget page) {
+        onNavigate: (VoidCallback navAction) {
           _closeMenu();
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (context) => page));
+          navAction();
         },
       ),
     );
@@ -79,44 +71,20 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   void _onIconPressed(String logMessage, VoidCallback action) {
     _logger.d(logMessage);
-    // 1. Close the "Options Tray" if it is open
     if (_isMenuOpen) _closeMenu();
     action();
   }
 
   void _handleHomePress() {
     _onIconPressed('Home icon pressed -> Master Reset', () {
-      // 2. Close the "Burger Menu" (Drawer) if it is open
-      // We check for both standard Drawer and EndDrawer just in case.
       final scaffoldState = Scaffold.maybeOf(context);
       if (scaffoldState != null) {
-        if (scaffoldState.isDrawerOpen) {
-          scaffoldState.closeDrawer();
-        }
-        if (scaffoldState.isEndDrawerOpen) {
-          scaffoldState.closeEndDrawer();
-        }
+        if (scaffoldState.isDrawerOpen) scaffoldState.closeDrawer();
+        if (scaffoldState.isEndDrawerOpen) scaffoldState.closeEndDrawer();
       }
-
-      // 3. Pop any pushed screens (Dialogs, Modals, or Pages pushed on top of Hub)
-      // This ensures we return to the "Root" of the main view (the Hub).
       Navigator.of(context).popUntil((route) => route.isFirst);
-
-      // 4. Finally, switch the tab to Home
       context.read<PublicSpeakingController>().showHome();
     });
-  }
-
-  void _handleUserJourneyPress() {
-    _logger.d('User Journey icon pressed!');
-    if (_isMenuOpen) _closeMenu();
-
-    context.read<PublicSpeakingController>().showJourney();
-  }
-
-  // [ADDED] Helper method to navigate to Under Construction Page
-  void _navigateToUnderConstruction() {
-    context.read<PublicSpeakingController>().showUnderConstruction();
   }
 
   @override
@@ -131,18 +99,20 @@ class _NavigationIconsState extends State<NavigationIcons> {
         _buildNavIcon(
           assetPath: 'assets/homepage_assets/faq.svg',
           onTap: () => _onIconPressed('FAQ icon pressed!', () {
-            _navigateToUnderConstruction();
+            context.read<PublicSpeakingController>().showUnderConstruction();
           }),
         ),
         _buildNavIcon(
           assetPath: 'assets/homepage_assets/adventure_mode.svg',
           onTap: () => _onIconPressed('Adventure mode icon pressed!', () {
-            _navigateToUnderConstruction();
+            context.read<PublicSpeakingController>().showUnderConstruction();
           }),
         ),
         _buildNavIcon(
           assetPath: 'assets/homepage_assets/user_journal.svg',
-          onTap: _handleUserJourneyPress,
+          onTap: () => _onIconPressed('Journal pressed', () {
+            context.read<PublicSpeakingController>().showJourney();
+          }),
         ),
         _buildNavIcon(
           assetPath: 'assets/homepage_assets/home_options.svg',
@@ -167,12 +137,10 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 }
 
-// ... (Rest of the file: _OptionsTrayOverlay class remains unchanged) ...
-// Paste the rest of the _OptionsTrayOverlay class here if you are replacing the whole file
 class _OptionsTrayOverlay extends StatefulWidget {
   final double navbarHeight;
   final VoidCallback onClose;
-  final Function(Widget) onNavigate;
+  final Function(VoidCallback) onNavigate;
 
   const _OptionsTrayOverlay({
     required this.navbarHeight,
@@ -190,7 +158,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _opacityAnimation;
 
-  // Use hex_color extension (removed 'const' as .toColor() is calculated)
+  static final Color _optionTrayMenuBackgroundColor = "2C2C3E".toColor();
   static const Color _dividerColor = Colors.white12;
 
   @override
@@ -200,18 +168,14 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
-
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.09),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    // Fade in
     _opacityAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
     _controller.forward();
   }
 
@@ -230,7 +194,6 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // The Scrim (Dimmer) - Stops ABOVE the navbar
         Positioned(
           top: 0,
           left: 0,
@@ -240,16 +203,15 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
             onTap: _animateOut,
             child: FadeTransition(
               opacity: _opacityAnimation,
-              child: Container(
-                color: Colors.black.withValues(alpha: 128), // 0.5 * 255 ≈ 128
-              ),
+              child: Container(color: Colors.black.withOpacity(0.5)),
             ),
           ),
         ),
-
+        // We position this slightly overlapping the navbar to ensure connection
         Positioned(
           left: 0,
           right: 0,
+          // navbarHeight (90) - 10 = 80. Matches visual height of navbar.
           bottom: widget.navbarHeight - 10,
           child: SlideTransition(
             position: _slideAnimation,
@@ -260,11 +222,18 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C2C3E),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 26),
-                    ), // 0.1 * 255 ≈ 26
+                    color: _optionTrayMenuBackgroundColor,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(10),
+                    ),
+                    // [CHANGED] Use Border constructor to specify sides.
+                    // Removed the bottom border to merge with the navbar.
+                    border: Border(
+                      top: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      left: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      right: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      // bottom: BorderSide.none,
+                    ),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -272,22 +241,37 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                       _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/profile.svg',
                         label: 'Profile',
-                        onTap: () => widget.onNavigate(
-                          const PublicSpeakingProfileStage(),
-                        ),
+                        onTap: () => widget.onNavigate(() {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const PublicSpeakingProfileStage(),
+                            ),
+                          );
+                        }),
                       ),
                       const Divider(height: 1, color: _dividerColor),
                       _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/mic_test.svg',
                         label: 'Mic Test',
-                        onTap: () {},
+                        onTap: () => widget.onNavigate(() {
+                          context
+                              .read<PublicSpeakingController>()
+                              .showUnderConstruction();
+                        }),
                       ),
                       const Divider(height: 1, color: _dividerColor),
                       _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/podium.svg',
                         label: 'Practice',
-                        onTap: () {},
+                        onTap: () => widget.onNavigate(() {
+                          context
+                              .read<PublicSpeakingController>()
+                              .showUnderConstruction();
+                        }),
                       ),
+                      // Add a tiny colored spacer at the bottom to blend with navbar color if needed
+                      // But since we removed the border, it should sit flush.
                     ],
                   ),
                 ),
