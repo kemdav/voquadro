@@ -197,9 +197,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
             onTap: _animateOut,
             child: FadeTransition(
               opacity: _opacityAnimation,
-              child: Container(
-                color: Colors.black.withValues(alpha: 128), // 0.5 * 255 ≈ 128
-              ),
+              child: Container(color: Colors.black.withValues(alpha: 0.5)),
             ),
           ),
         ),
@@ -226,13 +224,13 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                     // Removed the bottom border to merge with the navbar.
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withValues(alpha: 26),
-                      ), // 0.1 * 255 ≈ 26
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
                       left: BorderSide(
-                        color: Colors.white.withValues(alpha: 26),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                       right: BorderSide(
-                        color: Colors.white.withValues(alpha: 26),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                       // bottom: BorderSide.none,
                     ),
