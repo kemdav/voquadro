@@ -14,7 +14,7 @@ enum AppState {
 enum AppMode { modeSelection, publicSpeaking }
 
 class AppFlowController with ChangeNotifier {
-  AppState _appState = AppState.firstLaunch;
+  AppState _appState = AppState.authenticating;
   AppState get appState => _appState;
 
   AppMode _currentMode = AppMode.publicSpeaking;
@@ -22,6 +22,27 @@ class AppFlowController with ChangeNotifier {
 
   String? loginErrorMessage;
   User? currentUser; // Stores the custom User object from UserService
+
+  AppFlowController() {
+    _checkSession();
+  }
+
+  Future<void> _checkSession() async {
+    final userId = UserService.getCurrentUserId();
+    if (userId != null) {
+      try {
+        final user = await UserService.getFullUserProfile(userId);
+        currentUser = user;
+        _appState = AppState.authenticated;
+      } catch (e) {
+        await UserService.signOut();
+        _appState = AppState.firstLaunch;
+      }
+    } else {
+      _appState = AppState.firstLaunch;
+    }
+    notifyListeners();
+  }
 
   void initiateRegistration() {
     _appState = AppState.registration;

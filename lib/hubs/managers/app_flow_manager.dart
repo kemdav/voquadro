@@ -14,22 +14,38 @@ class AppFlowManager extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AppFlowController>(
       builder: (context, appFlow, child) {
+        Widget currentPage;
         switch (appFlow.appState) {
           case AppState.firstLaunch:
-            return FirstLaunchPage();
+            currentPage = const FirstLaunchPage(key: ValueKey('FirstLaunchPage'));
+            break;
           case AppState.login:
-            return LoginPage();
+            currentPage = const LoginPage(key: ValueKey('LoginPage'));
+            break;
           case AppState.registration:
-            return RegistrationScreen();
+            currentPage = const RegistrationScreen(key: ValueKey('RegistrationScreen'));
+            break;
           case AppState.unauthenticated:
-            return LoginPage();
+            currentPage = const LoginPage(key: ValueKey('LoginPage_Unauth'));
+            break;
           case AppState.authenticating:
-            return const Scaffold(
+            currentPage = const Scaffold(
+              key: ValueKey('Authenticating'),
               body: Center(child: CircularProgressIndicator()),
             );
+            break;
           case AppState.authenticated:
-            return const GameModeManager();
+            currentPage = const GameModeManager(key: ValueKey('GameModeManager'));
+            break;
         }
+
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: currentPage,
+        );
       },
     );
   }
