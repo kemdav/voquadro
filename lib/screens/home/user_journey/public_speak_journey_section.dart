@@ -125,6 +125,15 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                       fontWeight: FontWeight.w900,
                       color: purpleDark,
                       height: 1.1,
+                      letterSpacing: -1.0,
+                    ),
+                  ),
+                  Text(
+                    'Track your progress and growth',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: purpleDark.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -331,8 +340,21 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                             widthFactor: value,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: const Color(0xFF00C8C8),
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF00C8C8),
+                                    Color(0xFF00E5FF)
+                                  ],
+                                ),
                                 borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF00C8C8)
+                                        .withValues(alpha: 0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           );
@@ -374,29 +396,31 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Average pacing and filler usage',
+          'Performance Stats',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: titleColor,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildStatTile(
-                label: 'WPM',
+                label: 'Pace (WPM)',
                 value: averageWPM,
-                sublabel: 'Pace Control',
+                sublabel: 'Target: 130-150',
+                icon: Icons.speed_rounded,
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: _buildStatTile(
-                label: 'Avg. Fillers',
+                label: 'Filler Words',
                 value: averageFillers,
-                sublabel: 'Filler Word Control',
+                sublabel: 'Lower is better',
+                icon: Icons.graphic_eq_rounded,
               ),
             ),
           ],
@@ -539,8 +563,15 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
             width: 10,
             height: 10,
             decoration: const BoxDecoration(
-              color: Color(0xFFE53935),
+              color: Color(0xFF00C8C8),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x6600C8C8),
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
           ),
         ),
@@ -552,22 +583,34 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
     required String label,
     required int value,
     String? sublabel,
+    IconData? icon,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 230),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 20),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF49416D).withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
+          if (icon != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF0E6F6),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: const Color(0xFF49416D), size: 24),
+            ),
+            const SizedBox(height: 12),
+          ],
           Text(
             label,
             textAlign: TextAlign.center,
@@ -599,7 +642,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
             Text(
               sublabel,
               style: TextStyle(
-                color: '6C53A1'.toColor().withValues(alpha: 179),
+                color: '6C53A1'.toColor().withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
