@@ -288,7 +288,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
   }
 
   /// Generates descriptive feedback for the user's speech.
-  Future<void> generateAIFeedback() async {
+  Future<void> generateAIFeedback({double durationSeconds = 60.0}) async {
     if (userTranscript == null || currentSession == null) {
       aiFeedback = 'No transcript or session available for feedback.';
       notifyListeners();
@@ -302,6 +302,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
       final feedbackData = await aiService.getPublicSpeakingFeedbackWithScores(
         userTranscript!,
         currentSession!,
+        durationSeconds: durationSeconds.toInt(),
       );
       // Use structured, human-friendly formatting for feedback (handles
       // both String and Map-shaped feedback and appends scores if present).
