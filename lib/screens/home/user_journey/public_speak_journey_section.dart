@@ -40,13 +40,10 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
       curve: Curves.easeOut,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.05),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
 
     if (widget.isVisible) {
       _animationController.forward();
@@ -92,7 +89,9 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
     final currentXP = user.publicSpeakingEXP;
 
     // Use helper to get level info
-    final levelInfo = ProgressionConversionHelper.getLevelProgressInfo(currentXP);
+    final levelInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      currentXP,
+    );
     final currentLevel = levelInfo.level;
     final currentRank = levelInfo.rank;
     final currentLevelExp = levelInfo.currentLevelExp;
@@ -155,8 +154,8 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                           (sum, session) => sum + session.fillerControl,
                         );
                         averageWPM = (totalWPM / sessions.length).round();
-                        averageFillers =
-                            (totalFillers / sessions.length).round();
+                        averageFillers = (totalFillers / sessions.length)
+                            .round();
                       }
 
                       return progressCard(
@@ -229,8 +228,9 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
     String currentRank,
     int currentLevel,
   ) {
-    final progress =
-        (expToNextLevel > 0) ? currentLevelExp / expToNextLevel : 1.0;
+    final progress = (expToNextLevel > 0)
+        ? currentLevelExp / expToNextLevel
+        : 1.0;
 
     // Determine emblem asset based on rank
     String emblemAsset = 'assets/rank_emblem_assets/novice.png';
@@ -262,9 +262,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
               child: Container(
                 width: 90,
                 height: 90,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
+                decoration: const BoxDecoration(shape: BoxShape.circle),
                 child: Center(
                   child: Image.asset(
                     emblemAsset,
@@ -332,7 +330,9 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                       child: TweenAnimationBuilder<double>(
                         key: ValueKey('xp_bar_$_animationTriggerCount'),
                         tween: Tween<double>(
-                            begin: 0, end: progress.clamp(0.0, 1.0)),
+                          begin: 0,
+                          end: progress.clamp(0.0, 1.0),
+                        ),
                         duration: const Duration(milliseconds: 1500),
                         curve: Curves.easeOutCubic,
                         builder: (context, value, child) {
@@ -344,14 +344,15 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                                 gradient: const LinearGradient(
                                   colors: [
                                     Color(0xFF00C8C8),
-                                    Color(0xFF00E5FF)
+                                    Color(0xFF00E5FF),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF00C8C8)
-                                        .withValues(alpha: 0.4),
+                                    color: const Color(
+                                      0xFF00C8C8,
+                                    ).withValues(alpha: 0.4),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -482,8 +483,11 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
 
               // Show only top 3
               final recentSessions = sessionHistory.take(3).toList();
-              return _buildTimelineList(recentSessions, titleColor,
-                  isScrollable: false);
+              return _buildTimelineList(
+                recentSessions,
+                titleColor,
+                isScrollable: false,
+              );
             }
 
             return const Center(child: Text('No sessions found.'));
@@ -494,7 +498,10 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
   }
 
   void _showAllSessionsModal(
-      BuildContext context, List<Session> sessions, Color titleColor) {
+    BuildContext context,
+    List<Session> sessions,
+    Color titleColor,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -528,7 +535,11 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: _buildTimelineList(sessions, titleColor, isScrollable: true),
+              child: _buildTimelineList(
+                sessions,
+                titleColor,
+                isScrollable: true,
+              ),
             ),
           ],
         ),
@@ -671,9 +682,8 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => PublicSpeakingFeedbackModal(
-                session: session,
-              ),
+              builder: (context) =>
+                  PublicSpeakingFeedbackModal(session: session),
             );
           },
           child: Container(
@@ -694,14 +704,12 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: '49416D'.toColor().withValues(alpha: 0.1), // ~10% opacity
+                    color: '49416D'.toColor().withValues(
+                      alpha: 0.1,
+                    ), // ~10% opacity
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.mic,
-                    color: '49416D'.toColor(),
-                    size: 24,
-                  ),
+                  child: Icon(Icons.mic, color: '49416D'.toColor(), size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -720,8 +728,9 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('MMM d, y • h:mm a')
-                            .format(session.timestamp),
+                        DateFormat(
+                          'MMM d, y • h:mm a',
+                        ).format(session.timestamp),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
