@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/managers/app_flow_manager.dart';
 import 'package:voquadro/services/supabase_service.dart';
+import 'package:voquadro/services/sound_service.dart';
 
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
@@ -18,6 +19,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AppFlowController()),
         ChangeNotifierProvider(create: (_) => AudioController()),
+        ChangeNotifierProvider(create: (_) => SoundService()),
       ],
       child: const MyApp(),
     ),
