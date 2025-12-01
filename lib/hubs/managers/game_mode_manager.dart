@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/managers/public_speaking_hub.dart';
 
+import 'package:voquadro/hubs/managers/interview_hub.dart';
+
 class GameModeManager extends StatelessWidget {
   const GameModeManager({super.key});
 
@@ -15,6 +17,8 @@ class GameModeManager extends StatelessWidget {
     switch (appFlow.currentMode) {
       case AppMode.publicSpeaking:
         return const PublicSpeakingHub();
+      case AppMode.interview:
+        return const InterviewHub();
       case AppMode.modeSelection:
         return const Text('Mode Selection');
     }

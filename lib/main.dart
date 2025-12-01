@@ -7,6 +7,8 @@ import 'package:voquadro/hubs/managers/app_flow_manager.dart';
 import 'package:voquadro/services/supabase_service.dart';
 import 'package:voquadro/services/sound_service.dart';
 
+import 'package:voquadro/src/ai-integration/interview_mode_service.dart';
+
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
@@ -20,6 +22,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AppFlowController()),
         ChangeNotifierProvider(create: (_) => AudioController()),
         ChangeNotifierProvider(create: (_) => SoundService()),
+        ChangeNotifierProvider(create: (_) => InterviewModeService.instance),
       ],
       child: const MyApp(),
     ),
