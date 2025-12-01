@@ -29,7 +29,7 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
   // NEW: Getter for the controller to access
   double get actualSpeakingDurationInSeconds =>
       _speakingStopwatch.elapsedMilliseconds / 1000.0;
-  
+
   Duration? get lastRecordedDuration => _lastRecordedDuration;
 
   int _readyingTimeRemaining = 0;
@@ -96,7 +96,7 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
   Future<void> finishSpeechEarly() async {
     _speakingTimer?.cancel();
     _speakingStopwatch.stop();
-    
+
     Duration duration;
     if (_speakingStartTime != null) {
       duration = DateTime.now().difference(_speakingStartTime!);
@@ -113,16 +113,16 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
   Future<void> _onGameplayTimerEnd([Duration? duration]) async {
     _speakingTimer?.cancel();
     _speakingStopwatch.stop(); // Ensure it's stopped
-    
+
     Duration finalDuration;
     if (duration != null) {
       finalDuration = duration;
     } else if (_speakingStartTime != null) {
-       finalDuration = DateTime.now().difference(_speakingStartTime!);
+      finalDuration = DateTime.now().difference(_speakingStartTime!);
     } else {
-       finalDuration = _speakingStopwatch.elapsed;
+      finalDuration = _speakingStopwatch.elapsed;
     }
-    
+
     _lastRecordedDuration = finalDuration;
     print("DEBUG: Gameplay ended. Final Duration: $finalDuration");
 
@@ -136,7 +136,7 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
     _speakingStopwatch.stop();
     // Do NOT reset the stopwatch here, so we can read the final duration
     // in showFeedback() -> onEnterFeedbackFlow().
-    // _speakingStopwatch.reset(); 
+    // _speakingStopwatch.reset();
     _speakingProgress = 0.0;
     _readyingTimeRemaining = 0;
     _speakingStartTime = null;

@@ -185,21 +185,22 @@ class PublicSpeakingController
         if (duration != null) {
           durationToUse = duration.inMilliseconds / 1000.0;
         } else if (lastRecordedDuration != null) {
-           durationToUse = lastRecordedDuration!.inMilliseconds / 1000.0;
+          durationToUse = lastRecordedDuration!.inMilliseconds / 1000.0;
         } else {
           durationToUse = actualSpeakingDurationInSeconds;
         }
-        
-        debugPrint('DEBUG: Duration used for WPM: $durationToUse seconds (Raw duration: $duration)');
+
+        debugPrint(
+          'DEBUG: Duration used for WPM: $durationToUse seconds (Raw duration: $duration)',
+        );
 
         // Ensure a minimum duration to avoid division by zero or unrealistic WPM
         if (durationToUse < 1.0) durationToUse = 1.0;
 
-        if (aiFeedback == null) await generateAIFeedback(durationSeconds: durationToUse);
+        if (aiFeedback == null)
+          await generateAIFeedback(durationSeconds: durationToUse);
         if (overallScore == null) {
-          final feedback = await getAIFeedback(
-            durationSeconds: durationToUse,
-          );
+          final feedback = await getAIFeedback(durationSeconds: durationToUse);
 
           _overallScore = feedback['overall'];
           _contentQualityScore = feedback['content_quality'];
