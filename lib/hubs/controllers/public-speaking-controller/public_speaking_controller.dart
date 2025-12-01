@@ -116,13 +116,13 @@ class PublicSpeakingController
   }
 
   @override
-  void showFeedback() {
+  void showFeedback([Duration? duration]) {
     cancelGameplaySequence();
     setFeedbackStep(FeedbackStep.transcript);
     setPublicSpeakingState(PublicSpeakingState.inFeedback);
     _aiFeedback = null;
 
-    onEnterFeedbackFlow();
+    onEnterFeedbackFlow(duration);
 
     notifyListeners();
   }
@@ -131,7 +131,7 @@ class PublicSpeakingController
     _appFlowController = newAppFlowController;
   }
 
-  void onEnterFeedbackFlow() {
+  void onEnterFeedbackFlow([Duration? duration]) {
     Future<void> ensureTranscriptAndGenerate() async {
       if (_userTranscript == null || _userTranscript!.isEmpty) {
         _isTranscribing = true;
@@ -155,11 +155,16 @@ class PublicSpeakingController
       if (_userTranscript != null && _userTranscript!.isNotEmpty) {
         if (aiFeedback == null) await generateAIFeedback();
         if (overallScore == null) {
-          double durationToUse = actualSpeakingDurationInSeconds;
+          double durationToUse = duration?.inMilliseconds != null
+              ? duration!.inMilliseconds / 1000.0
+              : actualSpeakingDurationInSeconds;
+          
+          debugPrint('DEBUG: Duration used for WPM: $durationToUse');
+
           if (durationToUse < 1.0) durationToUse = 1.0;
 
           final feedback = await getAIFeedback(
-            durationSeconds: durationToUse.toInt(),
+            durationSeconds: durationToUse,
           );
 
           _overallScore = feedback['overall'];

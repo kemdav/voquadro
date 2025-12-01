@@ -324,7 +324,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
   Future<Map<String, dynamic>> getAIFeedback({
     int wordCount = 0,
     int fillerCount = 0,
-    int durationSeconds = 60,
+    double durationSeconds = 60.0,
   }) async {
     if (userTranscript == null || currentSession == null) {
       debugPrint('No transcript or session available for scoring.');
@@ -338,12 +338,12 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
 
       final computedDurationSeconds = (durationSeconds > 0)
           ? durationSeconds
-          : PublicSpeakingGameplay.speakingDuration.inSeconds;
+          : PublicSpeakingGameplay.speakingDuration.inSeconds.toDouble();
 
       int fillerWordCount = computedFillerCount;
       double wordsPerMinute = calculateWordsPerMinute(
         userTranscript!,
-        Duration(seconds: computedDurationSeconds),
+        Duration(milliseconds: (computedDurationSeconds * 1000).toInt()),
       );
 
       final result = await aiService.getPublicSpeakingFeedbackWithScores(
@@ -351,7 +351,7 @@ mixin PublicSpeakingAIInteraction on ChangeNotifier {
         currentSession!,
         wordCount: wordCount,
         fillerCount: fillerCount,
-        durationSeconds: durationSeconds,
+        durationSeconds: computedDurationSeconds.toInt(),
       );
       final scores = result['scores'] as Map<String, dynamic>?;
       // Update feedback if it hasn't been set yet
