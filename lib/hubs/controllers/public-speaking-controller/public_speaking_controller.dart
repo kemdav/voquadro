@@ -217,6 +217,17 @@ class PublicSpeakingController
         }
       }
 
+      // Check if we have all necessary data to save the session
+      if (_userTranscript == null ||
+          _aiFeedback == null ||
+          _questionGenerated == null) {
+        logger.d(
+          "Session data incomplete. Not saving to database. Transcript: $_userTranscript, Feedback: $_aiFeedback, Question: $_questionGenerated",
+        );
+        notifyListeners();
+        return;
+      }
+
       _sessionResult = createSessionResult();
 
       final String? userId = _appFlowController.currentUser?.id;
