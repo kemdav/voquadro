@@ -38,6 +38,7 @@ class RegistrationController with ChangeNotifier {
       _stage = RegistrationStage.password;
       notifyListeners();
     } catch (e) {
+      debugPrint('RegistrationController error: $e');
       _errorMessage =
           'Unable to create account. Please try again or contact support.';
       notifyListeners();

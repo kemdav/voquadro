@@ -396,6 +396,7 @@ class UserService {
 
       return response != null;
     } catch (e) {
+      debugPrint('Error checking username availability: $e');
       throw Exception('Failed to check username availability');
     }
   }
@@ -410,6 +411,7 @@ class UserService {
 
       return response != null;
     } catch (e) {
+      debugPrint('Error checking email availability: $e');
       throw Exception('Failed to check email availability');
     }
   }
