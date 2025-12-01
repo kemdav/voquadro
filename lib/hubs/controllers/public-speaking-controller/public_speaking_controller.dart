@@ -328,7 +328,11 @@ class PublicSpeakingController
 
   @override
   void dispose() {
-    _soundService.stopMusic();
+    try {
+      _soundService.stopMusic();
+    } catch (e) {
+      logger.e("Error stopping music during dispose: $e");
+    }
     disposeGameplay();
     super.dispose();
   }

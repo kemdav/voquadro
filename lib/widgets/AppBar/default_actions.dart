@@ -94,18 +94,26 @@ class _DefaultActionsState extends State<DefaultActions> {
     ).push(MaterialPageRoute(builder: (_) => const SettingsStage()));
   }
 
-  Future<void> _handleLogout() async {
+  void _handleLogout() {
     context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
     _removeBurgerMenu();
     showDialog(
       context: context,
       builder: (ctx) => ConfirmationDialog(
-        onConfirm: () {
-          context.read<AppFlowController>().logout();
+        onConfirm: () async {
+          final appFlow = context.read<AppFlowController>();
+          final navigator = Navigator.of(ctx);
 
-          Navigator.of(ctx).pop();
+          // Close the dialog
+          if (navigator.canPop()) {
+            navigator.pop();
+          }
 
-          Navigator.of(context).popUntil((r) => r.isFirst);
+          // Small delay to allow navigation to settle
+          await Future.delayed(const Duration(milliseconds: 200));
+
+          // Perform logout
+          await appFlow.logout();
         },
       ),
     );

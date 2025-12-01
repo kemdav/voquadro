@@ -104,13 +104,27 @@ class AppFlowController with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    //Call the service to sign the user out from the backend (Supabase)
-    await UserService.signOut();
-    //Clear the local user state
-    currentUser = null;
-    //Set the app state to show the first launch screen
-    _appState = AppState.firstLaunch;
-    notifyListeners();
+    debugPrint('AppFlowController: Logout initiated');
+    try {
+      //Call the service to sign the user out from the backend (Supabase)
+      await UserService.signOut();
+      debugPrint('AppFlowController: UserService.signOut completed');
+
+      //Clear the local user state
+      currentUser = null;
+      //Set the app state to show the first launch screen
+      _appState = AppState.firstLaunch;
+      debugPrint(
+        'AppFlowController: State set to firstLaunch, notifying listeners',
+      );
+      notifyListeners();
+      debugPrint('AppFlowController: Listeners notified');
+    } catch (e) {
+      debugPrint('AppFlowController: Error during logout: $e');
+      // Force state reset anyway
+      _appState = AppState.firstLaunch;
+      notifyListeners();
+    }
   }
 
   Future<void> deleteAccount() async {

@@ -7,6 +7,7 @@ class FirstLaunchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('FirstLaunchPage: Building');
     const Color bgColor = Color(0xFFF8F0FB);
     const Color primaryText = Color(0xFF322082);
     const Color buttonPurple = Color(0xFF7962A5);
