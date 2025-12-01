@@ -180,19 +180,27 @@ class PublicSpeakingController
       }
 
       if (_userTranscript != null && _userTranscript!.isNotEmpty) {
-        if (aiFeedback == null) await generateAIFeedback();
+        // Calculate duration in seconds
+        double durationToUse = 0.0;
+        if (duration != null) {
+          durationToUse = duration.inMilliseconds / 1000.0;
+        } else if (lastRecordedDuration != null) {
+          durationToUse = lastRecordedDuration!.inMilliseconds / 1000.0;
+        } else {
+          durationToUse = actualSpeakingDurationInSeconds;
+        }
+
+        debugPrint(
+          'DEBUG: Duration used for WPM: $durationToUse seconds (Raw duration: $duration)',
+        );
+
+        // Ensure a minimum duration to avoid division by zero or unrealistic WPM
+        if (durationToUse < 1.0) durationToUse = 1.0;
+
+        if (aiFeedback == null)
+          await generateAIFeedback(durationSeconds: durationToUse);
         if (overallScore == null) {
-          double durationToUse = duration?.inMilliseconds != null
-              ? duration!.inMilliseconds / 1000.0
-              : actualSpeakingDurationInSeconds;
-          
-          debugPrint('DEBUG: Duration used for WPM: $durationToUse');
-
-          if (durationToUse < 1.0) durationToUse = 1.0;
-
-          final feedback = await getAIFeedback(
-            durationSeconds: durationToUse,
-          );
+          final feedback = await getAIFeedback(durationSeconds: durationToUse);
 
           _overallScore = feedback['overall'];
           _contentQualityScore = feedback['content_quality'];
@@ -207,6 +215,17 @@ class PublicSpeakingController
           _messageDepthScore = (feedback['message_depth_score'] as num?)
               ?.toDouble();
         }
+      }
+
+      // Check if we have all necessary data to save the session
+      if (_userTranscript == null ||
+          _aiFeedback == null ||
+          _questionGenerated == null) {
+        logger.d(
+          "Session data incomplete. Not saving to database. Transcript: $_userTranscript, Feedback: $_aiFeedback, Question: $_questionGenerated",
+        );
+        notifyListeners();
+        return;
       }
 
       _sessionResult = createSessionResult();
