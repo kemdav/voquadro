@@ -50,7 +50,7 @@ double calculateWordsPerMinute(String transcript, Duration duration) {
       .split(RegExp(r'\s+'))
       .where((word) => word.isNotEmpty)
       .length;
-  final minutes = duration.inSeconds / 60.0;
-  if (minutes == 0) return 0.0; // Avoid division by zero
+  final minutes = duration.inMilliseconds / 60000.0;
+  if (minutes <= 0) return 0.0; // Avoid division by zero or negative
   return words / minutes;
 }
