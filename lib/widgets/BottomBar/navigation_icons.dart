@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
+import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 class NavigationIcons extends StatefulWidget {
@@ -65,6 +66,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   void _onIconPressed(String logMessage, VoidCallback action) {
     _logger.d(logMessage);
+    context.read<SoundService>().playSfx('assets/audio/navigation_sfx.mp3');
     if (_isMenuOpen) _closeMenu();
     action();
   }
@@ -112,6 +114,9 @@ class _NavigationIconsState extends State<NavigationIcons> {
           assetPath: 'assets/homepage_assets/home_options.svg',
           onTap: () {
             _logger.d('Options Tray icon pressed!');
+            context.read<SoundService>().playSfx(
+              'assets/audio/navigation_sfx.mp3',
+            );
             _toggleMenu();
           },
         ),
@@ -242,6 +247,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                         iconPath: 'assets/homepage_assets/profile.svg',
                         label: 'Profile',
                         onTap: () => widget.onNavigate(() {
+                          context.read<SoundService>().playSfx(
+                            'assets/audio/navigation_sfx.mp3',
+                          );
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) =>
@@ -255,6 +263,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                         iconPath: 'assets/homepage_assets/mic_test.svg',
                         label: 'Mic Test',
                         onTap: () => widget.onNavigate(() {
+                          context.read<SoundService>().playSfx(
+                            'assets/audio/navigation_sfx.mp3',
+                          );
                           context
                               .read<PublicSpeakingController>()
                               .showUnderConstruction();
@@ -265,6 +276,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                         iconPath: 'assets/homepage_assets/podium.svg',
                         label: 'Practice',
                         onTap: () => widget.onNavigate(() {
+                          context.read<SoundService>().playSfx(
+                            'assets/audio/navigation_sfx.mp3',
+                          );
                           context
                               .read<PublicSpeakingController>()
                               .showUnderConstruction();

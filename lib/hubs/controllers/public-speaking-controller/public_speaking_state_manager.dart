@@ -30,8 +30,7 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
   FeedbackStep get currentFeedbackStep => _currentFeedbackStep;
 
   void showHome() {
-    _currentState = PublicSpeakingState.home;
-    notifyListeners();
+    setPublicSpeakingState(PublicSpeakingState.home);
   }
 
   // [ADDED] showJourney method.
@@ -39,18 +38,15 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
   // Because this uses 'notifyListeners()', the PublicSpeakingHub will rebuild and show the
   // Journey screen instantly via the IndexedStack.
   void showJourney() {
-    _currentState = PublicSpeakingState.journey;
-    notifyListeners();
+    setPublicSpeakingState(PublicSpeakingState.journey);
   }
 
   void showStatus() {
-    _currentState = PublicSpeakingState.status;
-    notifyListeners();
+    setPublicSpeakingState(PublicSpeakingState.status);
   }
 
   void startMicTest() {
-    _currentState = PublicSpeakingState.micTest;
-    notifyListeners();
+    setPublicSpeakingState(PublicSpeakingState.micTest);
   }
 
   void goToNextFeedbackStep() {
@@ -58,12 +54,12 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
       // Assuming endGameplay() is in the main controller
       // This can be handled by a callback or by overriding this method.
       // For simplicity, we'll just move the core logic here.
-      _currentState = PublicSpeakingState.home;
+      setPublicSpeakingState(PublicSpeakingState.home);
     } else {
       int nextIndex = _currentFeedbackStep.index + 1;
       _currentFeedbackStep = FeedbackStep.values[nextIndex];
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void setPublicSpeakingState(PublicSpeakingState newState) {
@@ -77,7 +73,6 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
   }
 
   void showUnderConstruction() {
-    _currentState = PublicSpeakingState.underConstruction;
-    notifyListeners();
+    setPublicSpeakingState(PublicSpeakingState.underConstruction);
   }
 }

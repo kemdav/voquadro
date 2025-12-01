@@ -79,6 +79,7 @@ flutter:
     - assets/images/
     - assets/homepage_assets/
     - assets/rank_emblem_assets/
+    - assets/audio/
     - .env.local
   #   - images/a_dot_ham.jpeg
 

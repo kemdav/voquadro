@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
+import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 import 'package:voquadro/src/models/session_model.dart';
 import 'public_speaking_state_manager.dart';
@@ -20,6 +21,7 @@ class PublicSpeakingController
         PublicSpeakingGameplay,
         PublicSpeakingAIInteraction {
   final AudioController _audioController;
+  final SoundService _soundService;
   final HybridAIService _aiService = HybridAIService.instance;
   AppFlowController _appFlowController;
 
@@ -32,8 +34,33 @@ class PublicSpeakingController
   PublicSpeakingController({
     required AudioController audioController,
     required AppFlowController appFlowController,
+    required SoundService soundService,
   }) : _audioController = audioController,
-       _appFlowController = appFlowController;
+       _appFlowController = appFlowController,
+       _soundService = soundService {
+    // Initialize music if starting on a home-like state
+    if (_shouldPlayBackgroundMusic(currentState)) {
+      _soundService.playMusic('assets/audio/home_background.wav');
+    }
+  }
+
+  bool _shouldPlayBackgroundMusic(PublicSpeakingState state) {
+    return state == PublicSpeakingState.home ||
+        state == PublicSpeakingState.status ||
+        state == PublicSpeakingState.profile ||
+        state == PublicSpeakingState.journey ||
+        state == PublicSpeakingState.underConstruction;
+  }
+
+  @override
+  void setPublicSpeakingState(PublicSpeakingState newState) {
+    super.setPublicSpeakingState(newState);
+    if (_shouldPlayBackgroundMusic(newState)) {
+      _soundService.playMusic('assets/audio/home_background.wav');
+    } else {
+      _soundService.stopMusic();
+    }
+  }
 
   String? _userTranscript;
   @override
@@ -282,6 +309,7 @@ class PublicSpeakingController
 
   @override
   void dispose() {
+    _soundService.stopMusic();
     disposeGameplay();
     super.dispose();
   }

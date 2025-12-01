@@ -20,6 +20,8 @@ import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
 import 'package:voquadro/widgets/BottomBar/start_speaking_actions.dart';
 import 'package:voquadro/screens/misc/under_construction.dart'; // [ADDED] Import
 
+import 'package:voquadro/services/sound_service.dart';
+
 class PublicSpeakingHub extends StatelessWidget {
   const PublicSpeakingHub({super.key});
 
@@ -128,25 +130,35 @@ class PublicSpeakingHub extends StatelessWidget {
   Widget build(BuildContext context) {
     const double customAppBarHeight = 80.0;
 
-    return ChangeNotifierProxyProvider2<
+    return ChangeNotifierProxyProvider3<
       AppFlowController,
       AudioController,
+      SoundService,
       PublicSpeakingController
     >(
       create: (context) => PublicSpeakingController(
         audioController: context.read<AudioController>(),
         appFlowController: context.read<AppFlowController>(),
+        soundService: context.read<SoundService>(),
       ),
-      update: (context, appFlowController, audioController, previous) {
-        if (previous == null) {
-          return PublicSpeakingController(
-            audioController: audioController,
-            appFlowController: appFlowController,
-          );
-        }
-        previous.update(appFlowController);
-        return previous;
-      },
+      update:
+          (
+            context,
+            appFlowController,
+            audioController,
+            soundService,
+            previous,
+          ) {
+            if (previous == null) {
+              return PublicSpeakingController(
+                audioController: audioController,
+                appFlowController: appFlowController,
+                soundService: soundService,
+              );
+            }
+            previous.update(appFlowController);
+            return previous;
+          },
       child: Scaffold(
         body: Stack(
           children: [
@@ -174,7 +186,8 @@ class PublicSpeakingHub extends StatelessWidget {
                           const PublicSpeakingProfileStage(),
                           const PublicSpeakingStatusPage(),
                           PublicSpeakJourneySection(
-                            isVisible: controller.currentState ==
+                            isVisible:
+                                controller.currentState ==
                                 PublicSpeakingState.journey,
                           ),
                           const MicTestPage(),
