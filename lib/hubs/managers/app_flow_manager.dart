@@ -14,16 +14,21 @@ class AppFlowManager extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AppFlowController>(
       builder: (context, appFlow, child) {
+        debugPrint('AppFlowManager: Building with state ${appFlow.appState}');
         Widget currentPage;
         switch (appFlow.appState) {
           case AppState.firstLaunch:
-            currentPage = const FirstLaunchPage(key: ValueKey('FirstLaunchPage'));
+            currentPage = const FirstLaunchPage(
+              key: ValueKey('FirstLaunchPage'),
+            );
             break;
           case AppState.login:
             currentPage = const LoginPage(key: ValueKey('LoginPage'));
             break;
           case AppState.registration:
-            currentPage = const RegistrationScreen(key: ValueKey('RegistrationScreen'));
+            currentPage = const RegistrationScreen(
+              key: ValueKey('RegistrationScreen'),
+            );
             break;
           case AppState.unauthenticated:
             currentPage = const LoginPage(key: ValueKey('LoginPage_Unauth'));
@@ -35,7 +40,9 @@ class AppFlowManager extends StatelessWidget {
             );
             break;
           case AppState.authenticated:
-            currentPage = const GameModeManager(key: ValueKey('GameModeManager'));
+            currentPage = const GameModeManager(
+              key: ValueKey('GameModeManager'),
+            );
             break;
         }
 

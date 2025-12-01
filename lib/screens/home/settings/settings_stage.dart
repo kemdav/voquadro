@@ -145,11 +145,22 @@ class _SettingsStageState extends State<SettingsStage> {
                           title: 'Log out',
                           textColor: Colors
                               .redAccent, // Changed from cyan for better UX
-                          onTap: () {
-                            context.read<AppFlowController>().logout();
-                            Navigator.of(
-                              context,
-                            ).popUntil((route) => route.isFirst);
+                          onTap: () async {
+                            final appFlow = context.read<AppFlowController>();
+                            final navigator = Navigator.of(context);
+
+                            // Pop everything until we are at the root
+                            while (navigator.canPop()) {
+                              navigator.pop();
+                            }
+
+                            // Small delay to allow navigation to settle
+                            await Future.delayed(
+                              const Duration(milliseconds: 200),
+                            );
+
+                            // Then logout
+                            await appFlow.logout();
                           },
                         ),
                       ],
