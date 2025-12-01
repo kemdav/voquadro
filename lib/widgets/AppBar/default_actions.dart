@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
+import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 import 'package:voquadro/src/hex_color.dart';
 
@@ -86,6 +87,7 @@ class _DefaultActionsState extends State<DefaultActions> {
   }
 
   void _handleSettings() {
+    context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
     _removeBurgerMenu();
     Navigator.of(
       context,
@@ -93,6 +95,7 @@ class _DefaultActionsState extends State<DefaultActions> {
   }
 
   Future<void> _handleLogout() async {
+    context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
     _removeBurgerMenu();
     showDialog(
       context: context,
@@ -142,6 +145,9 @@ class _DefaultActionsState extends State<DefaultActions> {
               shape: const CircleBorder(),
               onPressed: () {
                 _logger.d('Burger menu pressed');
+                context.read<SoundService>().playSfx(
+                  'assets/audio/button_click.mp3',
+                );
                 _toggleBurgerMenu();
               },
               backgroundColor: _fabColor,

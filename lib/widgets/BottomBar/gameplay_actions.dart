@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
+import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 class GameplayActions extends StatelessWidget {
@@ -15,32 +16,36 @@ class GameplayActions extends StatelessWidget {
 
     return Consumer<PublicSpeakingController>(
       builder: (context, controller, child) {
-        
         // Use AnimatedSwitcher for smooth transitions between buttons
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-          child: _buildActionForState(context, controller, primaryPurple, accentCyan),
+          transitionBuilder: (child, animation) =>
+              ScaleTransition(scale: animation, child: child),
+          child: _buildActionForState(
+            context,
+            controller,
+            primaryPurple,
+            accentCyan,
+          ),
         );
       },
     );
   }
 
   Widget _buildActionForState(
-      BuildContext context, 
-      PublicSpeakingController controller,
-      Color primaryColor,
-      Color accentColor
+    BuildContext context,
+    PublicSpeakingController controller,
+    Color primaryColor,
+    Color accentColor,
   ) {
     switch (controller.currentState) {
-      
       // --- STATE: MIC TEST ---
       case PublicSpeakingState.micTest:
         // NOTE: Since your MicTestPage now auto-navigates, you might not need a button here.
         // But if you want a manual override, here it is:
         return SizedBox.shrink(); // Hiding it because MicTestPage handles logic now.
-        // Or uncomment below to keep a manual button:
-        /*
+      // Or uncomment below to keep a manual button:
+      /*
         return FloatingActionButton.large(
           key: const ValueKey('micTestBtn'),
           onPressed: () => controller.generateRandomQuestionAndStart(),
@@ -59,7 +64,12 @@ class GameplayActions extends StatelessWidget {
             _buildCircleButton(
               icon: Icons.close,
               color: Colors.redAccent,
-              onPressed: () => controller.endGameplay(),
+              onPressed: () {
+                context.read<SoundService>().playSfx(
+                  'assets/audio/button_click.mp3',
+                );
+                controller.endGameplay();
+              },
               tooltip: "Quit",
             ),
             const SizedBox(width: 20),
@@ -68,7 +78,12 @@ class GameplayActions extends StatelessWidget {
               label: "I'm Ready Now",
               icon: Icons.play_arrow_rounded,
               color: accentColor,
-              onPressed: () => controller.skipReadying(),
+              onPressed: () {
+                context.read<SoundService>().playSfx(
+                  'assets/audio/button_click.mp3',
+                );
+                controller.skipReadying();
+              },
             ),
           ],
         );
@@ -82,7 +97,12 @@ class GameplayActions extends StatelessWidget {
             _buildCircleButton(
               icon: Icons.close,
               color: Colors.redAccent,
-              onPressed: () => controller.endGameplay(), // Go back home
+              onPressed: () {
+                context.read<SoundService>().playSfx(
+                  'assets/audio/button_click.mp3',
+                );
+                controller.endGameplay();
+              }, // Go back home
               tooltip: "Quit",
             ),
             const SizedBox(width: 20),
@@ -91,7 +111,12 @@ class GameplayActions extends StatelessWidget {
               label: "Done Speaking",
               icon: Icons.check_circle_outline,
               color: const Color(0xFF6CCC51), // Green
-              onPressed: () => controller.finishSpeechEarly(), // Go to feedback
+              onPressed: () {
+                context.read<SoundService>().playSfx(
+                  'assets/audio/button_click.mp3',
+                );
+                controller.finishSpeechEarly();
+              }, // Go to feedback
             ),
           ],
         );
@@ -156,9 +181,7 @@ class GameplayActions extends StatelessWidget {
         onPressed: onPressed,
         tooltip: tooltip,
         icon: Icon(icon, color: color, size: 28),
-        style: IconButton.styleFrom(
-          shape: const CircleBorder(),
-        ),
+        style: IconButton.styleFrom(shape: const CircleBorder()),
       ),
     );
   }

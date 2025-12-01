@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
+import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
 
 class StartSpeakingActions extends StatelessWidget {
@@ -27,6 +28,9 @@ class StartSpeakingActions extends StatelessWidget {
             shape: const StadiumBorder(),
             onPressed: () {
               _logger.d('Start Speaking button pressed!');
+              context.read<SoundService>().playSfx(
+                'assets/audio/button_click.mp3',
+              );
               context.read<PublicSpeakingController>().startMicTest();
             },
             backgroundColor: "00A9A5".toColor(),
@@ -49,6 +53,9 @@ class StartSpeakingActions extends StatelessWidget {
           shape: const CircleBorder(),
           onPressed: () {
             _logger.d('Mode switcher button pressed!');
+            context.read<SoundService>().playSfx(
+              'assets/audio/button_click.mp3',
+            );
           },
           backgroundColor: "50D8D6".toColor(),
           elevation: 3.0,
