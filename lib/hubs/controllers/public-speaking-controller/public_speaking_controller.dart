@@ -11,6 +11,7 @@ import 'package:voquadro/src/models/session_model.dart';
 import 'public_speaking_state_manager.dart';
 import 'public_speaking_gameplay.dart';
 import 'public_speaking_ai_interaction.dart';
+import 'package:voquadro/data/notifiers.dart';
 export 'public_speaking_state_manager.dart';
 
 class PublicSpeakingController
@@ -189,9 +190,7 @@ class PublicSpeakingController
 
       try {
         // For exceljos: Add Session To Database
-
         // Use _sessionResult to add a session to the database with unique id at the format of [modeid]_[sessionid]
-
         await UserService.addSession(_sessionResult!, userId);
 
         await UserService.addExp(
@@ -204,6 +203,9 @@ class PublicSpeakingController
         final User updatedUser = await UserService.getFullUserProfile(userId);
 
         _appFlowController.updateCurrentUser(updatedUser);
+
+        // [ADDED] Trigger the red dot on the Journal icon
+        hasNewFeedbackNotifier.value = true;
       } catch (e) {
         logger.d("An error occurred while saving session or updating EXP: $e");
       }

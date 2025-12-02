@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
+// [ADDED] Import notifiers
+import 'package:voquadro/data/notifiers.dart';
 
 class NavigationIcons extends StatefulWidget {
   const NavigationIcons({super.key});
@@ -19,10 +21,8 @@ class _NavigationIconsState extends State<NavigationIcons> {
   OverlayEntry? _overlayEntry;
   bool _isMenuOpen = false;
 
-  // [CHANGED] Added state to track which icon is selected
   int _selectedIndex = 0;
 
-  // [CHANGED] Updated to 130.0 to match the GeneralNavigationBar
   final double _navbarHeight = 130.0;
   final double _iconSize = 40.0;
 
@@ -72,9 +72,11 @@ class _NavigationIconsState extends State<NavigationIcons> {
     _logger.d(logMessage);
     if (_isMenuOpen) _closeMenu();
 
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index != 4) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
 
     action();
   }
@@ -117,20 +119,27 @@ class _NavigationIconsState extends State<NavigationIcons> {
             context.read<PublicSpeakingController>().showUnderConstruction();
           }),
         ),
-        _buildNavIcon(
-          index: 3,
-          assetPath: 'assets/homepage_assets/user_journal.svg',
-          onTap: () => _onIconPressed(3, 'Journal pressed', () {
-            context.read<PublicSpeakingController>().showJourney();
-          }),
+        // [CHANGED] Wrapped Journal icon in ValueListenableBuilder to listen for new feedback
+        ValueListenableBuilder<bool>(
+          valueListenable: hasNewFeedbackNotifier,
+          builder: (context, hasNewFeedback, child) {
+            return _buildNavIcon(
+              index: 3,
+              assetPath: 'assets/homepage_assets/user_journal.svg',
+              showBadge: hasNewFeedback,
+              onTap: () => _onIconPressed(3, 'Journal pressed', () {
+                // Clear the badge when pressed
+                hasNewFeedbackNotifier.value = false;
+                context.read<PublicSpeakingController>().showJourney();
+              }),
+            );
+          },
         ),
         _buildNavIcon(
           index: 4,
           assetPath: 'assets/homepage_assets/home_options.svg',
           onTap: () {
             _logger.d('Options Tray icon pressed!');
-            // Options doesn't necessarily change the "Page", but if you want it to highlight:
-            // setState(() => _selectedIndex = 4);
             _toggleMenu();
           },
         ),
@@ -142,6 +151,8 @@ class _NavigationIconsState extends State<NavigationIcons> {
     required int index,
     required String assetPath,
     required VoidCallback onTap,
+    // [ADDED] Optional parameter to show a red dot badge
+    bool showBadge = false,
   }) {
     final isSelected = _selectedIndex == index && index != 4;
 
@@ -151,14 +162,36 @@ class _NavigationIconsState extends State<NavigationIcons> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutBack,
-        // [CHANGED] This Transform makes the icon float up when selected
         transform: Matrix4.translationValues(0, isSelected ? -4.0 : 0.0, 0),
         child: Container(
           padding: const EdgeInsets.all(8.0), // Hit area padding
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(assetPath, width: _iconSize, height: _iconSize),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  SvgPicture.asset(
+                    assetPath,
+                    width: _iconSize,
+                    height: _iconSize,
+                  ),
+                  if (showBadge)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               // indicator
               if (isSelected)
                 Container(
@@ -251,7 +284,6 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
         Positioned(
           left: 0,
           right: 0,
-          // [CHANGED] Uses the passed navbarHeight (130) so it sits exactly on top
           bottom: widget.navbarHeight,
           child: SlideTransition(
             position: _slideAnimation,
