@@ -140,18 +140,6 @@ class _SettingsStageState extends State<SettingsStage> {
                             );
                           },
                         ),
-                        const _TileDivider(),
-                        SettingsTile(
-                          title: 'Log out',
-                          textColor: Colors
-                              .redAccent, // Changed from cyan for better UX
-                          onTap: () {
-                            context.read<AppFlowController>().logout();
-                            Navigator.of(
-                              context,
-                            ).popUntil((route) => route.isFirst);
-                          },
-                        ),
                       ],
                     ),
 
@@ -261,24 +249,6 @@ class SwitchSettingsTile extends StatelessWidget {
       ),
     );
   }
-}
-
-//log out confirmation dialog
-// Add this method inside the _SettingsStageState class plsss
-void showLogoutConfirmationDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext dialogContext) {
-      // Return the custom dialog widget
-      return ConfirmationDialog(
-        // Pass the logout logic to the dialog
-        onConfirm: () {
-          // --- LOGIC SA LOGOUT ---
-        },
-      );
-    },
-  );
 }
 
 class _SectionHeader extends StatelessWidget {
