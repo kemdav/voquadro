@@ -18,8 +18,13 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   OverlayEntry? _overlayEntry;
   bool _isMenuOpen = false;
-  final double _navbarHeight = 90.0;
-  final double _iconSize = 50.0;
+
+  // [CHANGED] Added state to track which icon is selected
+  int _selectedIndex = 0;
+
+  // [CHANGED] Updated to 130.0 to match the GeneralNavigationBar
+  final double _navbarHeight = 130.0;
+  final double _iconSize = 40.0;
 
   @override
   void dispose() {
@@ -40,7 +45,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
   void _openMenu() {
     _overlayEntry = OverlayEntry(
       builder: (context) => _OptionsTrayOverlay(
-        navbarHeight: _navbarHeight,
+        navbarHeight: _navbarHeight - 50,
         onClose: _closeMenu,
         onNavigate: (VoidCallback navAction) {
           _closeMenu();
@@ -63,14 +68,19 @@ class _NavigationIconsState extends State<NavigationIcons> {
     });
   }
 
-  void _onIconPressed(String logMessage, VoidCallback action) {
+  void _onIconPressed(int index, String logMessage, VoidCallback action) {
     _logger.d(logMessage);
     if (_isMenuOpen) _closeMenu();
+
+    setState(() {
+      _selectedIndex = index;
+    });
+
     action();
   }
 
   void _handleHomePress() {
-    _onIconPressed('Home icon pressed -> Master Reset', () {
+    _onIconPressed(0, 'Home icon pressed -> Master Reset', () {
       final scaffoldState = Scaffold.maybeOf(context);
       if (scaffoldState != null) {
         if (scaffoldState.isDrawerOpen) scaffoldState.closeDrawer();
@@ -85,33 +95,42 @@ class _NavigationIconsState extends State<NavigationIcons> {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment:
+          CrossAxisAlignment.center, // Ensure vertical centering
       children: [
         _buildNavIcon(
+          index: 0,
           assetPath: 'assets/homepage_assets/house.svg',
           onTap: _handleHomePress,
         ),
         _buildNavIcon(
+          index: 1,
           assetPath: 'assets/homepage_assets/faq.svg',
-          onTap: () => _onIconPressed('FAQ icon pressed!', () {
+          onTap: () => _onIconPressed(1, 'FAQ icon pressed!', () {
             context.read<PublicSpeakingController>().showUnderConstruction();
           }),
         ),
         _buildNavIcon(
+          index: 2,
           assetPath: 'assets/homepage_assets/adventure_mode.svg',
-          onTap: () => _onIconPressed('Adventure mode icon pressed!', () {
+          onTap: () => _onIconPressed(2, 'Adventure mode icon pressed!', () {
             context.read<PublicSpeakingController>().showUnderConstruction();
           }),
         ),
         _buildNavIcon(
+          index: 3,
           assetPath: 'assets/homepage_assets/user_journal.svg',
-          onTap: () => _onIconPressed('Journal pressed', () {
+          onTap: () => _onIconPressed(3, 'Journal pressed', () {
             context.read<PublicSpeakingController>().showJourney();
           }),
         ),
         _buildNavIcon(
+          index: 4,
           assetPath: 'assets/homepage_assets/home_options.svg',
           onTap: () {
             _logger.d('Options Tray icon pressed!');
+            // Options doesn't necessarily change the "Page", but if you want it to highlight:
+            // setState(() => _selectedIndex = 4);
             _toggleMenu();
           },
         ),
@@ -120,13 +139,41 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 
   Widget _buildNavIcon({
+    required int index,
     required String assetPath,
     required VoidCallback onTap,
   }) {
-    return IconButton(
-      onPressed: onTap,
-      icon: SvgPicture.asset(assetPath, width: _iconSize, height: _iconSize),
-      iconSize: _iconSize,
+    final isSelected = _selectedIndex == index && index != 4;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutBack,
+        // [CHANGED] This Transform makes the icon float up when selected
+        transform: Matrix4.translationValues(0, isSelected ? -4.0 : 0.0, 0),
+        child: Container(
+          padding: const EdgeInsets.all(8.0), // Hit area padding
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(assetPath, width: _iconSize, height: _iconSize),
+              // indicator
+              if (isSelected)
+                Container(
+                  margin: const EdgeInsets.only(top: 7),
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -201,12 +248,11 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
             ),
           ),
         ),
-        // We position this slightly overlapping the navbar to ensure connection
         Positioned(
           left: 0,
           right: 0,
-          // navbarHeight (90) - 10 = 80. Matches visual height of navbar.
-          bottom: widget.navbarHeight - 10,
+          // [CHANGED] Uses the passed navbarHeight (130) so it sits exactly on top
+          bottom: widget.navbarHeight,
           child: SlideTransition(
             position: _slideAnimation,
             child: FadeTransition(
@@ -220,8 +266,6 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(10),
                     ),
-                    // [CHANGED] Use Border constructor to specify sides.
-                    // Removed the bottom border to merge with the navbar.
                     border: Border(
                       top: BorderSide(
                         color: Colors.white.withValues(alpha: 0.1),
@@ -232,7 +276,6 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                       right: BorderSide(
                         color: Colors.white.withValues(alpha: 0.1),
                       ),
-                      // bottom: BorderSide.none,
                     ),
                   ),
                   child: Column(
@@ -270,8 +313,6 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                               .showUnderConstruction();
                         }),
                       ),
-                      // Add a tiny colored spacer at the bottom to blend with navbar color if needed
-                      // But since we removed the border, it should sit flush.
                     ],
                   ),
                 ),
