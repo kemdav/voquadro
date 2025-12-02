@@ -332,7 +332,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                         onTap: () => widget.onNavigate(() {
                           context
                               .read<PublicSpeakingController>()
-                              .showUnderConstruction();
+                              .startMicTest();
                         }),
                       ),
                       const Divider(height: 1, color: _dividerColor),
