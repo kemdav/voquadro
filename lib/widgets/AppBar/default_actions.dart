@@ -148,8 +148,8 @@ class _DefaultActionsState extends State<DefaultActions> {
               elevation: 3.0,
               child: SvgPicture.asset(
                 'assets/homepage_assets/burger.svg',
-                width: 30,
-                height: 30,
+                width: 27,
+                height: 27,
                 colorFilter: const ColorFilter.mode(
                   Colors.white,
                   BlendMode.srcIn,
