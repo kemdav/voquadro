@@ -7,21 +7,7 @@ import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/services/user_service.dart';
-
-// --- Data Model for Profile Stats ---
-class ProfileStatOption {
-  final String id;
-  final String label;
-  final String value;
-  final String iconPath;
-
-  ProfileStatOption({
-    required this.id,
-    required this.label,
-    required this.value,
-    required this.iconPath,
-  });
-}
+import 'package:voquadro/src/models/attribute_stat_option.dart';
 
 class PublicSpeakingProfileStage extends StatefulWidget {
   const PublicSpeakingProfileStage({super.key});
@@ -34,6 +20,8 @@ class PublicSpeakingProfileStage extends StatefulWidget {
 class _PublicSpeakingProfileStageState
     extends State<PublicSpeakingProfileStage> {
   late Future<ProfileData> _profileDataFuture;
+  late Future<List<AttributeStatOption>> _availableStatsFuture;
+
   final ImagePicker _picker = ImagePicker();
 
   ImageProvider? _localAvatarImage;
@@ -41,27 +29,15 @@ class _PublicSpeakingProfileStageState
   User? _user;
 
   // --- State for Interactive Slots ---
-  // Initialize with 3 empty slots [null, null, null]
-  final List<ProfileStatOption?> _selectedSlots = [null, null, null];
-
-  // --- Overlay State ---
-  OverlayEntry? _overlayEntry;
-  bool _isMenuOpen = false;
-  int? _activeSlotIndex; // Tracks which slot is currently being edited
+  final List<AttributeStatOption?> _selectedSlots = [null, null, null];
 
   @override
   void initState() {
     super.initState();
     _user = context.read<AppFlowController>().currentUser;
     _profileDataFuture = _fetchProfileData();
-  }
-
-  @override
-  void dispose() {
-    if (_isMenuOpen) {
-      _overlayEntry?.remove();
-    }
-    super.dispose();
+    // Fetch stats using the updated service logic
+    _availableStatsFuture = UserService().getUserAttributeStats();
   }
 
   Future<ProfileData> _fetchProfileData() {
@@ -76,66 +52,166 @@ class _PublicSpeakingProfileStageState
       _localAvatarImage = null;
       _localBannerImage = null;
       _profileDataFuture = _fetchProfileData();
+      _availableStatsFuture = UserService().getUserAttributeStats();
     });
   }
 
-  // --- Overlay Logic ---
-  void _openAttributePicker(int slotIndex, ProfileData profileData) {
-    if (_isMenuOpen) {
-      _closeMenu();
-      return;
-    }
+  // --- Bottom Sheet Logic ---
+  void _openAttributePicker(int slotIndex, List<AttributeStatOption> allStats) {
+    // Filter out stats that are already selected in other slots
+    final currentlySelectedIds = _selectedSlots
+        .where((slot) => slot != null)
+        .map((slot) => slot!.id)
+        .toSet();
 
-    setState(() {
-      _activeSlotIndex = slotIndex;
-      _isMenuOpen = true;
-    });
+    final List<AttributeStatOption> availableForSelection = allStats
+        .where((stat) => !currentlySelectedIds.contains(stat.id))
+        .toList();
 
-    // Define available options dynamically based on profile data
-    final List<ProfileStatOption> options = [
-      ProfileStatOption(
-        id: 'streak',
-        label: 'Highest Streak',
-        value: '${profileData.highestStreak}',
-        // [CHANGE] Attribute Icons: Using the 'fire.svg' asset
-        iconPath: 'assets/profile_assets/fire.svg',
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF2C2C3E), // Dark tray background
+      isScrollControlled: true, // Allows the sheet to be dragged up
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-    ];
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          height: 350, // Height of the tray
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- DRAG HANDLE (The "little thing" at the top) ---
+              Center(
+                child: Container(
+                  width: 50, // Wider for better visibility
+                  height: 5, // Thicker
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(
+                      alpha: 0.4,
+                    ), // Higher contrast
+                    borderRadius: BorderRadius.circular(10), // Pill shape
+                  ),
+                ),
+              ),
 
-    _overlayEntry = OverlayEntry(
-      builder: (context) => _AttributePickerOverlay(
-        navbarHeight: 90.0, // Adjust to your actual navbar height
-        onClose: _closeMenu,
-        availableOptions: options,
-        onAttributeSelected: (option) {
-          setState(() {
-            if (_activeSlotIndex != null) {
-              _selectedSlots[_activeSlotIndex!] = option;
-            }
-          });
-        },
-      ),
+              const Center(
+                child: Text(
+                  "Select Attribute",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Grid of Options
+              Expanded(
+                child: availableForSelection.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.query_stats,
+                              color: Colors.white.withValues(alpha: 0.5),
+                              size: 40,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              allStats.isEmpty
+                                  ? "Complete a session to unlock stats!"
+                                  : "All available stats selected.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.85,
+                            ),
+                        itemCount: availableForSelection.length,
+                        itemBuilder: (context, index) {
+                          final option = availableForSelection[index];
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedSlots[slotIndex] = option;
+                              });
+                              Navigator.pop(context); // Close sheet
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    option.assetPath,
+                                    width: 32,
+                                    height: 32,
+                                    // Fallback icon just in case path is wrong
+                                    placeholderBuilder: (context) => const Icon(
+                                      Icons.broken_image,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    option.name,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    option.value,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
-
-    Overlay.of(context).insert(_overlayEntry!);
-  }
-
-  void _closeMenu() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-    setState(() {
-      _isMenuOpen = false;
-      _activeSlotIndex = null;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Styles copied from ProfileTemplate to maintain consistency
-    final Color purpleDark = '49416D'.toColor();
-    final Color purpleMid = '7962A5'.toColor();
-    const Color cardBg = Color(0xFFF0E6F6);
-    const Color pageBg = Color(0xFFF7F3FB);
+    final Color purpleDark = "#49416D".toColor();
+    final Color purpleMid = "#7962A5".toColor();
+    final Color cardBg = "#F0E6F6".toColor();
+    final Color pageBg = "#F7F3FB".toColor();
 
     return FutureBuilder<ProfileData>(
       future: _profileDataFuture,
@@ -143,11 +219,6 @@ class _PublicSpeakingProfileStageState
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(child: Text('Error: ${snapshot.error}')),
           );
         }
         if (snapshot.hasData) {
@@ -172,7 +243,7 @@ class _PublicSpeakingProfileStageState
             body: SafeArea(
               child: Stack(
                 children: [
-                  // 1. Banner Background
+                  // 1. Banner
                   Positioned.fill(
                     top: 0,
                     child: Align(
@@ -196,7 +267,7 @@ class _PublicSpeakingProfileStageState
                     ),
                   ),
 
-                  // 2. Scrollable Content (Header Card + Bio)
+                  // 2. Scrollable Content
                   Positioned.fill(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.only(top: 140, bottom: 24),
@@ -227,7 +298,7 @@ class _PublicSpeakingProfileStageState
                     ),
                   ),
 
-                  // 3. Top Actions (Back / Edit)
+                  // 3. Top Actions
                   _buildProfileActions(context, profileData),
                 ],
               ),
@@ -242,13 +313,11 @@ class _PublicSpeakingProfileStageState
   }
 
   Widget _buildProfileActions(BuildContext context, ProfileData profileData) {
-    const double buttonSize = 60.0;
-    const double topMargin = 16.0;
     return Positioned(
-      top: topMargin,
+      top: 16,
       left: 20,
       right: 20,
-      height: buttonSize,
+      height: 60,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -257,7 +326,7 @@ class _PublicSpeakingProfileStageState
             icon: const Icon(Icons.arrow_back),
             iconSize: 40,
             style: IconButton.styleFrom(
-              backgroundColor: "7962A5".toColor(),
+              backgroundColor: "#7962A5".toColor(),
               foregroundColor: Colors.white,
             ),
           ),
@@ -266,7 +335,7 @@ class _PublicSpeakingProfileStageState
             icon: const Icon(Icons.edit),
             iconSize: 40,
             style: IconButton.styleFrom(
-              backgroundColor: "7962A5".toColor(),
+              backgroundColor: "#7962A5".toColor(),
               foregroundColor: Colors.white,
             ),
           ),
@@ -275,7 +344,6 @@ class _PublicSpeakingProfileStageState
     );
   }
 
-  // --- STEP 4: The Interactive Header Card ---
   Widget _buildInteractiveHeaderCard(
     BuildContext context,
     ProfileData profileData,
@@ -289,7 +357,7 @@ class _PublicSpeakingProfileStageState
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -303,7 +371,7 @@ class _PublicSpeakingProfileStageState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Username & Level
+                // Username
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -321,7 +389,7 @@ class _PublicSpeakingProfileStageState
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        'lvl22', // Hardcoded level or use profileData.level
+                        'lvl22', // Can replace with profileData.level if available
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -333,27 +401,32 @@ class _PublicSpeakingProfileStageState
                 ),
                 const SizedBox(height: 26),
 
-                // --- INTERACTIVE STATS ROW (3 Customizable Slots) ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(3, (index) {
-                    return _buildInteractiveStatSlot(
-                      context,
-                      index,
-                      _selectedSlots[index], // Pass the data for this slot
-                      () => _openAttributePicker(
-                        index,
-                        profileData,
-                      ), // Pass the tap handler
+                // Interactive Stats Row
+                FutureBuilder<List<AttributeStatOption>>(
+                  future: _availableStatsFuture,
+                  builder: (context, snapshot) {
+                    final List<AttributeStatOption> allStats =
+                        snapshot.data ?? [];
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(3, (index) {
+                        return _buildInteractiveStatSlot(
+                          context,
+                          index,
+                          _selectedSlots[index],
+                          () => _openAttributePicker(index, allStats),
+                        );
+                      }),
                     );
-                  }),
+                  },
                 ),
                 const SizedBox(height: 16),
               ],
             ),
           ),
 
-          // Avatar Image (Centered at top)
+          // Avatar Image
           Positioned(
             top: -56,
             left: 0,
@@ -373,7 +446,7 @@ class _PublicSpeakingProfileStageState
                     border: Border.all(color: Colors.white, width: 6),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 6),
                       ),
@@ -395,94 +468,92 @@ class _PublicSpeakingProfileStageState
   Widget _buildInteractiveStatSlot(
     BuildContext context,
     int index,
-    ProfileStatOption? data,
+    AttributeStatOption? data,
     VoidCallback onTap,
   ) {
-    // Calculate width to fit 3 items: (Screen width - padding - spacing) / 3
-    final double cardWidth =
-        (MediaQuery.of(context).size.width - 40 - 32 - 20) / 3;
+    // Dynamic width calculation
+    final double cardWidth = (MediaQuery.of(context).size.width - 92) / 3;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: cardWidth,
-        height: cardWidth * 1.1,
+        height: 110,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.75),
+          color: "#F5F5F5".toColor(),
           borderRadius: BorderRadius.circular(16),
-          // Show dashed border if empty, solid or none if filled?
-          // Using solid for consistency, maybe lighter opacity if empty.
-          border: data == null
-              ? Border.all(color: Colors.grey.withOpacity(0.3), width: 1.5)
-              : null,
+          border: Border.all(color: "#E0E0E0".toColor(), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: data == null
-            ? _buildEmptySlotState()
-            : _buildFilledSlotState(data),
+            ? Center(
+                child: SvgPicture.asset(
+                  'assets/profile_assets/plus.svg',
+                  width: 32,
+                  height: 32,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.grey,
+                    BlendMode.srcIn,
+                  ),
+                  placeholderBuilder: (context) =>
+                      const Icon(Icons.add, color: Colors.grey, size: 32),
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      data.assetPath,
+                      width: 28,
+                      height: 28,
+                      placeholderBuilder: (context) =>
+                          const Icon(Icons.broken_image, size: 28),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      data.value,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      data.name,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }
 
-  Widget _buildEmptySlotState() {
-    return Center(
-      child: SvgPicture.asset(
-        // [CHANGE] Empty State Icon: Using 'plus.svg' when slot is empty
-        'assets/profile_assets/plus.svg',
-        width: 24,
-        height: 24,
-        colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
-      ),
-    );
-  }
-
-  Widget _buildFilledSlotState(ProfileStatOption data) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          data.iconPath,
-          width: 30,
-          height: 30,
-          // Removed colorFilter to allow the Fire SVG to show its natural colors
-        ),
-        const SizedBox(height: 8),
-        Text(
-          data.label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: '6C53A1'.toColor(),
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          data.value,
-          style: TextStyle(
-            color: '6C53A1'.toColor(),
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- Logic for editing bio/images ---
+  // --- Logic for editing bio/images (Unchanged) ---
   void _openEditSheet(ProfileData profileData) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: 'F0E6F6'.toColor(),
+      backgroundColor: "#F0E6F6".toColor(),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -514,7 +585,7 @@ class _PublicSpeakingProfileStageState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update bio: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
       }
     }
   }
@@ -558,189 +629,13 @@ class _PublicSpeakingProfileStageState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update image: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
       }
       _refreshProfile();
     }
   }
 }
 
-// --- The Attribute Picker Overlay (Step 2 Implementation) ---
-class _AttributePickerOverlay extends StatefulWidget {
-  final double navbarHeight;
-  final VoidCallback onClose;
-  final List<ProfileStatOption> availableOptions;
-  final Function(ProfileStatOption) onAttributeSelected;
-
-  const _AttributePickerOverlay({
-    required this.navbarHeight,
-    required this.onClose,
-    required this.availableOptions,
-    required this.onAttributeSelected,
-  });
-
-  @override
-  State<_AttributePickerOverlay> createState() =>
-      _AttributePickerOverlayState();
-}
-
-class _AttributePickerOverlayState extends State<_AttributePickerOverlay>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _opacityAnimation;
-
-  final Color _trayBackgroundColor = const Color(0xFF2C2C3E);
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _slideAnimation = Tween<Offset>(
-      // [CHANGE] Tray Animation: Starts from Offset(0, 1.0) so it slides from very bottom up
-      begin: const Offset(0, 1.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _animateOut() async {
-    await _controller.reverse();
-    widget.onClose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Backdrop
-        Positioned.fill(
-          bottom: widget.navbarHeight,
-          child: GestureDetector(
-            onTap: _animateOut,
-            child: FadeTransition(
-              opacity: _opacityAnimation,
-              child: Container(color: Colors.black.withOpacity(0.5)),
-            ),
-          ),
-        ),
-        // Tray
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: widget.navbarHeight - 10,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: FadeTransition(
-              opacity: _opacityAnimation,
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  height: 250,
-                  margin: const EdgeInsets.symmetric(horizontal: 0),
-                  decoration: BoxDecoration(
-                    color: _trayBackgroundColor,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    border: Border(
-                      top: BorderSide(color: Colors.white.withOpacity(0.1)),
-                      left: BorderSide(color: Colors.white.withOpacity(0.1)),
-                      right: BorderSide(color: Colors.white.withOpacity(0.1)),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Center(
-                        child: Text(
-                          "Select Attribute",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                                childAspectRatio: 0.85,
-                              ),
-                          itemCount: widget.availableOptions.length,
-                          itemBuilder: (context, index) {
-                            return _buildGridItem(
-                              widget.availableOptions[index],
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGridItem(ProfileStatOption option) {
-    return GestureDetector(
-      onTap: () {
-        widget.onAttributeSelected(option);
-        _animateOut();
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(option.iconPath, width: 32, height: 32),
-            const SizedBox(height: 12),
-            Text(
-              option.label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// --- Helper Widget for Bio (Copied locally) ---
 class _BioCard extends StatelessWidget {
   const _BioCard({
     required this.bio,
@@ -760,7 +655,7 @@ class _BioCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -771,17 +666,13 @@ class _BioCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  'Bio:',
-                  style: TextStyle(
-                    color: titleColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
+            Text(
+              'Bio:',
+              style: TextStyle(
+                color: titleColor,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: 12),
             Container(
@@ -789,7 +680,6 @@ class _BioCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.015),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.transparent),
               ),
               child: Text(
                 bio,

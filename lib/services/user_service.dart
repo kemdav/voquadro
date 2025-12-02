@@ -6,6 +6,7 @@ import 'dart:io';
 
 // Import custom exception class
 import 'package:voquadro/utils/exceptions.dart';
+import 'package:voquadro/src/models/attribute_stat_option.dart';
 
 class User {
   final String id;
@@ -464,6 +465,102 @@ class UserService {
       return response.map((map) => Session.fromMap(map)).toList();
     } catch (e) {
       throw Exception('Failed to fetch sessions: $e');
+    }
+  }
+}
+
+//This is used for the profile data fetching and user attributes, feel free to change as needed
+extension UserServiceAttributes on UserService {
+  // Fetch and calculate attributes for the tray
+  Future<List<AttributeStatOption>> getUserAttributeStats() async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      // Fetch completed practice sessions
+      final response = await supabase
+          .from('practice_sessions')
+          .select(
+            'wpm, filler_word_count, vocal_delivery_score, message_depth_score, duration_seconds',
+          )
+          .eq('user_id', userId)
+          .not('wpm', 'is', null);
+
+      if (response.isEmpty) return [];
+
+      // Calculate Averages
+      double totalWpm = 0;
+      int totalFillerWords = 0;
+      double totalVocalScore = 0;
+      double totalDepthScore = 0;
+      int count = response.length;
+
+      for (var session in response) {
+        totalWpm += (session['wpm'] as num?)?.toDouble() ?? 0;
+        totalFillerWords +=
+            (session['filler_word_count'] as num?)?.toInt() ?? 0;
+        totalVocalScore +=
+            (session['vocal_delivery_score'] as num?)?.toDouble() ?? 0;
+        totalDepthScore +=
+            (session['message_depth_score'] as num?)?.toDouble() ?? 0;
+      }
+
+      List<AttributeStatOption> computedStats = [];
+
+      // 1. Average Pace
+      if (totalWpm > 0) {
+        computedStats.add(
+          AttributeStatOption(
+            id: 'pace',
+            name: 'Avg Pace',
+            value: '${(totalWpm / count).round()} WPM',
+            assetPath: 'assets/profile_assets/badge_icons.svg/pace_control.svg',
+          ),
+        );
+      }
+
+      // 2. Filler Words
+      computedStats.add(
+        AttributeStatOption(
+          id: 'filler',
+          name: 'Fillers/Session',
+          value: (totalFillerWords / count).toStringAsFixed(1),
+          assetPath: 'assets/profile_assets/badge_icons.svg/filler_word.svg',
+        ),
+      );
+
+      // 3. Message Depth
+      if (totalDepthScore > 0) {
+        computedStats.add(
+          AttributeStatOption(
+            id: 'depth',
+            name: 'Msg Depth',
+            value: '${(totalDepthScore / count).round()}%',
+            assetPath:
+                'assets/profile_assets/badge_icons.svg/message_depth.svg',
+          ),
+        );
+      }
+
+      // 4. Vocal Delivery
+      if (totalVocalScore > 0) {
+        computedStats.add(
+          AttributeStatOption(
+            id: 'vocal',
+            name: 'Vocal Score',
+            value: '${(totalVocalScore / count).round()}%',
+            assetPath:
+                'assets/profile_assets/badge_icons.svg/vocal_delivery.svg',
+          ),
+        );
+      }
+
+      return computedStats;
+    } catch (e) {
+      debugPrint('Error calculating attributes: $e'); // Fixed: Use debugPrint
+      return [];
     }
   }
 }
