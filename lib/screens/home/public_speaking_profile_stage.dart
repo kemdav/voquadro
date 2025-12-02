@@ -678,7 +678,7 @@ class _BioCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.015),
+                color: Colors.white.withValues(alpha: 0.015),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
