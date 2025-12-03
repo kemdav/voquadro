@@ -6,8 +6,8 @@ class GeneralNavigationBar extends StatelessWidget {
   const GeneralNavigationBar({
     super.key,
     this.actions,
-    this.navBarVisualHeight = 80,
-    this.totalHitTestHeight = 180,
+    this.navBarVisualHeight = 220.0,
+    this.totalHitTestHeight = 180.0,
     this.showIcons = true,
   });
 

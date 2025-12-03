@@ -80,6 +80,7 @@ flutter:
     - assets/homepage_assets/
     - assets/rank_emblem_assets/
     - assets/audio/
+    - assets/profile_assets/
     - .env.local
   #   - images/a_dot_ham.jpeg
 
