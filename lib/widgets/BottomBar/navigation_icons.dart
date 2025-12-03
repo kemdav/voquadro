@@ -44,9 +44,10 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 
   void _openMenu() {
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
     _overlayEntry = OverlayEntry(
       builder: (context) => _OptionsTrayOverlay(
-        navbarHeight: _navbarHeight,
+        navbarHeight: _navbarHeight + bottomPadding,
         onClose: _closeMenu,
         onNavigate: (VoidCallback navAction) {
           _closeMenu();
