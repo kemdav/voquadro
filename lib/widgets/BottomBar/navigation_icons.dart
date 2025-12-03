@@ -26,7 +26,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
   int _selectedIndex = 0;
 
   final double _navbarHeight = 90.0;
-  final double _iconSize = 40.0;
+  final double _iconSize = 50.0;
 
   @override
   void dispose() {
@@ -350,7 +350,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                           );
                           context
                               .read<PublicSpeakingController>()
-                              .showUnderConstruction();
+                              .startPracticeSession();
                         }),
                       ),
                     ],
