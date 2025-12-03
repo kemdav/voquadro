@@ -31,7 +31,19 @@ class GeneralNavigationBar extends StatelessWidget {
               right: 0,
               child: Container(
                 height: navBarVisualHeight,
-                decoration: BoxDecoration(color: "49416D".toColor()),
+                decoration: BoxDecoration(
+                  color: "49416D".toColor(),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 15,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
               ),
             ),
           // Navigation icons (centered inside purple bar at bottom) - only show if navBarVisualHeight > 0
