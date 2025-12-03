@@ -64,6 +64,8 @@ class SpeakingPage extends StatelessWidget {
                 ],
               ),
             ),
+            // Add spacing for the bottom buttons (GameplayActions)
+            const SizedBox(height: 140),
           ],
         ),
       ),
