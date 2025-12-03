@@ -8,11 +8,13 @@ class SoundService extends ChangeNotifier {
 
   bool _isMusicMuted = false;
   bool _isSfxMuted = false;
+  bool _isDolphSfxMuted = false;
   double _musicVolume = 0.5;
   double _sfxVolume = 1.0;
 
   bool get isMusicMuted => _isMusicMuted;
   bool get isSfxMuted => _isSfxMuted;
+  bool get isDolphSfxMuted => _isDolphSfxMuted;
   double get musicVolume => _musicVolume;
   double get sfxVolume => _sfxVolume;
 
@@ -63,6 +65,7 @@ class SoundService extends ChangeNotifier {
   /// Creates a new player instance to allow overlapping sounds.
   Future<void> playSfx(String assetPath) async {
     if (_isSfxMuted) return;
+    if (assetPath.contains('dolph_sound.wav') && _isDolphSfxMuted) return;
 
     final player = AudioPlayer();
     try {
@@ -99,6 +102,11 @@ class SoundService extends ChangeNotifier {
 
   void toggleSfxMute() {
     _isSfxMuted = !_isSfxMuted;
+    notifyListeners();
+  }
+
+  void toggleDolphSfxMute() {
+    _isDolphSfxMuted = !_isDolphSfxMuted;
     notifyListeners();
   }
 
