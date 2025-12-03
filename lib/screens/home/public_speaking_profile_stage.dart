@@ -263,10 +263,6 @@ class _PublicSpeakingProfileStageState
     final Color purpleMid = "#7962A5".toColor();
     final Color cardBg = "#F0E6F6".toColor();
     final Color pageBg = "#F7F3FB".toColor();
-
-    // Watch for user updates (e.g. XP changes)
-    final currentUser = context.watch<AppFlowController>().currentUser;
-
     return FutureBuilder<ProfileData>(
       future: _profileDataFuture,
       builder: (context, snapshot) {

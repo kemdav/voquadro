@@ -124,7 +124,6 @@ mixin PublicSpeakingGameplay on ChangeNotifier {
     }
 
     _lastRecordedDuration = finalDuration;
-    print("DEBUG: Gameplay ended. Final Duration: $finalDuration");
 
     await audioController.stopRecording();
     showFeedback(finalDuration);
