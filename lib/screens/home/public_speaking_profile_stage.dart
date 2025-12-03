@@ -8,6 +8,7 @@ import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/services/user_service.dart';
 import 'package:voquadro/src/models/attribute_stat_option.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PublicSpeakingProfileStage extends StatefulWidget {
   const PublicSpeakingProfileStage({super.key});
@@ -20,7 +21,10 @@ class PublicSpeakingProfileStage extends StatefulWidget {
 class _PublicSpeakingProfileStageState
     extends State<PublicSpeakingProfileStage> {
   late Future<ProfileData> _profileDataFuture;
-  late Future<List<AttributeStatOption>> _availableStatsFuture;
+  
+  // Stats & Persistence
+  List<AttributeStatOption> _allStats = [];
+  bool _isLoadingStats = true;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -36,8 +40,47 @@ class _PublicSpeakingProfileStageState
     super.initState();
     _user = context.read<AppFlowController>().currentUser;
     _profileDataFuture = _fetchProfileData();
-    // Fetch stats using the updated service logic
-    _availableStatsFuture = UserService().getUserAttributeStats();
+    _loadStatsAndPrefs();
+  }
+
+  Future<void> _loadStatsAndPrefs() async {
+    try {
+      // 1. Fetch stats from DB
+      final stats = await UserService().getUserAttributeStats();
+      
+      // 2. Fetch saved slots from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final savedId0 = prefs.getString('profile_stat_0');
+      final savedId1 = prefs.getString('profile_stat_1');
+      final savedId2 = prefs.getString('profile_stat_2');
+
+      // 3. Map saved IDs to actual stat objects
+      AttributeStatOption? findStat(String? id) {
+        if (id == null) return null;
+        try {
+          return stats.firstWhere((s) => s.id == id);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _allStats = stats;
+          _selectedSlots[0] = findStat(savedId0);
+          _selectedSlots[1] = findStat(savedId1);
+          _selectedSlots[2] = findStat(savedId2);
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading stats/prefs: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingStats = false;
+        });
+      }
+    }
   }
 
   Future<ProfileData> _fetchProfileData() {
@@ -52,8 +95,9 @@ class _PublicSpeakingProfileStageState
       _localAvatarImage = null;
       _localBannerImage = null;
       _profileDataFuture = _fetchProfileData();
-      _availableStatsFuture = UserService().getUserAttributeStats();
+      _isLoadingStats = true;
     });
+    _loadStatsAndPrefs();
   }
 
   // --- Bottom Sheet Logic ---
@@ -146,11 +190,18 @@ class _PublicSpeakingProfileStageState
                         itemBuilder: (context, index) {
                           final option = availableForSelection[index];
                           return GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               setState(() {
                                 _selectedSlots[slotIndex] = option;
                               });
-                              Navigator.pop(context); // Close sheet
+                              
+                              // Save to SharedPreferences
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.setString('profile_stat_$slotIndex', option.id);
+
+                              if (context.mounted) {
+                                Navigator.pop(context); // Close sheet
+                              }
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -212,6 +263,9 @@ class _PublicSpeakingProfileStageState
     final Color purpleMid = "#7962A5".toColor();
     final Color cardBg = "#F0E6F6".toColor();
     final Color pageBg = "#F7F3FB".toColor();
+
+    // Watch for user updates (e.g. XP changes)
+    final currentUser = context.watch<AppFlowController>().currentUser;
 
     return FutureBuilder<ProfileData>(
       future: _profileDataFuture,
@@ -385,42 +439,29 @@ class _PublicSpeakingProfileStageState
                         letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'lvl22', // Can replace with profileData.level if available
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: titleColor,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 26),
 
                 // Interactive Stats Row
-                FutureBuilder<List<AttributeStatOption>>(
-                  future: _availableStatsFuture,
-                  builder: (context, snapshot) {
-                    final List<AttributeStatOption> allStats =
-                        snapshot.data ?? [];
-
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(3, (index) {
-                        return _buildInteractiveStatSlot(
-                          context,
-                          index,
-                          _selectedSlots[index],
-                          () => _openAttributePicker(index, allStats),
-                        );
-                      }),
-                    );
-                  },
-                ),
+                _isLoadingStats
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(3, (index) {
+                          return _buildInteractiveStatSlot(
+                            context,
+                            index,
+                            _selectedSlots[index],
+                            () => _openAttributePicker(index, _allStats),
+                          );
+                        }),
+                      ),
                 const SizedBox(height: 16),
               ],
             ),
