@@ -68,6 +68,7 @@ class SoundService extends ChangeNotifier {
     if (_isDucked == enable) return;
     _isDucked = enable;
     _updateMusicVolume();
+    _updateCelebrationVolume();
   }
 
   void _updateMusicVolume() {
@@ -79,6 +80,20 @@ class SoundService extends ChangeNotifier {
         targetVolume *= 0.2; // Duck to 20%
       }
       _musicPlayer.setVolume(targetVolume);
+    }
+  }
+
+  void _updateCelebrationVolume() {
+    if (_celebrationPlayer == null) return;
+
+    if (_isSfxMuted) {
+      _celebrationPlayer!.setVolume(0);
+    } else {
+      double targetVolume = _sfxVolume;
+      if (_isDucked) {
+        targetVolume *= 0.2; // Duck to 20%
+      }
+      _celebrationPlayer!.setVolume(targetVolume);
     }
   }
 
@@ -113,7 +128,7 @@ class SoundService extends ChangeNotifier {
     _celebrationPlayer = AudioPlayer();
     try {
       await _celebrationPlayer!.setAsset('assets/audio/celebration.mp3');
-      _celebrationPlayer!.setVolume(_sfxVolume);
+      _updateCelebrationVolume();
       await _celebrationPlayer!.play();
     } catch (e) {
       _logger.e("Error playing celebration: $e");
@@ -141,6 +156,7 @@ class SoundService extends ChangeNotifier {
 
   void setSfxVolume(double volume) {
     _sfxVolume = volume.clamp(0.0, 1.0);
+    _updateCelebrationVolume();
     notifyListeners();
   }
 
@@ -152,6 +168,7 @@ class SoundService extends ChangeNotifier {
 
   void toggleSfxMute() {
     _isSfxMuted = !_isSfxMuted;
+    _updateCelebrationVolume();
     notifyListeners();
   }
 
