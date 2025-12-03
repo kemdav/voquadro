@@ -348,7 +348,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                           );
                           context
                               .read<PublicSpeakingController>()
-                              .startPracticeSession();
+                              .showUnderConstruction();
                         }),
                       ),
                     ],

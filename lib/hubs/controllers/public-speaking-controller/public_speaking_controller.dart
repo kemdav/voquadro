@@ -75,6 +75,7 @@ class PublicSpeakingController
   }) : _audioController = audioController,
        _appFlowController = appFlowController,
        _soundService = soundService {
+    // Initialize music if starting on a home-like state
     if (_shouldPlayBackgroundMusic(currentState)) {
       _soundService.playMusic('assets/audio/home_background.wav');
     }
@@ -85,6 +86,7 @@ class PublicSpeakingController
     final prefs = await SharedPreferences.getInstance();
     // final hasSeenTutorial =
     //     prefs.getBool('hasSeenPublicSpeakingTutorial') ?? false;
+
     final hasSeenTutorial = false;
 
     if (!hasSeenTutorial) {
@@ -100,6 +102,7 @@ class PublicSpeakingController
       _soundService.playSfx('assets/audio/dolph_sound.wav');
       notifyListeners();
     } else {
+      // End tutorial
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasSeenPublicSpeakingTutorial', true);
       _isTutorialActive = false;
@@ -197,6 +200,7 @@ class PublicSpeakingController
     return _aiFeedback!;
   }
 
+  // AI service status getters
   bool get isOllamaAvailable => _aiService.isOllamaAvailable;
   bool get isUsingFallback => _aiService.isUsingFallback;
   String get aiServiceStatus => _aiService.getServiceStatus();
@@ -231,13 +235,13 @@ class PublicSpeakingController
 
   void onEnterFeedbackFlow([Duration? duration]) {
     Future<void> ensureTranscriptAndGenerate() async {
-      // 1. Transcribe Audio
       if (_userTranscript == null || _userTranscript!.isEmpty) {
         _isTranscribing = true;
         _transcriptionError = null;
         notifyListeners();
         try {
-          final transcribed = await audioController.transcribeWithAssemblyAI();
+          final transcribed = await audioController
+              .transcribeWithAssemblyAI(); // Use the getter
           _userTranscript = transcribed.isNotEmpty ? transcribed : null;
           if (transcribed.isEmpty) {
             _transcriptionError = 'Transcription returned empty text.';
@@ -250,7 +254,7 @@ class PublicSpeakingController
         }
       }
 
-      // 2. Calculate Duration
+      // Calculate duration in seconds
       double durationToUse = 0.0;
       if (duration != null) {
         durationToUse = duration.inMilliseconds / 1000.0;
@@ -260,11 +264,13 @@ class PublicSpeakingController
         durationToUse = actualSpeakingDurationInSeconds;
       }
 
-      debugPrint('DEBUG: Duration used for WPM: $durationToUse seconds');
+      debugPrint(
+        'DEBUG: Duration used for WPM: $durationToUse seconds (Raw duration: $duration)',
+      );
 
+      // Ensure a minimum duration to avoid division by zero or unrealistic WPM
       if (durationToUse < 1.0) durationToUse = 1.0;
 
-      // 3. Generate AI Feedback & Scores (We generate scores but won't save them in practice)
       if (_userTranscript != null && _userTranscript!.isNotEmpty) {
         if (aiFeedback == null)
           await generateAIFeedback(durationSeconds: durationToUse);
@@ -278,6 +284,7 @@ class PublicSpeakingController
           _fillerWordCount = feedback['filler_count'];
           _topic = feedback['topic'];
           _questionGenerated = feedback['question'];
+          // Capture additional AI metric scores for display and persistence
           _vocalDeliveryScore = (feedback['vocal_delivery_score'] as num?)
               ?.toDouble();
           _messageDepthScore = (feedback['message_depth_score'] as num?)
@@ -286,14 +293,6 @@ class PublicSpeakingController
       }
 
       // Check if we have all necessary data to save the session
-      // Check for Practice Mode before saving
-      if (isPracticeMode) {
-        logger.d("Practice Mode: Skipping Database Save and XP Gain.");
-        notifyListeners();
-        return; // EXIT HERE so we don't save to DB
-      }
-
-      // 4. Save to Database
       if (_userTranscript == null ||
           _aiFeedback == null ||
           _questionGenerated == null) {

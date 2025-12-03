@@ -1,13 +1,17 @@
+// lib/views/pages/gameplay/feedback/feedback_flow_page.dart (New or Refactored File)
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/src/hex_color.dart';
+// Import your component and content widgets
 import 'package:voquadro/widgets/Widget/feedback_continue_button_widget.dart';
 import 'package:voquadro/widgets/Widget/feedback_progress_widget.dart';
 import 'package:voquadro/screens/gameplay/feedback/progression_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/stat_feedback_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/transcript_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/speak_feedback_page.dart';
+// ... import other feedback pages
 
 class FeedbackFlowPage extends StatelessWidget {
   const FeedbackFlowPage({super.key});
@@ -16,8 +20,6 @@ class FeedbackFlowPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<PublicSpeakingController>();
     final currentIndex = controller.currentFeedbackStep.index;
-
-    final isPractice = controller.isPracticeMode;
 
     final Color primaryPurple = "49416D".toColor();
     final Color buttonPurple = "887CAF".toColor();
@@ -57,12 +59,8 @@ class FeedbackFlowPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           FeedbackContinueButton(buttonPurple: buttonPurple),
-
-          // Only show the "blue bar indicators" if aint in practice mode.
-          if (!isPractice) ...[
-            const SizedBox(height: 20),
-            FeedbackProgressWidget(activeColor: activeIndicator),
-          ],
+          const SizedBox(height: 20),
+          FeedbackProgressWidget(activeColor: activeIndicator),
         ],
       ),
     );
