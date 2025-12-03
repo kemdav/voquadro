@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
-import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
+import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 
 class DefaultActions extends StatefulWidget {
   const DefaultActions({
@@ -121,6 +122,23 @@ class _DefaultActionsState extends State<DefaultActions> {
 
   @override
   Widget build(BuildContext context) {
+    final appFlow = context.watch<AppFlowController>();
+    final user = appFlow.currentUser;
+
+    // Default values if user is not loaded
+    int currentLevel = 1;
+    int currentXp = 0;
+    int requiredXp = 100;
+
+    if (user != null) {
+      final levelInfo = ProgressionConversionHelper.getLevelProgressInfo(
+        user.publicSpeakingEXP,
+      );
+      currentLevel = levelInfo.level;
+      currentXp = levelInfo.currentLevelExp;
+      requiredXp = levelInfo.expToNextLevel;
+    }
+
     return Positioned(
       top: _visibleBarHeight - (_fabSize / 2),
       left: 20,
@@ -135,10 +153,9 @@ class _DefaultActionsState extends State<DefaultActions> {
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0, top: 8.0),
               child: _LevelProgressBar(
-                // Placeholders for now (replace with real data later)
-                currentLevel: 5,
-                currentXp: 750,
-                requiredXp: 1200,
+                currentLevel: currentLevel,
+                currentXp: currentXp,
+                requiredXp: requiredXp,
               ),
             ),
           ),
