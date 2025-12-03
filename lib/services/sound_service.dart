@@ -81,6 +81,37 @@ class SoundService extends ChangeNotifier {
     }
   }
 
+  AudioPlayer? _celebrationPlayer;
+
+  /// Plays the celebration sound.
+  /// Stops any existing celebration sound first.
+  Future<void> playCelebration() async {
+    if (_isSfxMuted) return;
+
+    await stopCelebration();
+    _celebrationPlayer = AudioPlayer();
+    try {
+      await _celebrationPlayer!.setAsset('assets/audio/celebration.mp3');
+      _celebrationPlayer!.setVolume(_sfxVolume);
+      await _celebrationPlayer!.play();
+    } catch (e) {
+      _logger.e("Error playing celebration: $e");
+    }
+  }
+
+  /// Stops the celebration sound if it's playing.
+  Future<void> stopCelebration() async {
+    if (_celebrationPlayer != null) {
+      try {
+        await _celebrationPlayer!.stop();
+        await _celebrationPlayer!.dispose();
+      } catch (e) {
+        _logger.e("Error stopping celebration: $e");
+      }
+      _celebrationPlayer = null;
+    }
+  }
+
   void setMusicVolume(double volume) {
     _musicVolume = volume.clamp(0.0, 1.0);
     if (!_isMusicMuted) {

@@ -120,6 +120,12 @@ class PublicSpeakingController
 
   @override
   void setPublicSpeakingState(PublicSpeakingState newState) {
+    // Stop celebration sound if leaving feedback state
+    if (currentState == PublicSpeakingState.inFeedback &&
+        newState != PublicSpeakingState.inFeedback) {
+      _soundService.stopCelebration();
+    }
+
     super.setPublicSpeakingState(newState);
     if (_shouldPlayBackgroundMusic(newState)) {
       _soundService.playMusic('assets/audio/home_background.wav');
@@ -214,6 +220,9 @@ class PublicSpeakingController
     setFeedbackStep(FeedbackStep.transcript);
     setPublicSpeakingState(PublicSpeakingState.inFeedback);
     _aiFeedback = null;
+
+    // Play celebration sound
+    _soundService.playCelebration();
 
     onEnterFeedbackFlow(duration);
 
