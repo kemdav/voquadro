@@ -7,6 +7,7 @@ import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/services/user_service.dart';
 import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
+import 'package:voquadro/widgets/Modals/rank_progression_modal.dart';
 
 class PublicSpeakJourneySection extends StatefulWidget {
   final bool isVisible;
@@ -371,21 +372,46 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Current Rank:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: titleColor.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  Text(
-                    currentRank,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: titleColor,
-                    ),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Current Rank:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: titleColor.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Text(
+                            currentRank,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: titleColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => RankProgressionModal(
+                              currentLevel: currentLevel,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.info_outline_rounded),
+                        color: titleColor.withValues(alpha: 0.5),
+                        tooltip: 'View Rank Progression',
+                      ),
+                    ],
                   ),
                 ],
               ),
