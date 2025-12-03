@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
@@ -74,24 +73,16 @@ class _DefaultActionsState extends State<DefaultActions> {
     if (left < 8) left = 8;
     final double top = pos.dy + size.height + 8;
 
-    // [FIX] Capture the controller from the current context, which HAS access to the provider
-    final publicSpeakingController = context.read<PublicSpeakingController>();
-
     _burgerMenuOverlayEntry = OverlayEntry(
       builder: (context) {
-        // [FIX] Wrap the overlay in a Provider.value using the captured controller.
-        // This makes the provider available to the overlay's isolated widget tree.
-        return ChangeNotifierProvider.value(
-          value: publicSpeakingController,
-          child: _BurgerMenuOverlay(
-            top: top,
-            left: left,
-            width: menuWidth,
-            onClose: _removeBurgerMenu,
-            onLogout: _handleLogout,
-            onSettings: _handleSettings,
-            onMicTest: _handleMicTest,
-          ),
+        return _BurgerMenuOverlay(
+          top: top,
+          left: left,
+          width: menuWidth,
+          onClose: _removeBurgerMenu,
+          onLogout: _handleLogout,
+          onSettings: _handleSettings,
+          // [REMOVED] onMicTest
         );
       },
     );
@@ -107,12 +98,7 @@ class _DefaultActionsState extends State<DefaultActions> {
     ).push(MaterialPageRoute(builder: (_) => const SettingsStage()));
   }
 
-  void _handleMicTest() {
-    context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
-    _removeBurgerMenu();
-    // This will now work even if called from within the overlay's context
-    context.read<PublicSpeakingController>().startMicTestOnly();
-  }
+  // [REMOVED] _handleMicTest
 
   void _handleLogout() {
     context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
@@ -158,7 +144,7 @@ class _DefaultActionsState extends State<DefaultActions> {
       top: _visibleBarHeight - (_fabSize / 2),
       left: 20,
       right: 5,
-      height: _fabSize + 10, // Increased height slightly for the new card
+      height: _fabSize + 10,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -207,6 +193,7 @@ class _DefaultActionsState extends State<DefaultActions> {
   }
 }
 
+// ... _LevelProgressBar remains unchanged ...
 class _LevelProgressBar extends StatelessWidget {
   final int currentLevel;
   final int currentXp;
@@ -346,7 +333,7 @@ class _BurgerMenuOverlay extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onSettings;
   final VoidCallback onLogout;
-  final VoidCallback onMicTest;
+  // [REMOVED] onMicTest
 
   const _BurgerMenuOverlay({
     required this.top,
@@ -355,7 +342,7 @@ class _BurgerMenuOverlay extends StatefulWidget {
     required this.onClose,
     required this.onSettings,
     required this.onLogout,
-    required this.onMicTest,
+    // [REMOVED] onMicTest
   });
 
   @override
@@ -461,12 +448,7 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                                     _handleSelection(widget.onSettings),
                               ),
                               _buildDivider(),
-                              _buildMenuItem(
-                                label: 'Mic Test',
-                                asset: 'assets/homepage_assets/mic_test.svg',
-                                onTap: () => _handleSelection(widget.onMicTest),
-                              ),
-                              _buildDivider(),
+                              // [REMOVED] Mic Test Menu Item
                               _buildMenuItem(
                                 label: 'Log out',
                                 asset: 'assets/homepage_assets/exit_door.svg',

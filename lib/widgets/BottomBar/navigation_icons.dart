@@ -1,3 +1,5 @@
+// [FILE: kemdav/voquadro/voquadro-feature-animation-dolph-and-other-stuff/lib/widgets/BottomBar/navigation_icons.dart]
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
@@ -6,7 +8,6 @@ import 'package:voquadro/hubs/controllers/public-speaking-controller/public_spea
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
-// [ADDED] Import notifiers
 import 'package:voquadro/data/notifiers.dart';
 
 class NavigationIcons extends StatefulWidget {
@@ -44,15 +45,25 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 
   void _openMenu() {
+    // [FIX] Capture the controller from the current context where it exists
+    final publicSpeakingController = context.read<PublicSpeakingController>();
+
     _overlayEntry = OverlayEntry(
-      builder: (context) => _OptionsTrayOverlay(
-        navbarHeight: _navbarHeight,
-        onClose: _closeMenu,
-        onNavigate: (VoidCallback navAction) {
-          _closeMenu();
-          navAction();
-        },
-      ),
+      builder: (context) {
+        // [FIX] Wrap the overlay in ChangeNotifierProvider.value
+        // This passes the existing controller to the Overlay's widget tree
+        return ChangeNotifierProvider.value(
+          value: publicSpeakingController,
+          child: _OptionsTrayOverlay(
+            navbarHeight: _navbarHeight,
+            onClose: _closeMenu,
+            onNavigate: (VoidCallback navAction) {
+              _closeMenu();
+              navAction();
+            },
+          ),
+        );
+      },
     );
 
     Overlay.of(context).insert(_overlayEntry!);
@@ -99,8 +110,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment:
-          CrossAxisAlignment.center, // Ensure vertical centering
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildNavIcon(
           index: 0,
@@ -121,7 +131,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
             context.read<PublicSpeakingController>().showUnderConstruction();
           }),
         ),
-        // [CHANGED] Wrapped Journal icon in ValueListenableBuilder to listen for new feedback
         ValueListenableBuilder<bool>(
           valueListenable: hasNewFeedbackNotifier,
           builder: (context, hasNewFeedback, child) {
@@ -130,7 +139,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
               assetPath: 'assets/homepage_assets/user_journal.svg',
               showBadge: hasNewFeedback,
               onTap: () => _onIconPressed(3, 'Journal pressed', () {
-                // Clear the badge when pressed
                 hasNewFeedbackNotifier.value = false;
                 context.read<PublicSpeakingController>().showJourney();
               }),
@@ -156,7 +164,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
     required int index,
     required String assetPath,
     required VoidCallback onTap,
-    // [ADDED] Optional parameter to show a red dot badge
     bool showBadge = false,
   }) {
     final isSelected = _selectedIndex == index && index != 4;
@@ -317,6 +324,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                         }),
                       ),
                       const Divider(height: 1, color: _dividerColor),
+                      // [NOTE] Mic Test button IS kept here
                       _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/mic_test.svg',
                         label: 'Mic Test',
@@ -324,6 +332,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                           context.read<SoundService>().playSfx(
                             'assets/audio/navigation_sfx.mp3',
                           );
+                          // This call will now work because of the Provider fix above
                           context
                               .read<PublicSpeakingController>()
                               .startMicTestOnly();
