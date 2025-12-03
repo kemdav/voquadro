@@ -163,7 +163,9 @@ class UserService {
         // We can store the username in the metadata
         data: {'username': username},
       );
-      debugPrint('UserService: signUp completed. User ID: ${authResponse.user?.id}');
+      debugPrint(
+        'UserService: signUp completed. User ID: ${authResponse.user?.id}',
+      );
 
       if (authResponse.user == null) {
         throw AuthException('Could not create account. User is null.');
@@ -176,7 +178,9 @@ class UserService {
       int retries = 0;
       while (retries < 5) {
         try {
-          debugPrint('UserService: Attempting to fetch profile (Attempt ${retries + 1})');
+          debugPrint(
+            'UserService: Attempting to fetch profile (Attempt ${retries + 1})',
+          );
           userProfile = await getFullUserProfile(authResponse.user!.id);
           debugPrint('UserService: Profile fetched successfully');
           break; // Success!
@@ -184,8 +188,8 @@ class UserService {
           debugPrint('UserService: Fetch profile failed: $e');
           retries++;
           if (retries >= 5) {
-             debugPrint('UserService: Max retries reached. Rethrowing.');
-             rethrow; // Give up after 5 tries
+            debugPrint('UserService: Max retries reached. Rethrowing.');
+            rethrow; // Give up after 5 tries
           }
           await Future.delayed(const Duration(milliseconds: 500));
         }

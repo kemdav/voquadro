@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:voquadro/src/ai-integration/assemblyai_service.dart';
+import 'package:audio_session/audio_session.dart';
 
 var logger = Logger();
 
@@ -31,12 +32,32 @@ class AudioController with ChangeNotifier {
   double get currentAmplitude => _currentAmplitude; // Value from 0.0 to 1.0
   bool get hasReachedGoodVolume => _hasReachedGoodVolume;
 
+  /// Configures the audio session for recording and playback.
+  Future<void> _configureAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(AudioSessionConfiguration.speech());
+  }
+
   /// Starts a live stream to monitor microphone input level.
   Future<void> startAmplitudeStream() async {
-    final status = await Permission.microphone.request();
+    var status = await Permission.microphone.status;
+    if (!status.isGranted) {
+      status = await Permission.microphone.request();
+    }
+
+    if (status.isPermanentlyDenied) {
+      // The user opted to never again see the permission request dialog for this
+      // app. The only way to change the permission's status now is to let the
+      // user manually enable it in the system settings.
+      openAppSettings();
+      throw Exception('Microphone permission permanently denied. Please enable it in settings.');
+    }
+
     if (!status.isGranted) {
       throw Exception('Microphone permission not granted');
     }
+
+    await _configureAudioSession();
 
     // Reset state for a new test
     _hasReachedGoodVolume = false;
@@ -102,10 +123,21 @@ class AudioController with ChangeNotifier {
   /// Starts the audio recording process.
   Future<void> startRecording() async {
     // 1. Check for microphone permission
-    final status = await Permission.microphone.request();
+    var status = await Permission.microphone.status;
+    if (!status.isGranted) {
+      status = await Permission.microphone.request();
+    }
+
+    if (status.isPermanentlyDenied) {
+      openAppSettings();
+      throw Exception('Microphone permission permanently denied. Please enable it in settings.');
+    }
+
     if (!status.isGranted) {
       throw Exception('Microphone permission not granted');
     }
+
+    await _configureAudioSession();
 
     // 2. Find a temporary directory to save the file
     final Directory tempDir = await getTemporaryDirectory();
