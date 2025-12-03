@@ -84,10 +84,8 @@ class PublicSpeakingController
 
   Future<void> _checkTutorialStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    // final hasSeenTutorial =
-    //     prefs.getBool('hasSeenPublicSpeakingTutorial') ?? false;
-
-    final hasSeenTutorial = false;
+    final hasSeenTutorial =
+        prefs.getBool('hasSeenPublicSpeakingTutorial') ?? false;
 
     if (!hasSeenTutorial) {
       _isTutorialActive = true;
