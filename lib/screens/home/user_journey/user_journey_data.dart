@@ -22,6 +22,7 @@ final List<Session> placeholderSessions = [
         'Good morning. Today, I will discuss the ethical implications of advanced AI. Firstly, there is the issue of job displacement...',
     feedback:
         'Excellent pace and clear structure. You articulated your points very well. Try to reduce the use of "so" at the start of sentences.',
+    durationSeconds: 60,
   ),
   Session(
     id: 'sid_002',
@@ -41,6 +42,7 @@ final List<Session> placeholderSessions = [
         'Um, so, climate change is a... a really big problem. We need to invest in solar and wind, you know? It is very important for the future because...',
     feedback:
         'Your content was relevant, but you spoke a bit too quickly and used several filler words like "um" and "so". Focusing on a slower pace next time will greatly improve clarity.',
+    durationSeconds: 45,
   ),
   Session(
     id: 'sid_003',
@@ -60,6 +62,7 @@ final List<Session> placeholderSessions = [
         'That is an interesting question. I believe the investment in space exploration is absolutely justifiable. The technological advancements alone, like GPS and medical imaging, have provided immense value back to society.',
     feedback:
         'Great job handling an impromptu topic! Your pace was perfect. A few filler words were noted, but the overall structure was solid.',
+    durationSeconds: 55,
   ),
   Session(
     id: 'sid_004',
@@ -79,6 +82,7 @@ final List<Session> placeholderSessions = [
         'Certainly. In my previous role, we faced a tight deadline for a project with unexpected scope changes. I took the initiative to reorganize the workflow, delegate tasks effectively, and communicate transparently with the client. As a result, we delivered the project successfully on time.',
     feedback:
         'Outstanding performance. You used the STAR method effectively, your pacing was professional, and your response was free of filler words. A textbook answer!',
+    durationSeconds: 70,
   ),
   Session(
     id: 'sid_005',
@@ -98,6 +102,7 @@ final List<Session> placeholderSessions = [
         'Work-life balance is crucial. It basically helps prevent burnout and improves mental well-being. Companies should, like, encourage employees to take breaks.',
     feedback:
         'A good start with relevant points. The message could be stronger with a more organized structure and formal language. Your pace was a little rushed in the beginning.',
+    durationSeconds: 40,
   ),
 ];
 
