@@ -513,14 +513,16 @@ extension UserServiceAttributes on UserService {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) return [];
 
-      // Fetch completed practice sessions
+      // Fetch completed practice sessions (Limit to last 5 for recent stats)
       final response = await supabase
           .from('practice_sessions')
           .select(
             'words_per_minute, filler_control, vocal_delivery_score, message_depth_score, duration_seconds',
           )
           .eq('user_id', userId)
-          .not('words_per_minute', 'is', null);
+          .not('words_per_minute', 'is', null)
+          .order('timestamp', ascending: false)
+          .limit(5);
 
       if (response.isEmpty) return [];
 

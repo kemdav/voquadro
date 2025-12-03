@@ -24,8 +24,8 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   int _selectedIndex = 0;
 
-  final double _navbarHeight = 130.0;
-  final double _iconSize = 40.0;
+  final double _navbarHeight = 60.0;
+  final double _iconSize = 30.0;
 
   @override
   void dispose() {
@@ -44,9 +44,10 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 
   void _openMenu() {
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
     _overlayEntry = OverlayEntry(
       builder: (context) => _OptionsTrayOverlay(
-        navbarHeight: _navbarHeight - 50,
+        navbarHeight: _navbarHeight + bottomPadding,
         onClose: _closeMenu,
         onNavigate: (VoidCallback navAction) {
           _closeMenu();
@@ -164,53 +165,46 @@ class _NavigationIconsState extends State<NavigationIcons> {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutBack,
-        transform: Matrix4.translationValues(0, isSelected ? -4.0 : 0.0, 0),
-        child: Container(
-          padding: const EdgeInsets.all(8.0), // Hit area padding
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  SvgPicture.asset(
-                    assetPath,
-                    width: _iconSize,
-                    height: _iconSize,
-                  ),
-                  if (showBadge)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                SvgPicture.asset(
+                  assetPath,
+                  width: _iconSize,
+                  height: _iconSize,
+                ),
+                if (showBadge)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
                       ),
                     ),
-                ],
-              ),
-              // indicator
-              if (isSelected)
-                Container(
-                  margin: const EdgeInsets.only(top: 7),
-                  width: 7,
-                  height: 7,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -277,7 +271,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
           top: 0,
           left: 0,
           right: 0,
-          bottom: widget.navbarHeight,
+          bottom: 0,
           child: GestureDetector(
             onTap: _animateOut,
             child: FadeTransition(
@@ -300,19 +294,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
                     color: _optionTrayMenuBackgroundColor,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(10),
-                    ),
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
-                      left: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
-                      right: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Column(
