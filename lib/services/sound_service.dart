@@ -12,6 +12,8 @@ class SoundService extends ChangeNotifier {
   double _musicVolume = 0.5;
   double _sfxVolume = 1.0;
 
+  bool _isDucked = false;
+
   bool get isMusicMuted => _isMusicMuted;
   bool get isSfxMuted => _isSfxMuted;
   bool get isDolphSfxMuted => _isDolphSfxMuted;
@@ -39,7 +41,7 @@ class SoundService extends ChangeNotifier {
         await _musicPlayer.setAsset(assetPath);
       }
 
-      _musicPlayer.setVolume(_isMusicMuted ? 0 : _musicVolume);
+      _updateMusicVolume();
       await _musicPlayer.play();
     } catch (e) {
       _logger.e("Error playing music: $e");
@@ -58,6 +60,25 @@ class SoundService extends ChangeNotifier {
   Future<void> resumeMusic() async {
     if (!_musicPlayer.playing) {
       await _musicPlayer.play();
+    }
+  }
+
+  /// Lowers the background music volume temporarily (ducking)
+  void duckMusic(bool enable) {
+    if (_isDucked == enable) return;
+    _isDucked = enable;
+    _updateMusicVolume();
+  }
+
+  void _updateMusicVolume() {
+    if (_isMusicMuted) {
+      _musicPlayer.setVolume(0);
+    } else {
+      double targetVolume = _musicVolume;
+      if (_isDucked) {
+        targetVolume *= 0.2; // Duck to 20%
+      }
+      _musicPlayer.setVolume(targetVolume);
     }
   }
 
@@ -114,9 +135,7 @@ class SoundService extends ChangeNotifier {
 
   void setMusicVolume(double volume) {
     _musicVolume = volume.clamp(0.0, 1.0);
-    if (!_isMusicMuted) {
-      _musicPlayer.setVolume(_musicVolume);
-    }
+    _updateMusicVolume();
     notifyListeners();
   }
 
@@ -127,7 +146,7 @@ class SoundService extends ChangeNotifier {
 
   void toggleMusicMute() {
     _isMusicMuted = !_isMusicMuted;
-    _musicPlayer.setVolume(_isMusicMuted ? 0 : _musicVolume);
+    _updateMusicVolume();
     notifyListeners();
   }
 

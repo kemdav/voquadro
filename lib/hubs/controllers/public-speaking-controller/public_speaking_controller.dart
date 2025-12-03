@@ -68,6 +68,8 @@ class PublicSpeakingController
   @override
   HybridAIService get aiService => _aiService;
 
+  late VoidCallback _audioListener;
+
   PublicSpeakingController({
     required AudioController audioController,
     required AppFlowController appFlowController,
@@ -79,6 +81,17 @@ class PublicSpeakingController
     if (_shouldPlayBackgroundMusic(currentState)) {
       _soundService.playMusic('assets/audio/home_background.wav');
     }
+
+    // Listen to audio controller for ducking music during playback
+    _audioListener = () {
+      if (_audioController.audioState == AudioState.playing) {
+        _soundService.duckMusic(true);
+      } else {
+        _soundService.duckMusic(false);
+      }
+    };
+    _audioController.addListener(_audioListener);
+
     _checkTutorialStatus();
   }
 
@@ -427,6 +440,7 @@ class PublicSpeakingController
 
   @override
   void dispose() {
+    _audioController.removeListener(_audioListener);
     try {
       _soundService.stopMusic();
     } catch (e) {
