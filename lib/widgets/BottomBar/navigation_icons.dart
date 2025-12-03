@@ -25,7 +25,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   int _selectedIndex = 0;
 
-  final double _navbarHeight = 90.0;
+  final double _navbarHeight = 110.0;
   final double _iconSize = 50.0;
 
   @override
@@ -45,17 +45,14 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 
   void _openMenu() {
-    // [FIX] Capture the controller from the current context where it exists
     final publicSpeakingController = context.read<PublicSpeakingController>();
 
     _overlayEntry = OverlayEntry(
       builder: (context) {
-        // [FIX] Wrap the overlay in ChangeNotifierProvider.value
-        // This passes the existing controller to the Overlay's widget tree
         return ChangeNotifierProvider.value(
           value: publicSpeakingController,
           child: _OptionsTrayOverlay(
-            navbarHeight: _navbarHeight,
+            navbarHeight: _navbarHeight - 10,
             onClose: _closeMenu,
             onNavigate: (VoidCallback navAction) {
               _closeMenu();
@@ -273,11 +270,12 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // [CHANGED] The dimmer/scrim now stops at the top of the navbar
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          bottom: 0,
+          bottom: widget.navbarHeight, // This keeps the navbar clear
           child: GestureDetector(
             onTap: _animateOut,
             child: FadeTransition(
@@ -300,7 +298,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
                     color: _optionTrayMenuBackgroundColor,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.1),
                     ),
@@ -324,7 +324,6 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                         }),
                       ),
                       const Divider(height: 1, color: _dividerColor),
-                      // [NOTE] Mic Test button IS kept here
                       _buildOptionTrayMenuItem(
                         iconPath: 'assets/homepage_assets/mic_test.svg',
                         label: 'Mic Test',
@@ -332,23 +331,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                           context.read<SoundService>().playSfx(
                             'assets/audio/navigation_sfx.mp3',
                           );
-                          // This call will now work because of the Provider fix above
                           context
                               .read<PublicSpeakingController>()
                               .startMicTestOnly();
-                        }),
-                      ),
-                      const Divider(height: 1, color: _dividerColor),
-                      _buildOptionTrayMenuItem(
-                        iconPath: 'assets/homepage_assets/podium.svg',
-                        label: 'Practice',
-                        onTap: () => widget.onNavigate(() {
-                          context.read<SoundService>().playSfx(
-                            'assets/audio/navigation_sfx.mp3',
-                          );
-                          context
-                              .read<PublicSpeakingController>()
-                              .showUnderConstruction();
                         }),
                       ),
                     ],
