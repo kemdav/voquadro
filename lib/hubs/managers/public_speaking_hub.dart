@@ -118,7 +118,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey:
       case PublicSpeakingState.underConstruction:
-        return [90, 160];
+        return [60, 160];
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.micTestOnly: // [ADDED]
@@ -308,8 +308,7 @@ class PublicSpeakingHub extends StatelessWidget {
           ),
 
           // Arrow pointing to Start button (Last step)
-          if (controller.tutorialIndex ==
-              controller.tutorialMessages.length - 1)
+          if (controller.tutorialIndex == controller.tutorialMessages.length - 1)
             Positioned(
               bottom: 180,
               left: 0,

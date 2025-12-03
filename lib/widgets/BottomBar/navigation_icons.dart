@@ -300,9 +300,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
                     color: _optionTrayMenuBackgroundColor,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.1),
                     ),
