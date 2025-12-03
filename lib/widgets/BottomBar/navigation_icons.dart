@@ -25,8 +25,8 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   int _selectedIndex = 0;
 
-  final double _navbarHeight = 60.0;
-  final double _iconSize = 30.0;
+  final double _navbarHeight = 90.0;
+  final double _iconSize = 40.0;
 
   @override
   void dispose() {
@@ -300,7 +300,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
                     color: _optionTrayMenuBackgroundColor,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.1),
                     ),
