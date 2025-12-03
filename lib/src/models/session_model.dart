@@ -19,6 +19,9 @@ class Session {
 
   final String transcript;
   final String feedback;
+  final String? audioUrl;
+  final int durationSeconds;
+
   Session({
     required this.id,
     required this.modeId,
@@ -37,6 +40,8 @@ class Session {
     this.messageDepthScore = 0.0,
     required this.transcript,
     required this.feedback,
+    this.audioUrl,
+    required this.durationSeconds,
   });
 
   factory Session.fromMap(Map<String, dynamic> map) {
@@ -61,6 +66,8 @@ class Session {
       messageDepthScore: (map['message_depth_score'] as num? ?? 0.0).toDouble(),
       transcript: map['transcript'] ?? '',
       feedback: map['feedback'] ?? '', // Expects 'feedback_summary' column
+      audioUrl: map['audio_url'],
+      durationSeconds: (map['duration_seconds'] as num? ?? 0).toInt(),
     );
   }
 
@@ -84,6 +91,8 @@ class Session {
       'message_depth_score': messageDepthScore,
       'transcript': transcript,
       'feedback': feedback, // Writes to 'feedback_summary' column
+      'audio_url': audioUrl,
+      'duration_seconds': durationSeconds,
     };
   }
 }

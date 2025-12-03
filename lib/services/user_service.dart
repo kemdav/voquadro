@@ -329,6 +329,38 @@ class UserService {
     }
   }
 
+  /// Uploads a session audio file to the 'session-audio' storage bucket.
+  /// Returns the public URL of the uploaded file.
+  static Future<String> uploadSessionAudio(
+    String userId,
+    File file,
+    String sessionId,
+  ) async {
+    try {
+      final fileExtension = file.path.split('.').last.toLowerCase();
+      // Path format: user_id/session_id.ext
+      final path = '$userId/$sessionId.$fileExtension';
+
+      debugPrint("Uploading session audio to Supabase Storage: $path");
+
+      await _supabase.storage
+          .from('session-audio')
+          .upload(
+            path,
+            file,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+
+      return _supabase.storage.from('session-audio').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('Failed to upload session audio: $e');
+      // We don't want to crash the whole session save if audio upload fails,
+      // so we might just return empty string or rethrow depending on requirements.
+      // For now, let's rethrow so the controller knows.
+      throw Exception('Failed to upload session audio: $e');
+    }
+  }
+
   /// Updates the user's profile_avatar_url or profile_banner_url in the database.
   static Future<void> updateProfileImageUrl(
     String userId,
@@ -485,10 +517,10 @@ extension UserServiceAttributes on UserService {
       final response = await supabase
           .from('practice_sessions')
           .select(
-            'wpm, filler_word_count, vocal_delivery_score, message_depth_score, duration_seconds',
+            'words_per_minute, filler_control, vocal_delivery_score, message_depth_score, duration_seconds',
           )
           .eq('user_id', userId)
-          .not('wpm', 'is', null);
+          .not('words_per_minute', 'is', null);
 
       if (response.isEmpty) return [];
 
@@ -500,9 +532,8 @@ extension UserServiceAttributes on UserService {
       int count = response.length;
 
       for (var session in response) {
-        totalWpm += (session['wpm'] as num?)?.toDouble() ?? 0;
-        totalFillerWords +=
-            (session['filler_word_count'] as num?)?.toInt() ?? 0;
+        totalWpm += (session['words_per_minute'] as num?)?.toDouble() ?? 0;
+        totalFillerWords += (session['filler_control'] as num?)?.toInt() ?? 0;
         totalVocalScore +=
             (session['vocal_delivery_score'] as num?)?.toDouble() ?? 0;
         totalDepthScore +=

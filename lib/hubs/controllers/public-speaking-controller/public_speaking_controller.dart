@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/services/user_service.dart';
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'package:uuid/uuid.dart';
 import 'package:voquadro/src/ai-integration/hybrid_ai_service.dart';
 import 'package:voquadro/src/ai-integration/ollama_service.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
@@ -180,24 +182,24 @@ class PublicSpeakingController
         }
       }
 
+      // Calculate duration in seconds
+      double durationToUse = 0.0;
+      if (duration != null) {
+        durationToUse = duration.inMilliseconds / 1000.0;
+      } else if (lastRecordedDuration != null) {
+        durationToUse = lastRecordedDuration!.inMilliseconds / 1000.0;
+      } else {
+        durationToUse = actualSpeakingDurationInSeconds;
+      }
+
+      debugPrint(
+        'DEBUG: Duration used for WPM: $durationToUse seconds (Raw duration: $duration)',
+      );
+
+      // Ensure a minimum duration to avoid division by zero or unrealistic WPM
+      if (durationToUse < 1.0) durationToUse = 1.0;
+
       if (_userTranscript != null && _userTranscript!.isNotEmpty) {
-        // Calculate duration in seconds
-        double durationToUse = 0.0;
-        if (duration != null) {
-          durationToUse = duration.inMilliseconds / 1000.0;
-        } else if (lastRecordedDuration != null) {
-          durationToUse = lastRecordedDuration!.inMilliseconds / 1000.0;
-        } else {
-          durationToUse = actualSpeakingDurationInSeconds;
-        }
-
-        debugPrint(
-          'DEBUG: Duration used for WPM: $durationToUse seconds (Raw duration: $duration)',
-        );
-
-        // Ensure a minimum duration to avoid division by zero or unrealistic WPM
-        if (durationToUse < 1.0) durationToUse = 1.0;
-
         if (aiFeedback == null)
           await generateAIFeedback(durationSeconds: durationToUse);
         if (overallScore == null) {
@@ -229,8 +231,6 @@ class PublicSpeakingController
         return;
       }
 
-      _sessionResult = createSessionResult();
-
       final String? userId = _appFlowController.currentUser?.id;
 
       // Null user
@@ -238,6 +238,31 @@ class PublicSpeakingController
         notifyListeners();
         return;
       }
+
+      // Upload Audio Logic
+      String? uploadedAudioUrl;
+      try {
+        if (audioController.audioPath != null) {
+          final File audioFile = File(audioController.audioPath!);
+          if (audioFile.existsSync()) {
+            // Generate a unique ID for the file
+            final String sessionFileId = const Uuid().v4();
+            uploadedAudioUrl = await UserService.uploadSessionAudio(
+              userId,
+              audioFile,
+              sessionFileId,
+            );
+          }
+        }
+      } catch (e) {
+        logger.e("Audio upload failed: $e");
+        // Continue saving session even if audio upload fails
+      }
+
+      _sessionResult = createSessionResult(
+        uploadedAudioUrl,
+        durationToUse.toInt(),
+      );
 
       try {
         // For exceljos: Add Session To Database
@@ -298,7 +323,7 @@ class PublicSpeakingController
     clearScores();
   }
 
-  Session createSessionResult() {
+  Session createSessionResult(String? audioUrl, int durationSeconds) {
     return Session(
       id: '',
       modeId: 'public',
@@ -325,6 +350,8 @@ class PublicSpeakingController
       messageDepthScore: _messageDepthScore?.toDouble() ?? 0.0,
       transcript: userTranscript.toString(),
       feedback: aiFeedback.toString(),
+      audioUrl: audioUrl,
+      durationSeconds: durationSeconds,
     );
   }
 

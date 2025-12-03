@@ -1,15 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/src/models/session_model.dart';
 
 class PublicSpeakingFeedbackModal extends StatefulWidget {
   final Session session;
 
-  const PublicSpeakingFeedbackModal({
-    super.key,
-    required this.session,
-  });
+  const PublicSpeakingFeedbackModal({super.key, required this.session});
 
   @override
   State<PublicSpeakingFeedbackModal> createState() =>
@@ -19,12 +17,66 @@ class PublicSpeakingFeedbackModal extends StatefulWidget {
 class _PublicSpeakingFeedbackModalState
     extends State<PublicSpeakingFeedbackModal> {
   final PageController _pageController = PageController();
+  late AudioPlayer _audioPlayer;
   int _currentPage = 0;
+  bool _isPlaying = false;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+  bool _isAudioLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    if (widget.session.audioUrl != null) {
+      try {
+        setState(() => _isAudioLoading = true);
+        await _audioPlayer.setUrl(widget.session.audioUrl!);
+
+        _audioPlayer.playerStateStream.listen((state) {
+          if (mounted) {
+            setState(() {
+              _isPlaying = state.playing;
+              if (state.processingState == ProcessingState.completed) {
+                _isPlaying = false;
+                _audioPlayer.seek(Duration.zero);
+                _audioPlayer.pause();
+              }
+            });
+          }
+        });
+
+        _audioPlayer.durationStream.listen((d) {
+          if (mounted) setState(() => _duration = d ?? Duration.zero);
+        });
+
+        _audioPlayer.positionStream.listen((p) {
+          if (mounted) setState(() => _position = p);
+        });
+      } catch (e) {
+        debugPrint("Error loading audio: $e");
+      } finally {
+        if (mounted) setState(() => _isAudioLoading = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$minutes:$seconds";
   }
 
   @override
@@ -90,7 +142,7 @@ class _PublicSpeakingFeedbackModalState
             const SizedBox(height: 24),
             // Swipeable Content
             SizedBox(
-              height: 450,
+              height: 400, // Reduced slightly to make room for audio player
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (int page) =>
@@ -102,6 +154,109 @@ class _PublicSpeakingFeedbackModalState
                 ],
               ),
             ),
+
+            // Audio Player Section
+            if (widget.session.audioUrl != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: _isAudioLoading
+                              ? null
+                              : () {
+                                  if (_isPlaying) {
+                                    _audioPlayer.pause();
+                                  } else {
+                                    _audioPlayer.play();
+                                  }
+                                },
+                          icon: _isAudioLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  _isPlaying
+                                      ? Icons.pause_circle_filled
+                                      : Icons.play_circle_filled,
+                                  color: purpleDark,
+                                  size: 32,
+                                ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 4,
+                                  thumbShape: const RoundSliderThumbShape(
+                                    enabledThumbRadius: 6,
+                                  ),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                    overlayRadius: 14,
+                                  ),
+                                  activeTrackColor: purpleDark,
+                                  inactiveTrackColor: purpleDark.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  thumbColor: purpleDark,
+                                ),
+                                child: Slider(
+                                  value: _position.inSeconds.toDouble().clamp(
+                                    0.0,
+                                    _duration.inSeconds.toDouble(),
+                                  ),
+                                  max: _duration.inSeconds.toDouble() > 0
+                                      ? _duration.inSeconds.toDouble()
+                                      : 1.0,
+                                  onChanged: (value) {
+                                    _audioPlayer.seek(
+                                      Duration(seconds: value.toInt()),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatDuration(_position),
+                          style: TextStyle(
+                            color: purpleDark,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 24),
             // Footer
             Row(
@@ -142,13 +297,7 @@ class _PublicSpeakingFeedbackModalState
       (session.vocalDeliveryScore / 100).clamp(0.0, 1.0),
       (session.messageDepthScore / 100).clamp(0.0, 1.0),
     ];
-    final labels = [
-      'Fillers',
-      'Pace',
-      'Clarity',
-      'Vocal',
-      'Depth',
-    ];
+    final labels = ['Fillers', 'Pace', 'Clarity', 'Vocal', 'Depth'];
 
     return Column(
       children: [
@@ -568,4 +717,3 @@ class RadarChartPainter extends CustomPainter {
     return oldDelegate.animationValue != animationValue;
   }
 }
-
