@@ -73,7 +73,7 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                         child: CircleAvatar(
                           radius: 56,
                           backgroundColor: Colors.grey.shade600,
-                          backgroundImage: const AssetImage('assets/images/tempCharacter.png'),
+                          backgroundImage: const AssetImage('assets/images/dolph.png'),
                         ),
                       ),
 

@@ -66,15 +66,18 @@ class RegistrationController with ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('RegistrationController: Starting completeRegistration');
       // Create user in database
       await UserService.createUser(
         username: username!,
         email: email!,
         password: password!,
       );
+      debugPrint('RegistrationController: createUser success');
 
       // Registration successful - the Main App Controller takes over
     } catch (e) {
+      debugPrint('RegistrationController: createUser failed: $e');
       _errorMessage = 'Failed to create account: ${e.toString()}';
       _stage = RegistrationStage.confirmation; // Go back to confirmation stage
       notifyListeners();
