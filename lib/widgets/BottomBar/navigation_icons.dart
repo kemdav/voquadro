@@ -26,7 +26,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
   int _selectedIndex = 0;
 
   final double _navbarHeight = 110.0;
-  final double _iconSize = 50.0;
+  final double _iconSize = 35.0;
 
   @override
   void dispose() {
@@ -52,7 +52,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
         return ChangeNotifierProvider.value(
           value: publicSpeakingController,
           child: _OptionsTrayOverlay(
-            navbarHeight: _navbarHeight - 10,
+            navbarHeight: _navbarHeight - 20,
             onClose: _closeMenu,
             onNavigate: (VoidCallback navAction) {
               _closeMenu();
@@ -163,10 +163,8 @@ class _NavigationIconsState extends State<NavigationIcons> {
     required VoidCallback onTap,
     bool showBadge = false,
   }) {
-    // Determine selection state here to pass down
     final isSelected = _selectedIndex == index && index != 4;
 
-    // Use our new bouncing widget
     return _BouncingNavItem(
       isSelected: isSelected,
       assetPath: assetPath,
@@ -177,7 +175,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 }
 
-// --- NEW WIDGET FOR ANIMATION ---
 class _BouncingNavItem extends StatefulWidget {
   final bool isSelected;
   final String assetPath;
@@ -207,11 +204,10 @@ class _BouncingNavItemState extends State<_BouncingNavItem>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100), // Speed of squeeze
-      reverseDuration: const Duration(milliseconds: 100), // Speed of release
+      duration: const Duration(milliseconds: 100),
+      reverseDuration: const Duration(milliseconds: 100),
     );
 
-    // Scales from 100% -> 95% -> 100%
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.95,
@@ -225,7 +221,6 @@ class _BouncingNavItemState extends State<_BouncingNavItem>
   }
 
   void _handleTap() {
-    // Play the squeeze animation forward then backward
     _controller.forward().then((_) => _controller.reverse());
     widget.onTap();
   }
@@ -239,21 +234,19 @@ class _BouncingNavItemState extends State<_BouncingNavItem>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // REMOVED ScaleTransition from here
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: widget.isSelected
-                  ? Colors.white.withValues(alpha: 0.2)
+                  ? Colors.white.withValues(alpha: 0.11)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // ADDED ScaleTransition here, wrapping only the Icon
                 ScaleTransition(
                   scale: _scaleAnimation,
                   child: SvgPicture.asset(
@@ -262,7 +255,6 @@ class _BouncingNavItemState extends State<_BouncingNavItem>
                     height: widget.iconSize,
                   ),
                 ),
-                // The Badge is outside the ScaleTransition, so it stays fixed
                 if (widget.showBadge)
                   Positioned(
                     top: -2,
@@ -286,7 +278,6 @@ class _BouncingNavItemState extends State<_BouncingNavItem>
   }
 }
 
-// ... _OptionsTrayOverlay remains unchanged ...
 class _OptionsTrayOverlay extends StatefulWidget {
   final double navbarHeight;
   final VoidCallback onClose;
@@ -319,7 +310,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
       duration: const Duration(milliseconds: 250),
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.09),
+      begin: const Offset(0, 1.0),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _opacityAnimation = Tween<double>(

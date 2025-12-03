@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                 Center(
                   child: CircleAvatar(
                     radius: 56,
-                    backgroundColor: Colors.grey.shade600,
+                    backgroundColor: Color(0xFFF8F0FB),
                     backgroundImage: const AssetImage(
                       'assets/images/dolph.png',
                     ),

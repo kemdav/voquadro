@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/registration_controller.dart';
+import 'package:voquadro/src/hex_color.dart';
 
 class RegistrationConfirmationStage extends StatelessWidget {
   const RegistrationConfirmationStage({super.key});
@@ -55,7 +56,7 @@ class RegistrationConfirmationStage extends StatelessWidget {
           Center(
             child: CircleAvatar(
               radius: 56,
-              backgroundColor: Colors.grey.shade600,
+              backgroundColor: '#f5fbf9'.toColor(),
               backgroundImage: const AssetImage('assets/images/dolph.png'),
             ),
           ),
@@ -94,7 +95,7 @@ class RegistrationConfirmationStage extends StatelessWidget {
           Center(
             child: CircleAvatar(
               radius: 40,
-              backgroundColor: Colors.grey[400],
+              backgroundColor: '#E0D4F2'.toColor(),
               child: Consumer<RegistrationController>(
                 builder: (context, controller, child) {
                   return Text(
