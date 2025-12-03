@@ -97,6 +97,9 @@ class _ModePageState extends State<PublicSpeakingHomePage> {
     final controller = context.read<PublicSpeakingController>();
     if (controller.isTutorialActive) return;
 
+    // Only show facts if we are on the home screen
+    if (controller.currentState != PublicSpeakingState.home) return;
+
     setState(() {
       final randomFact = _dolphFacts[Random().nextInt(_dolphFacts.length)];
       _currentFact = randomFact["text"]!;
