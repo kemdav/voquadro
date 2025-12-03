@@ -247,18 +247,6 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                     ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Forgot password?',
-                        style: TextStyle(
-                          color: accentTeal,
-                          fontWeight: FontWeight.w800,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
 
