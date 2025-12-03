@@ -6,6 +6,7 @@ import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/managers/app_flow_manager.dart';
 import 'package:voquadro/services/supabase_service.dart';
 import 'package:voquadro/services/sound_service.dart';
+import 'package:voquadro/widgets/internet_check_wrapper.dart';
 
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
@@ -40,7 +41,9 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
           ),
-          home: AppFlowManager(),
+          home: const InternetCheckWrapper(
+            child: AppFlowManager(),
+          ),
         );
       },
     );

@@ -113,7 +113,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey: // Standard size
       case PublicSpeakingState.underConstruction:
-        return [80, 180];
+        return [60, 160];
 
       case PublicSpeakingState.micTest:
         return [140, 40];
