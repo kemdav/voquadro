@@ -7,6 +7,7 @@ import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/services/user_service.dart';
 import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
+import 'package:voquadro/widgets/Modals/rank_progression_modal.dart';
 
 class PublicSpeakJourneySection extends StatefulWidget {
   final bool isVisible;
@@ -256,49 +257,53 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Transform.scale(
-              scale: 1.45,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                child: Center(
-                  child: Image.asset(
-                    emblemAsset,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
-                        Icons.emoji_events,
-                        size: 50,
-                        color: Colors.amber,
-                      );
-                    },
-                  ),
+            // Rank Emblem
+            Container(
+              width: 110,
+              height: 110,
+              decoration: const BoxDecoration(shape: BoxShape.circle),
+              child: ClipOval(
+                child: Image.asset(
+                  emblemAsset,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.emoji_events,
+                      size: 60,
+                      color: Colors.amber,
+                    );
+                  },
                 ),
               ),
             ),
-            const SizedBox(width: 32),
+            const SizedBox(width: 16),
+            // User Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     username,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: 26,
                       fontWeight: FontWeight.w900,
                       color: titleColor,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+                  
+                  // Level & XP (Stacked for better space usage)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Level $currentLevel',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: titleColor,
                         ),
@@ -312,20 +317,22 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                           return Text(
                             '$value/$expToNextLevel XP',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: titleColor,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: titleColor.withValues(alpha: 0.6),
                             ),
                           );
                         },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  
+                  // Progress Bar
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      height: 16,
+                      height: 10,
                       decoration: const BoxDecoration(color: Colors.white),
                       child: TweenAnimationBuilder<double>(
                         key: ValueKey('xp_bar_$_animationTriggerCount'),
@@ -364,21 +371,47 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  RichText(
-                    text: TextSpan(
-                      style: TextStyle(fontSize: 16, color: titleColor),
-                      children: [
-                        const TextSpan(
-                          text: 'Current Rank: ',
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        TextSpan(
-                          text: currentRank,
-                          style: const TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Current Rank:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: titleColor.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Text(
+                            currentRank,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: titleColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => RankProgressionModal(
+                              currentLevel: currentLevel,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.info_outline_rounded),
+                        color: titleColor.withValues(alpha: 0.5),
+                        tooltip: 'View Rank Progression',
+                      ),
+                    ],
                   ),
                 ],
               ),

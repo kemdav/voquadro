@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/services/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -28,6 +29,39 @@ class PublicSpeakingController
   final HybridAIService _aiService = HybridAIService.instance;
   AppFlowController _appFlowController;
 
+  // Tutorial State
+  bool _isTutorialActive = false;
+  int _tutorialIndex = 0;
+  final List<String> _tutorialMessages = [
+    "Hi! I'm Dolph. Welcome to Public Speaking!",
+    "I'm here to help you practice your speaking skills.",
+    "I'll give you a topic, and you'll have time to prepare.",
+    "Then, you'll speak for a few minutes while I listen.",
+    "Tap 'Start Speaking' below to begin your journey!",
+  ];
+
+  bool get isTutorialActive => _isTutorialActive;
+  int get tutorialIndex => _tutorialIndex;
+  List<String> get tutorialMessages => _tutorialMessages;
+  String get currentTutorialMessage => _tutorialMessages[_tutorialIndex];
+
+  String get currentTutorialImage {
+    switch (_tutorialIndex) {
+      case 0:
+        return 'assets/images/dolph_happy.png';
+      case 1:
+        return 'assets/images/dolph.png';
+      case 2:
+        return 'assets/images/dolph_thinking.png';
+      case 3:
+        return 'assets/images/dolph_smug.png';
+      case 4:
+        return 'assets/images/dolph_approves.png';
+      default:
+        return 'assets/images/dolph.png';
+    }
+  }
+
   @override
   AudioController get audioController => _audioController;
 
@@ -44,6 +78,35 @@ class PublicSpeakingController
     // Initialize music if starting on a home-like state
     if (_shouldPlayBackgroundMusic(currentState)) {
       _soundService.playMusic('assets/audio/home_background.wav');
+    }
+    _checkTutorialStatus();
+  }
+
+  Future<void> _checkTutorialStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    // final hasSeenTutorial =
+    //     prefs.getBool('hasSeenPublicSpeakingTutorial') ?? false;
+
+    final hasSeenTutorial = false;
+
+    if (!hasSeenTutorial) {
+      _isTutorialActive = true;
+      _soundService.playSfx('assets/audio/dolph_sound.wav');
+      notifyListeners();
+    }
+  }
+
+  void nextTutorialStep() async {
+    if (_tutorialIndex < _tutorialMessages.length - 1) {
+      _tutorialIndex++;
+      _soundService.playSfx('assets/audio/dolph_sound.wav');
+      notifyListeners();
+    } else {
+      // End tutorial
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasSeenPublicSpeakingTutorial', true);
+      _isTutorialActive = false;
+      notifyListeners();
     }
   }
 

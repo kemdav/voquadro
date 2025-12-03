@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
+import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/screens/home/settings/change_password_stage.dart';
 import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
@@ -16,10 +17,9 @@ class SettingsStage extends StatefulWidget {
 }
 
 class _SettingsStageState extends State<SettingsStage> {
-  bool _darkMode = false;
-
   @override
   Widget build(BuildContext context) {
+    final soundService = context.watch<SoundService>();
     final Color purpleDark = '49416D'.toColor();
     final Color purpleMid = '7962A5'.toColor();
     const Color cardBg = Color(0xFFF0E6F6);
@@ -79,9 +79,9 @@ class _SettingsStageState extends State<SettingsStage> {
                       background: cardBg,
                       children: [
                         _SwitchRow(
-                          label: 'Dark Mode',
-                          value: _darkMode,
-                          onChanged: (v) => setState(() => _darkMode = v),
+                          label: 'Dolph SFX',
+                          value: !soundService.isDolphSfxMuted,
+                          onChanged: (v) => soundService.toggleDolphSfxMute(),
                           activeColor: purpleMid,
                         ),
                       ],

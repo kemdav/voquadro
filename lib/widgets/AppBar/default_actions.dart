@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
-import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
+import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 
 class DefaultActions extends StatefulWidget {
   const DefaultActions({
@@ -121,11 +122,30 @@ class _DefaultActionsState extends State<DefaultActions> {
 
   @override
   Widget build(BuildContext context) {
+    final appFlow = context.watch<AppFlowController>();
+    final user = appFlow.currentUser;
+
+    // Default values if user is not loaded
+    int currentLevel = 1;
+    int currentXp = 0;
+    int requiredXp = 100;
+    String currentRank = "Novice";
+
+    if (user != null) {
+      final levelInfo = ProgressionConversionHelper.getLevelProgressInfo(
+        user.publicSpeakingEXP,
+      );
+      currentLevel = levelInfo.level;
+      currentXp = levelInfo.currentLevelExp;
+      requiredXp = levelInfo.expToNextLevel;
+      currentRank = levelInfo.rank;
+    }
+
     return Positioned(
       top: _visibleBarHeight - (_fabSize / 2),
       left: 20,
       right: 5,
-      height: _fabSize,
+      height: _fabSize + 10, // Increased height slightly for the new card
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center, // Centered vertically
@@ -133,12 +153,12 @@ class _DefaultActionsState extends State<DefaultActions> {
           // --- NEW LEVEL BAR SECTION ---
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+              padding: const EdgeInsets.only(right: 16.0, top: 4.0),
               child: _LevelProgressBar(
-                // Placeholders for now (replace with real data later)
-                currentLevel: 5,
-                currentXp: 750,
-                requiredXp: 1200,
+                currentLevel: currentLevel,
+                currentXp: currentXp,
+                requiredXp: requiredXp,
+                rankName: currentRank,
               ),
             ),
           ),
@@ -182,11 +202,13 @@ class _LevelProgressBar extends StatelessWidget {
   final int currentLevel;
   final int currentXp;
   final int requiredXp;
+  final String rankName;
 
   const _LevelProgressBar({
     required this.currentLevel,
     required this.currentXp,
     required this.requiredXp,
+    required this.rankName,
   });
 
   @override
@@ -199,10 +221,10 @@ class _LevelProgressBar extends StatelessWidget {
     final Color barColor = "7962A5".toColor();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 230), // 0.9 * 255 ≈ 230
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 26), // 0.1 * 255 ≈ 26
@@ -211,43 +233,99 @@ class _LevelProgressBar extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Text Row: "Lvl 5" ------- "750/1200 XP"
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Lvl $currentLevel',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: textColor,
-                  fontSize: 14,
-                ),
+          // Rank Emblem
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: barColor.withValues(alpha: 26), // Light purple bg
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/rank_emblem_assets/${rankName.toLowerCase()}.png',
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                        const Icon(Icons.shield, size: 30, color: Colors.grey),
               ),
-              Text(
-                '$currentXp / $requiredXp XP',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: textColor.withValues(alpha: 179), // 0.7 * 255 ≈ 179
-                  fontSize: 11,
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 4),
-          // The Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: textColor.withValues(
-                alpha: 26,
-              ), // 0.1 * 255 ≈ 26
-              valueColor: AlwaysStoppedAnimation<Color>(barColor),
-              minHeight: 8, // Thicker bar looks more "game-like"
+          const SizedBox(width: 10),
+
+          // Info Column
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Rank Name & Level
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      rankName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: textColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      'Lvl $currentLevel',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: barColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+
+                // Progress Bar
+                Stack(
+                  children: [
+                    // Background track
+                    Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: textColor.withValues(alpha: 26),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    // Fill
+                    FractionallySizedBox(
+                      widthFactor: progress,
+                      child: Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // XP Text (Optional, kept small)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2.0),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '$currentXp / $requiredXp XP',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: textColor.withValues(alpha: 128),
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

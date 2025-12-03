@@ -220,6 +220,10 @@ class PublicSpeakingHub extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    // Tutorial Overlay (Covers everything including bars)
+                    if (controller.isTutorialActive)
+                      _buildTutorialOverlay(context, controller),
                   ],
                 );
               },
@@ -229,4 +233,151 @@ class PublicSpeakingHub extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildTutorialOverlay(
+    BuildContext context,
+    PublicSpeakingController controller,
+  ) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          // Dimmer
+          GestureDetector(
+            onTap: controller.nextTutorialStep,
+            child: Container(color: Colors.black.withValues(alpha: 0.7)),
+          ),
+
+          // Dolph (Tutorial Version)
+          Positioned(
+            bottom: 260,
+            left: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: controller.nextTutorialStep,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Center(
+                  child: Image.asset(
+                    controller.currentTutorialImage,
+                    width: screenWidth * 1.5,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Bubble (Tutorial Version)
+          Positioned(
+            bottom: screenHeight * 0.60,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: CustomPaint(
+                painter: _BubblePainter(),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                  width: 280,
+                  child: Text(
+                    controller.currentTutorialMessage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Arrow pointing to Start button (Last step)
+          if (controller.tutorialIndex == controller.tutorialMessages.length - 1)
+            Positioned(
+              bottom: 180,
+              left: 0,
+              right: 0,
+              child: const Center(
+                child: Icon(
+                  Icons.arrow_downward_rounded,
+                  color: Colors.white,
+                  size: 48,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 8,
+                      color: Colors.black,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Tutorial Hint
+          Positioned(
+            bottom: screenHeight * 0.60 + 120,
+            left: 0,
+            right: 0,
+            child: const Center(
+              child: Text(
+                "Tap anywhere to continue",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 4,
+                      color: Colors.black,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BubblePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final Paint shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.1)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+
+    const double tailHeight = 12.0;
+    const double tailWidth = 20.0;
+    const double radius = 25.0;
+
+    final RRect bubbleBody = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height - tailHeight),
+      const Radius.circular(radius),
+    );
+
+    final Path path = Path()
+      ..addRRect(bubbleBody)
+      ..moveTo(size.width / 2 - tailWidth / 2, size.height - tailHeight)
+      ..lineTo(size.width / 2, size.height) // The point of the tail
+      ..lineTo(size.width / 2 + tailWidth / 2, size.height - tailHeight)
+      ..close();
+
+    canvas.drawPath(path.shift(const Offset(0, 4)), shadowPaint);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
