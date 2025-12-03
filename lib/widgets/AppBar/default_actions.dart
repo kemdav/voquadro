@@ -1,9 +1,10 @@
+// [FILE: kemdav/voquadro/voquadro-feature-animation-dolph-and-other-stuff/lib/widgets/AppBar/default_actions.dart]
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-// [ADDED] Import PublicSpeakingController to change state
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
@@ -72,16 +73,26 @@ class _DefaultActionsState extends State<DefaultActions> {
     if (left < 8) left = 8;
     final double top = pos.dy + size.height + 8;
 
+    // [FIX] Capture the controller from the current context, which HAS access to the provider
+    final publicSpeakingController = context.read<PublicSpeakingController>();
+
     _burgerMenuOverlayEntry = OverlayEntry(
-      builder: (context) => _BurgerMenuOverlay(
-        top: top,
-        left: left,
-        width: menuWidth,
-        onClose: _removeBurgerMenu,
-        onLogout: _handleLogout,
-        onSettings: _handleSettings,
-        onMicTest: _handleMicTest, // [ADDED] Pass handler
-      ),
+      builder: (context) {
+        // [FIX] Wrap the overlay in a Provider.value using the captured controller.
+        // This makes the provider available to the overlay's isolated widget tree.
+        return ChangeNotifierProvider.value(
+          value: publicSpeakingController,
+          child: _BurgerMenuOverlay(
+            top: top,
+            left: left,
+            width: menuWidth,
+            onClose: _removeBurgerMenu,
+            onLogout: _handleLogout,
+            onSettings: _handleSettings,
+            onMicTest: _handleMicTest,
+          ),
+        );
+      },
     );
 
     overlayState.insert(_burgerMenuOverlayEntry!);
@@ -95,11 +106,10 @@ class _DefaultActionsState extends State<DefaultActions> {
     ).push(MaterialPageRoute(builder: (_) => const SettingsStage()));
   }
 
-  // [ADDED] Handle Mic Test selection
   void _handleMicTest() {
     context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
     _removeBurgerMenu();
-    // Trigger the state change in the controller
+    // This will now work even if called from within the overlay's context
     context.read<PublicSpeakingController>().startMicTestOnly();
   }
 
@@ -124,7 +134,6 @@ class _DefaultActionsState extends State<DefaultActions> {
 
   @override
   Widget build(BuildContext context) {
-    // ... (Build method remains exactly the same as provided) ...
     return Positioned(
       top: _visibleBarHeight - (_fabSize / 2),
       left: 20,
@@ -177,7 +186,6 @@ class _DefaultActionsState extends State<DefaultActions> {
   }
 }
 
-// ... (_LevelProgressBar class remains exactly the same) ...
 class _LevelProgressBar extends StatelessWidget {
   final int currentLevel;
   final int currentXp;
@@ -255,7 +263,7 @@ class _BurgerMenuOverlay extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onSettings;
   final VoidCallback onLogout;
-  final VoidCallback onMicTest; // [ADDED]
+  final VoidCallback onMicTest;
 
   const _BurgerMenuOverlay({
     required this.top,
@@ -264,7 +272,7 @@ class _BurgerMenuOverlay extends StatefulWidget {
     required this.onClose,
     required this.onSettings,
     required this.onLogout,
-    required this.onMicTest, // [ADDED]
+    required this.onMicTest,
   });
 
   @override
@@ -370,11 +378,9 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                                     _handleSelection(widget.onSettings),
                               ),
                               _buildDivider(),
-                              // [ADDED] Mic Test Option
                               _buildMenuItem(
                                 label: 'Mic Test',
-                                asset:
-                                    'assets/homepage_assets/mic_test.svg', // Ensure this asset exists
+                                asset: 'assets/homepage_assets/mic_test.svg',
                                 onTap: () => _handleSelection(widget.onMicTest),
                               ),
                               _buildDivider(),
@@ -437,7 +443,6 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
   }
 }
 
-// ... (_TrianglePainter remains the same) ...
 class _TrianglePainter extends CustomPainter {
   final Color color;
   const _TrianglePainter({required this.color});
