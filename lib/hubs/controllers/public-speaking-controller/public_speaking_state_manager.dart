@@ -29,7 +29,6 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
 
   void showHome() {
     setPublicSpeakingState(PublicSpeakingState.home);
-    _isPracticeMode = false; // [ADDED] Reset flag when returning home
   }
 
   void showJourney() {
