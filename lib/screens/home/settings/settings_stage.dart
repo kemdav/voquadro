@@ -108,18 +108,7 @@ class _SettingsStageState extends State<SettingsStage> {
                             );
                           },
                         ),
-                        const _TileDivider(),
-                        SettingsTile(
-                          title: 'Change Password',
-                          textColor: purpleDark,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const ChangePasswordStage(),
-                              ),
-                            );
-                          },
-                        ),
+
                         const _TileDivider(),
                         SettingsTile(
                           title: 'Linked Accounts',
