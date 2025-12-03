@@ -343,7 +343,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                           );
                           context
                               .read<PublicSpeakingController>()
-                              .startMicTest();
+                              .startMicTestOnly();
                         }),
                       ),
                       const Divider(height: 1, color: _dividerColor),
