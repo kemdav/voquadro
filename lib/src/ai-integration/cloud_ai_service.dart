@@ -188,7 +188,7 @@ Return ONLY a JSON object in this exact format:
       final response = await _callGemini(
         prompt,
         temperature: 0.2,
-        maxTokens: 2048,
+        maxTokens: 8192,
         forceJson: true,
       );
 
@@ -674,6 +674,9 @@ Keep it encouraging but honest. Format as natural paragraphs.
 
       // Debug: Log raw response structure
       debugPrint('Gemini raw response keys: ${data.keys}');
+      if (data.containsKey('usageMetadata')) {
+        debugPrint('Gemini usage metadata: ${data['usageMetadata']}');
+      }
       debugPrint('Gemini candidates type: ${data['candidates']?.runtimeType}');
 
       // Check for content filtering or blocked responses

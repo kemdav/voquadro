@@ -50,7 +50,9 @@ class AudioController with ChangeNotifier {
       // app. The only way to change the permission's status now is to let the
       // user manually enable it in the system settings.
       openAppSettings();
-      throw Exception('Microphone permission permanently denied. Please enable it in settings.');
+      throw Exception(
+        'Microphone permission permanently denied. Please enable it in settings.',
+      );
     }
 
     if (!status.isGranted) {
@@ -130,7 +132,9 @@ class AudioController with ChangeNotifier {
 
     if (status.isPermanentlyDenied) {
       openAppSettings();
-      throw Exception('Microphone permission permanently denied. Please enable it in settings.');
+      throw Exception(
+        'Microphone permission permanently denied. Please enable it in settings.',
+      );
     }
 
     if (!status.isGranted) {
