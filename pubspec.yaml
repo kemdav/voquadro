@@ -53,6 +53,7 @@ dependencies:
   crypto: ^3.0.3
   bcrypt: ^1.1.3
   uuid: ^4.5.2
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
@@ -82,6 +83,7 @@ flutter:
     - assets/rank_emblem_assets/
     - assets/audio/
     - assets/profile_assets/
+    - assets/profile_assets/badge_icons.svg/
     - .env.local
   #   - images/a_dot_ham.jpeg
 
