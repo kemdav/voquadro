@@ -163,21 +163,89 @@ class _NavigationIconsState extends State<NavigationIcons> {
     required VoidCallback onTap,
     bool showBadge = false,
   }) {
+    // Determine selection state here to pass down
     final isSelected = _selectedIndex == index && index != 4;
 
-    return GestureDetector(
+    // Use our new bouncing widget
+    return _BouncingNavItem(
+      isSelected: isSelected,
+      assetPath: assetPath,
+      iconSize: _iconSize,
+      showBadge: showBadge,
       onTap: onTap,
+    );
+  }
+}
+
+// --- NEW WIDGET FOR ANIMATION ---
+class _BouncingNavItem extends StatefulWidget {
+  final bool isSelected;
+  final String assetPath;
+  final double iconSize;
+  final bool showBadge;
+  final VoidCallback onTap;
+
+  const _BouncingNavItem({
+    required this.isSelected,
+    required this.assetPath,
+    required this.iconSize,
+    required this.showBadge,
+    required this.onTap,
+  });
+
+  @override
+  State<_BouncingNavItem> createState() => _BouncingNavItemState();
+}
+
+class _BouncingNavItemState extends State<_BouncingNavItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100), // Speed of squeeze
+      reverseDuration: const Duration(milliseconds: 100), // Speed of release
+    );
+
+    // Scales from 100% -> 95% -> 100%
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    // Play the squeeze animation forward then backward
+    _controller.forward().then((_) => _controller.reverse());
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // REMOVED ScaleTransition from here
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected
+              color: widget.isSelected
                   ? Colors.white.withValues(alpha: 0.2)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(24),
@@ -185,12 +253,17 @@ class _NavigationIconsState extends State<NavigationIcons> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                SvgPicture.asset(
-                  assetPath,
-                  width: _iconSize,
-                  height: _iconSize,
+                // ADDED ScaleTransition here, wrapping only the Icon
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: SvgPicture.asset(
+                    widget.assetPath,
+                    width: widget.iconSize,
+                    height: widget.iconSize,
+                  ),
                 ),
-                if (showBadge)
+                // The Badge is outside the ScaleTransition, so it stays fixed
+                if (widget.showBadge)
                   Positioned(
                     top: -2,
                     right: -2,
@@ -213,6 +286,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 }
 
+// ... _OptionsTrayOverlay remains unchanged ...
 class _OptionsTrayOverlay extends StatefulWidget {
   final double navbarHeight;
   final VoidCallback onClose;
@@ -270,12 +344,11 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // [CHANGED] The dimmer/scrim now stops at the top of the navbar
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          bottom: widget.navbarHeight, // This keeps the navbar clear
+          bottom: widget.navbarHeight,
           child: GestureDetector(
             onTap: _animateOut,
             child: FadeTransition(

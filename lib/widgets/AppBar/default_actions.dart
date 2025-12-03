@@ -143,7 +143,7 @@ class _DefaultActionsState extends State<DefaultActions> {
     return Positioned(
       top: _visibleBarHeight - (_fabSize / 2),
       left: 20,
-      right: 5,
+      right: 10,
       height: _fabSize + 10,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

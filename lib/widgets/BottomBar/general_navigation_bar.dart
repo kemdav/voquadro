@@ -46,7 +46,7 @@ class GeneralNavigationBar extends StatelessWidget {
           // Navigation icons (centered inside purple bar at bottom) - only show if navBarVisualHeight > 0
           if (navBarVisualHeight > 0 && showIcons)
             Positioned(
-              bottom: 0,
+              bottom: 8,
               left: 0,
               right: 0,
               height: navBarVisualHeight,
