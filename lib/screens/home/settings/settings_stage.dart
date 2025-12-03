@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/screens/home/settings/change_password_stage.dart';
-import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
 import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
-import 'package:provider/provider.dart';
-import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-//import 'package:voquadro/screens/authentication/firstLaunch/first_launch_page.dart';
+import 'package:voquadro/widgets/Modals/terms_of_service_modal.dart';
+import 'package:voquadro/widgets/Modals/privacy_policy_modal.dart';
 
 class SettingsStage extends StatefulWidget {
   const SettingsStage({super.key});
@@ -166,7 +166,7 @@ class _SettingsStageState extends State<SettingsStage> {
                       ],
                     ),
 
-                    // Add back Privacy & Security section
+                    // Privacy & Security section
                     _SectionHeader(
                       title: 'Privacy & Security',
                       icon: Icons.lock,
@@ -179,14 +179,26 @@ class _SettingsStageState extends State<SettingsStage> {
                           title: 'Privacy Policy',
                           textColor: purpleDark,
                           trailing: const Icon(Icons.open_in_new, size: 20),
-                          onTap: () {},
+                          onTap: () {
+                            // [CHANGED] Show new PrivacyPolicyModal
+                            showDialog(
+                              context: context,
+                              builder: (context) => const PrivacyPolicyModal(),
+                            );
+                          },
                         ),
                         const _TileDivider(),
                         SettingsTile(
                           title: 'Terms of Service',
                           textColor: purpleDark,
                           trailing: const Icon(Icons.open_in_new, size: 20),
-                          onTap: () {},
+                          onTap: () {
+                            // [CHANGED] Show new TermsOfServiceModal
+                            showDialog(
+                              context: context,
+                              builder: (context) => const TermsOfServiceModal(),
+                            );
+                          },
                         ),
                         const Padding(
                           padding: EdgeInsets.all(16),
@@ -272,24 +284,6 @@ class SwitchSettingsTile extends StatelessWidget {
       ),
     );
   }
-}
-
-//log out confirmation dialog
-// Add this method inside the _SettingsStageState class plsss
-void showLogoutConfirmationDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext dialogContext) {
-      // Return the custom dialog widget
-      return ConfirmationDialog(
-        // Pass the logout logic to the dialog
-        onConfirm: () {
-          // --- LOGIC SA LOGOUT ---
-        },
-      );
-    },
-  );
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -386,7 +380,7 @@ class _SwitchRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: Colors.white, // Updated from activeColor
+            activeThumbColor: Colors.white,
             activeTrackColor: activeColor,
           ),
         ],
