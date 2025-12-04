@@ -241,6 +241,12 @@ class PublicSpeakingController
   String get aiServiceMessage => _aiService.getServiceMessage();
   String get estimatedResponseTime => _aiService.getEstimatedResponseTime();
 
+  bool get isFeedbackGenerationComplete =>
+      !_isTranscribing &&
+      _userTranscript != null &&
+      _aiFeedback != null &&
+      _overallScore != null;
+
   // 3. ORCHESTRATION & METHODS
 
   Future<void> generateRandomQuestionAndStart() async {
