@@ -77,7 +77,9 @@ class AppFlowController with ChangeNotifier {
 
     try {
       // Call secure UserService to perform authentication
-      debugPrint('AppFlowController: Calling UserService.signInWithUsernameAndPassword');
+      debugPrint(
+        'AppFlowController: Calling UserService.signInWithUsernameAndPassword',
+      );
       final user = await UserService.signInWithUsernameAndPassword(
         username: username,
         password: password,

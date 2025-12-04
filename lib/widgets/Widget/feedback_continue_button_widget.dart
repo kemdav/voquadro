@@ -10,21 +10,38 @@ class FeedbackContinueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<PublicSpeakingController>();
+    final isReady = controller.isFeedbackGenerationComplete;
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: buttonPurple,
+        disabledBackgroundColor: buttonPurple.withValues(alpha: 0.5),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
-      onPressed: () {
-        context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
-        context.read<PublicSpeakingController>().goToNextFeedbackStep();
-      },
-      child: const Text(
-        'Continue',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      onPressed: isReady
+          ? () {
+              context.read<SoundService>().playSfx(
+                'assets/audio/button_click.mp3',
+              );
+              context.read<PublicSpeakingController>().goToNextFeedbackStep();
+            }
+          : null,
+      child: isReady
+          ? const Text(
+              'Continue',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            )
+          : const SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2.5,
+              ),
+            ),
     );
   }
 }

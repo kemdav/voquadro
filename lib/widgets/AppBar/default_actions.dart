@@ -1,3 +1,5 @@
+// [FILE: kemdav/voquadro/voquadro-feature-animation-dolph-and-other-stuff/lib/widgets/AppBar/default_actions.dart]
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
@@ -68,20 +70,21 @@ class _DefaultActionsState extends State<DefaultActions> {
     const double menuWidth = 140;
 
     double left = pos.dx + size.width - menuWidth - 24;
-
     if (left < 8) left = 8;
-
     final double top = pos.dy + size.height + 8;
 
     _burgerMenuOverlayEntry = OverlayEntry(
-      builder: (context) => _BurgerMenuOverlay(
-        top: top,
-        left: left,
-        width: menuWidth,
-        onClose: _removeBurgerMenu,
-        onLogout: _handleLogout,
-        onSettings: _handleSettings,
-      ),
+      builder: (context) {
+        return _BurgerMenuOverlay(
+          top: top,
+          left: left,
+          width: menuWidth,
+          onClose: _removeBurgerMenu,
+          onLogout: _handleLogout,
+          onSettings: _handleSettings,
+          // [REMOVED] onMicTest
+        );
+      },
     );
 
     overlayState.insert(_burgerMenuOverlayEntry!);
@@ -95,6 +98,8 @@ class _DefaultActionsState extends State<DefaultActions> {
     ).push(MaterialPageRoute(builder: (_) => const SettingsStage()));
   }
 
+  // [REMOVED] _handleMicTest
+
   void _handleLogout() {
     context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
     _removeBurgerMenu();
@@ -104,16 +109,10 @@ class _DefaultActionsState extends State<DefaultActions> {
         onConfirm: () async {
           final appFlow = context.read<AppFlowController>();
           final navigator = Navigator.of(ctx);
-
-          // Close the dialog
           if (navigator.canPop()) {
             navigator.pop();
           }
-
-          // Small delay to allow navigation to settle
           await Future.delayed(const Duration(milliseconds: 200));
-
-          // Perform logout
           await appFlow.logout();
         },
       ),
@@ -144,13 +143,12 @@ class _DefaultActionsState extends State<DefaultActions> {
     return Positioned(
       top: _visibleBarHeight - (_fabSize / 2),
       left: 20,
-      right: 5,
-      height: _fabSize + 10, // Increased height slightly for the new card
+      right: 10,
+      height: _fabSize + 10,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center, // Centered vertically
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // --- NEW LEVEL BAR SECTION ---
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0, top: 4.0),
@@ -162,8 +160,6 @@ class _DefaultActionsState extends State<DefaultActions> {
               ),
             ),
           ),
-
-          // -----------------------------
           SizedBox(
             width: 70,
             height: 70,
@@ -197,7 +193,7 @@ class _DefaultActionsState extends State<DefaultActions> {
   }
 }
 
-// --- NEW WIDGET: Level Progress Bar ---
+// ... _LevelProgressBar remains unchanged ...
 class _LevelProgressBar extends StatelessWidget {
   final int currentLevel;
   final int currentXp;
@@ -213,10 +209,7 @@ class _LevelProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate percentage (clamp to 0.0 - 1.0 to prevent errors)
     final double progress = (currentXp / requiredXp).clamp(0.0, 1.0);
-
-    // Using your app's color palette
     final Color textColor = "49416D".toColor();
     final Color barColor = "7962A5".toColor();
 
@@ -227,7 +220,7 @@ class _LevelProgressBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 26), // 0.1 * 255 ≈ 26
+            color: Colors.black.withValues(alpha: 26),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -247,9 +240,8 @@ class _LevelProgressBar extends StatelessWidget {
               child: Image.asset(
                 'assets/rank_emblem_assets/${rankName.toLowerCase()}.png',
                 fit: BoxFit.cover,
-                errorBuilder:
-                    (context, error, stackTrace) =>
-                        const Icon(Icons.shield, size: 30, color: Colors.grey),
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.shield, size: 30, color: Colors.grey),
               ),
             ),
           ),
@@ -309,7 +301,7 @@ class _LevelProgressBar extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 // XP Text (Optional, kept small)
                 Padding(
                   padding: const EdgeInsets.only(top: 2.0),
@@ -334,8 +326,6 @@ class _LevelProgressBar extends StatelessWidget {
   }
 }
 
-// ... (The _BurgerMenuOverlay and _TrianglePainter classes remain exactly the same as your original code) ...
-
 class _BurgerMenuOverlay extends StatefulWidget {
   final double top;
   final double left;
@@ -343,6 +333,7 @@ class _BurgerMenuOverlay extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onSettings;
   final VoidCallback onLogout;
+  // [REMOVED] onMicTest
 
   const _BurgerMenuOverlay({
     required this.top,
@@ -351,6 +342,7 @@ class _BurgerMenuOverlay extends StatefulWidget {
     required this.onClose,
     required this.onSettings,
     required this.onLogout,
+    // [REMOVED] onMicTest
   });
 
   @override
@@ -363,7 +355,6 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
 
-  // Using hex_color extension
   static final Color _menuBgColor = "49416D".toColor();
   static final Color _borderColor = "6C53A1".toColor();
 
@@ -374,19 +365,14 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
-
-    // Slide: Starts slightly above (-0.1) and slides down to 0
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, -0.1),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    // Fade: Starts invisible (0.0) and fades to visible (1.0)
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
     _controller.forward();
   }
 
@@ -396,7 +382,6 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
     super.dispose();
   }
 
-  // Handles the exit animation before removing the overlay
   Future<void> _handleClose() async {
     await _controller.reverse();
     widget.onClose();
@@ -427,7 +412,6 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1. Triangle Pointer
                       Align(
                         alignment: Alignment.topRight,
                         child: Padding(
@@ -438,14 +422,8 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                           ),
                         ),
                       ),
-
-                      // 2. Menu Content Box
-                      // Offset vertically to overlap slightly or sit flush with triangle
                       Transform.translate(
-                        offset: const Offset(
-                          0,
-                          -1,
-                        ), // pull up slightly to connect
+                        offset: const Offset(0, -1),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           decoration: BoxDecoration(
@@ -457,9 +435,7 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                               bottomRight: Radius.circular(14),
                             ),
                             border: Border.all(
-                              color: _borderColor.withValues(
-                                alpha: 31,
-                              ), // 0.12 * 255 ≈ 31
+                              color: _borderColor.withValues(alpha: 31),
                             ),
                           ),
                           child: Column(
@@ -472,6 +448,7 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                                     _handleSelection(widget.onSettings),
                               ),
                               _buildDivider(),
+                              // [REMOVED] Mic Test Menu Item
                               _buildMenuItem(
                                 label: 'Log out',
                                 asset: 'assets/homepage_assets/exit_door.svg',
@@ -492,10 +469,8 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
     );
   }
 
-  Widget _buildDivider() => Container(
-    height: 1,
-    color: _borderColor.withValues(alpha: 64),
-  ); // 0.25 * 255 ≈ 64
+  Widget _buildDivider() =>
+      Container(height: 1, color: _borderColor.withValues(alpha: 64));
 
   Widget _buildMenuItem({
     required String label,
@@ -536,7 +511,6 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
 class _TrianglePainter extends CustomPainter {
   final Color color;
   const _TrianglePainter({required this.color});
-
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = color;

@@ -41,9 +41,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
           ),
-          home: const InternetCheckWrapper(
-            child: AppFlowManager(),
-          ),
+          home: const InternetCheckWrapper(child: AppFlowManager()),
         );
       },
     );

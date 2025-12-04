@@ -6,6 +6,7 @@ import 'package:voquadro/hubs/controllers/public-speaking-controller/public_spea
 import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
+import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_only.dart'; // Ensure this matches your file creation
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/readying_prompt_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/speaking_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/status_page.dart';
@@ -18,8 +19,7 @@ import 'package:voquadro/widgets/BottomBar/empty_actions.dart';
 import 'package:voquadro/widgets/BottomBar/gameplay_actions.dart';
 import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
 import 'package:voquadro/widgets/BottomBar/start_speaking_actions.dart';
-import 'package:voquadro/screens/misc/under_construction.dart'; // [ADDED] Import
-
+import 'package:voquadro/screens/misc/under_construction.dart';
 import 'package:voquadro/services/sound_service.dart';
 
 class PublicSpeakingHub extends StatelessWidget {
@@ -33,17 +33,17 @@ class PublicSpeakingHub extends StatelessWidget {
         return const StartSpeakingActions();
 
       case PublicSpeakingState.profile:
-      case PublicSpeakingState
-          .journey: // Journey uses empty bottom actions (nav bar handles it)\
+      case PublicSpeakingState.journey:
       case PublicSpeakingState.underConstruction:
         return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
+      case PublicSpeakingState.micTestOnly: // [ADDED] Hide bottom actions
         return EmptyNavigationActions();
+
       case PublicSpeakingState.readying:
         return const EmptyActions();
       case PublicSpeakingState.speaking:
-        // For any gameplay state, show the gameplay-specific buttons.
         return GameplayActions();
       case PublicSpeakingState.inFeedback:
         return const EmptyNavigationActions();
@@ -61,8 +61,11 @@ class PublicSpeakingHub extends StatelessWidget {
 
       case PublicSpeakingState.journey:
       case PublicSpeakingState.micTest:
+      case PublicSpeakingState
+          .micTestOnly: // [ADDED] Hide upper actions (Page has its own back button)
       case PublicSpeakingState.readying:
         return const EmptyActions();
+
       case PublicSpeakingState.speaking:
       case PublicSpeakingState.inFeedback:
         return const EmptyActions();
@@ -81,6 +84,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return true;
 
       case PublicSpeakingState.micTest:
+      case PublicSpeakingState.micTestOnly: // [ADDED] Full screen mode
       case PublicSpeakingState.readying:
       case PublicSpeakingState.inFeedback:
         return false;
@@ -98,6 +102,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return true;
 
       case PublicSpeakingState.micTest:
+      case PublicSpeakingState.micTestOnly: // [ADDED]
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
       case PublicSpeakingState.inFeedback:
@@ -111,12 +116,14 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.home:
       case PublicSpeakingState.status:
       case PublicSpeakingState.profile:
-      case PublicSpeakingState.journey: // Standard size
+      case PublicSpeakingState.journey:
       case PublicSpeakingState.underConstruction:
-        return [60, 160];
+        return [70, 160];
 
       case PublicSpeakingState.micTest:
+      case PublicSpeakingState.micTestOnly: // [ADDED]
         return [140, 40];
+
       case PublicSpeakingState.readying:
         return [120, 40];
       case PublicSpeakingState.speaking:
@@ -191,14 +198,18 @@ class PublicSpeakingHub extends StatelessWidget {
                                 PublicSpeakingState.journey,
                           ),
                           const MicTestPage(),
+
+                          // [ADDED] MicTestOnlyPage at the index corresponding to PublicSpeakingState.micTestOnly
+                          const MicTestOnlyPage(),
+
                           const ReadyingPromptPage(),
                           const SpeakingPage(),
                           const FeedbackFlowPage(),
-                          const UnderConstructionPage(), // [ADDED] Under Construction Page
+                          const UnderConstructionPage(),
                         ],
                       ),
                     ),
-                    // Bottom navigation bar (only shown when appropriate)
+                    // Bottom navigation bar
                     if (showBottomBar)
                       Align(
                         alignment: Alignment.bottomCenter,
@@ -297,7 +308,8 @@ class PublicSpeakingHub extends StatelessWidget {
           ),
 
           // Arrow pointing to Start button (Last step)
-          if (controller.tutorialIndex == controller.tutorialMessages.length - 1)
+          if (controller.tutorialIndex ==
+              controller.tutorialMessages.length - 1)
             Positioned(
               bottom: 180,
               left: 0,

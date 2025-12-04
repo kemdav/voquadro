@@ -1,3 +1,5 @@
+// [FILE: kemdav/voquadro/voquadro-feature-animation-dolph-and-other-stuff/lib/widgets/BottomBar/navigation_icons.dart]
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
@@ -6,11 +8,16 @@ import 'package:voquadro/hubs/controllers/public-speaking-controller/public_spea
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
-// [ADDED] Import notifiers
 import 'package:voquadro/data/notifiers.dart';
 
 class NavigationIcons extends StatefulWidget {
-  const NavigationIcons({super.key});
+  final double navbarHeight;
+
+  const NavigationIcons({
+    super.key,
+    this.navbarHeight =
+        70.0, // Default to 70 to match home screen if not specified
+  });
 
   @override
   State<NavigationIcons> createState() => _NavigationIconsState();
@@ -24,8 +31,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   int _selectedIndex = 0;
 
-  final double _navbarHeight = 60.0;
-  final double _iconSize = 30.0;
+  final double _iconSize = 35.0;
 
   @override
   void dispose() {
@@ -45,15 +51,22 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   void _openMenu() {
     final double bottomPadding = MediaQuery.of(context).padding.bottom;
+    final publicSpeakingController = context.read<PublicSpeakingController>();
+
     _overlayEntry = OverlayEntry(
-      builder: (context) => _OptionsTrayOverlay(
-        navbarHeight: _navbarHeight + bottomPadding,
-        onClose: _closeMenu,
-        onNavigate: (VoidCallback navAction) {
-          _closeMenu();
-          navAction();
-        },
-      ),
+      builder: (context) {
+        return ChangeNotifierProvider.value(
+          value: publicSpeakingController,
+          child: _OptionsTrayOverlay(
+            navbarHeight: widget.navbarHeight + bottomPadding,
+            onClose: _closeMenu,
+            onNavigate: (VoidCallback navAction) {
+              _closeMenu();
+              navAction();
+            },
+          ),
+        );
+      },
     );
 
     Overlay.of(context).insert(_overlayEntry!);
@@ -100,8 +113,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment:
-          CrossAxisAlignment.center, // Ensure vertical centering
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildNavIcon(
           index: 0,
@@ -122,7 +134,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
             context.read<PublicSpeakingController>().showUnderConstruction();
           }),
         ),
-        // [CHANGED] Wrapped Journal icon in ValueListenableBuilder to listen for new feedback
         ValueListenableBuilder<bool>(
           valueListenable: hasNewFeedbackNotifier,
           builder: (context, hasNewFeedback, child) {
@@ -131,7 +142,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
               assetPath: 'assets/homepage_assets/user_journal.svg',
               showBadge: hasNewFeedback,
               onTap: () => _onIconPressed(3, 'Journal pressed', () {
-                // Clear the badge when pressed
                 hasNewFeedbackNotifier.value = false;
                 context.read<PublicSpeakingController>().showJourney();
               }),
@@ -157,13 +167,74 @@ class _NavigationIconsState extends State<NavigationIcons> {
     required int index,
     required String assetPath,
     required VoidCallback onTap,
-    // [ADDED] Optional parameter to show a red dot badge
     bool showBadge = false,
   }) {
     final isSelected = _selectedIndex == index && index != 4;
 
-    return GestureDetector(
+    return _BouncingNavItem(
+      isSelected: isSelected,
+      assetPath: assetPath,
+      iconSize: _iconSize,
+      showBadge: showBadge,
       onTap: onTap,
+    );
+  }
+}
+
+class _BouncingNavItem extends StatefulWidget {
+  final bool isSelected;
+  final String assetPath;
+  final double iconSize;
+  final bool showBadge;
+  final VoidCallback onTap;
+
+  const _BouncingNavItem({
+    required this.isSelected,
+    required this.assetPath,
+    required this.iconSize,
+    required this.showBadge,
+    required this.onTap,
+  });
+
+  @override
+  State<_BouncingNavItem> createState() => _BouncingNavItemState();
+}
+
+class _BouncingNavItemState extends State<_BouncingNavItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      reverseDuration: const Duration(milliseconds: 100),
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    _controller.forward().then((_) => _controller.reverse());
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -174,20 +245,23 @@ class _NavigationIconsState extends State<NavigationIcons> {
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.white.withValues(alpha: 0.2)
+              color: widget.isSelected
+                  ? Colors.white.withValues(alpha: 0.11)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                SvgPicture.asset(
-                  assetPath,
-                  width: _iconSize,
-                  height: _iconSize,
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: SvgPicture.asset(
+                    widget.assetPath,
+                    width: widget.iconSize,
+                    height: widget.iconSize,
+                  ),
                 ),
-                if (showBadge)
+                if (widget.showBadge)
                   Positioned(
                     top: -2,
                     right: -2,
@@ -242,7 +316,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
       duration: const Duration(milliseconds: 250),
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.09),
+      begin: const Offset(0, 1.0),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _opacityAnimation = Tween<double>(
@@ -271,7 +345,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
           top: 0,
           left: 0,
           right: 0,
-          bottom: 0,
+          bottom: widget.navbarHeight,
           child: GestureDetector(
             onTap: _animateOut,
             child: FadeTransition(
@@ -294,7 +368,9 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                   margin: const EdgeInsets.symmetric(horizontal: 0),
                   decoration: BoxDecoration(
                     color: _optionTrayMenuBackgroundColor,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.1),
                     ),
@@ -327,20 +403,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                           );
                           context
                               .read<PublicSpeakingController>()
-                              .startMicTest();
-                        }),
-                      ),
-                      const Divider(height: 1, color: _dividerColor),
-                      _buildOptionTrayMenuItem(
-                        iconPath: 'assets/homepage_assets/podium.svg',
-                        label: 'Practice',
-                        onTap: () => widget.onNavigate(() {
-                          context.read<SoundService>().playSfx(
-                            'assets/audio/navigation_sfx.mp3',
-                          );
-                          context
-                              .read<PublicSpeakingController>()
-                              .showUnderConstruction();
+                              .startMicTestOnly();
                         }),
                       ),
                     ],
