@@ -118,7 +118,7 @@ class PublicSpeakingHub extends StatelessWidget {
       case PublicSpeakingState.profile:
       case PublicSpeakingState.journey:
       case PublicSpeakingState.underConstruction:
-        return [90, 160];
+        return [70, 160];
 
       case PublicSpeakingState.micTest:
       case PublicSpeakingState.micTestOnly: // [ADDED]

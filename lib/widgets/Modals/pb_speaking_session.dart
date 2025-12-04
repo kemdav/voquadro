@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/src/models/session_model.dart';
 
@@ -39,6 +41,14 @@ class _PublicSpeakingFeedbackModalState
 
         _audioPlayer.playerStateStream.listen((state) {
           if (mounted) {
+            // Duck music when playing
+            final soundService = context.read<SoundService>();
+            if (state.playing) {
+              soundService.duckMusic(true);
+            } else {
+              soundService.duckMusic(false);
+            }
+
             setState(() {
               _isPlaying = state.playing;
               if (state.processingState == ProcessingState.completed) {
@@ -67,6 +77,12 @@ class _PublicSpeakingFeedbackModalState
 
   @override
   void dispose() {
+    // Ensure music is unducked when modal closes
+    try {
+      context.read<SoundService>().duckMusic(false);
+    } catch (e) {
+      // Ignore if context is invalid
+    }
     _pageController.dispose();
     _audioPlayer.dispose();
     super.dispose();

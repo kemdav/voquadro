@@ -18,8 +18,10 @@ class GeneralNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return SizedBox(
-      height: totalHitTestHeight,
+      height: totalHitTestHeight + bottomPadding,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -30,7 +32,7 @@ class GeneralNavigationBar extends StatelessWidget {
               left: 0,
               right: 0,
               child: Container(
-                height: navBarVisualHeight,
+                height: navBarVisualHeight + bottomPadding,
                 decoration: BoxDecoration(
                   color: "49416D".toColor(),
                   boxShadow: [
@@ -46,16 +48,20 @@ class GeneralNavigationBar extends StatelessWidget {
           // Navigation icons (centered inside purple bar at bottom) - only show if navBarVisualHeight > 0
           if (navBarVisualHeight > 0 && showIcons)
             Positioned(
-              bottom: 10,
+              bottom: bottomPadding,
               left: 0,
               right: 0,
               height: navBarVisualHeight,
-              child: Center(child: const NavigationIcons()),
+              child: Center(
+                child: NavigationIcons(navbarHeight: navBarVisualHeight),
+              ),
             ),
           // Actions widget (positioned above the purple navigation bar, or at bottom if no nav bar)
           if (actions != null)
             Positioned(
-              bottom: navBarVisualHeight > 0 ? navBarVisualHeight + 20 : 20,
+              bottom:
+                  (navBarVisualHeight > 0 ? navBarVisualHeight + 20 : 20) +
+                  bottomPadding,
               left: 20,
               right: 20,
               child: actions!,

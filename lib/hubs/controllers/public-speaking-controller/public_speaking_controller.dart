@@ -68,6 +68,8 @@ class PublicSpeakingController
   @override
   HybridAIService get aiService => _aiService;
 
+  late VoidCallback _audioListener;
+
   PublicSpeakingController({
     required AudioController audioController,
     required AppFlowController appFlowController,
@@ -79,15 +81,35 @@ class PublicSpeakingController
     if (_shouldPlayBackgroundMusic(currentState)) {
       _soundService.playMusic('assets/audio/home_background.wav');
     }
+
+    // Listen to audio controller for ducking music during playback
+    _audioListener = () {
+      if (_audioController.audioState == AudioState.playing) {
+        _soundService.duckMusic(true);
+      } else {
+        _soundService.duckMusic(false);
+      }
+    };
+    _audioController.addListener(_audioListener);
+
     _checkTutorialStatus();
   }
 
   Future<void> _checkTutorialStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    // final hasSeenTutorial =
-    //     prefs.getBool('hasSeenPublicSpeakingTutorial') ?? false;
+    // Add a small delay to ensure the UI is fully settled and any pending
+    // touch events (like from the registration button) are cleared.
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    final hasSeenTutorial = false;
+    if (_isDisposed) return;
+
+    final userId = _appFlowController.currentUser?.id;
+    if (userId == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final tutorialKey = 'hasSeenPublicSpeakingTutorial_$userId';
+    final hasSeenTutorial = prefs.getBool(tutorialKey) ?? false;
+
+    logger.d("Tutorial Check for user $userId: $hasSeenTutorial");
 
     if (!hasSeenTutorial) {
       _isTutorialActive = true;
@@ -96,18 +118,30 @@ class PublicSpeakingController
     }
   }
 
+  bool _isProcessingTutorialStep = false;
+
   void nextTutorialStep() async {
+    if (_isProcessingTutorialStep) return;
+    _isProcessingTutorialStep = true;
+
     if (_tutorialIndex < _tutorialMessages.length - 1) {
       _tutorialIndex++;
       _soundService.playSfx('assets/audio/dolph_sound.wav');
       notifyListeners();
+      // Small delay to prevent accidental double-taps
+      await Future.delayed(const Duration(milliseconds: 300));
     } else {
       // End tutorial
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('hasSeenPublicSpeakingTutorial', true);
+      final userId = _appFlowController.currentUser?.id;
+      if (userId != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final tutorialKey = 'hasSeenPublicSpeakingTutorial_$userId';
+        await prefs.setBool(tutorialKey, true);
+      }
       _isTutorialActive = false;
       notifyListeners();
     }
+    _isProcessingTutorialStep = false;
   }
 
   bool _shouldPlayBackgroundMusic(PublicSpeakingState state) {
@@ -427,8 +461,12 @@ class PublicSpeakingController
     );
   }
 
+  bool _isDisposed = false;
+
   @override
   void dispose() {
+    _isDisposed = true;
+    _audioController.removeListener(_audioListener);
     try {
       _soundService.stopMusic();
     } catch (e) {

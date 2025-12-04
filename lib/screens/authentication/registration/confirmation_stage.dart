@@ -12,19 +12,34 @@ class RegistrationConfirmationStage extends StatelessWidget {
   }
 
   Future<void> _completeRegistration(BuildContext context) async {
+    // Capture controllers before the async gap
     final registrationController = context.read<RegistrationController>();
     final appFlowController = context.read<AppFlowController>();
 
+    // This will trigger a rebuild of RegistrationScreen, causing this widget (ConfirmationStage)
+    // to be disposed as it switches to the 'submitting' loading indicator.
     await registrationController.completeRegistration();
 
-    if (context.mounted) {
-      // Check if registration was successful (no error message)
-      if (registrationController.errorMessage == null) {
+    // Because this widget is disposed, context.mounted would be false here.
+    // However, we already captured the controllers, so we can proceed with the logic.
+    
+    // Check if registration was successful (no error message)
+    if (registrationController.errorMessage == null) {
+      debugPrint("Registration successful, proceeding to auto-login...");
+      try {
         appFlowController.login(
           registrationController.username!,
           registrationController.password!,
         );
+      } catch (e) {
+        debugPrint("Error calling login from registration: $e");
       }
+    } else {
+      debugPrint("Registration failed with error: ${registrationController.errorMessage}");
+      // If there was an error, the controller sets the stage back to confirmation.
+      // Since this widget was disposed, we can't update IT, but the parent RegistrationScreen
+      // will rebuild with the ConfirmationStage again (because of notifyListeners in controller),
+      // showing the error message.
     }
   }
 

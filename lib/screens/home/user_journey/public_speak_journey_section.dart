@@ -93,6 +93,13 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
     final levelInfo = ProgressionConversionHelper.getLevelProgressInfo(
       currentXP,
     );
+    final paceLevelInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.paceControlEXP,
+    );
+    final fillerLevelInfo = ProgressionConversionHelper.getLevelProgressInfo(
+      user.fillerControlEXP,
+    );
+
     final currentLevel = levelInfo.level;
     final currentRank = levelInfo.rank;
     final currentLevelExp = levelInfo.currentLevelExp;
@@ -169,6 +176,8 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                         currentLevel,
                         averageWPM,
                         averageFillers,
+                        paceLevelInfo,
+                        fillerLevelInfo,
                         snapshot,
                       );
                     },
@@ -192,6 +201,8 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
     int currentLevel,
     int averageWPM,
     int averageFillers,
+    LevelProgressInfo paceLevelInfo,
+    LevelProgressInfo fillerLevelInfo,
     AsyncSnapshot<List<Session>> snapshot,
   ) {
     return Container(
@@ -208,6 +219,8 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
             currentRank,
             currentLevel,
           ),
+          const SizedBox(height: 24),
+          _buildSubSkillsSection(titleColor, paceLevelInfo, fillerLevelInfo),
           const SizedBox(height: 32),
           const Divider(height: 1, thickness: 1),
           const SizedBox(height: 32),
@@ -218,6 +231,101 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
           _buildFeedbackSection(titleColor, snapshot),
         ],
       ),
+    );
+  }
+
+  Widget _buildSubSkillsSection(
+    Color titleColor,
+    LevelProgressInfo paceInfo,
+    LevelProgressInfo fillerInfo,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildMiniProgressBar(
+            'Pace Control',
+            paceInfo,
+            const Color(0xFF00A9A5),
+            titleColor,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildMiniProgressBar(
+            'Filler Control',
+            fillerInfo,
+            const Color(0xFF00A9A5),
+            titleColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniProgressBar(
+    String title,
+    LevelProgressInfo info,
+    Color progressColor,
+    Color textColor,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Lvl ${info.level}',
+              style: TextStyle(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            height: 8,
+            decoration: const BoxDecoration(color: Colors.white),
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey('${title}_bar_$_animationTriggerCount'),
+              tween: Tween<double>(
+                begin: 0,
+                end: info.progressPercentage.clamp(0.0, 1.0),
+              ),
+              duration: const Duration(milliseconds: 1500),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: value,
+                  child: Container(color: progressColor),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${info.currentLevelExp}/${info.expToNextLevel} XP',
+          style: TextStyle(
+            color: textColor.withValues(alpha: 0.6),
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 

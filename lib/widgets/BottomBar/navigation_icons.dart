@@ -11,7 +11,13 @@ import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/data/notifiers.dart';
 
 class NavigationIcons extends StatefulWidget {
-  const NavigationIcons({super.key});
+  final double navbarHeight;
+
+  const NavigationIcons({
+    super.key,
+    this.navbarHeight =
+        70.0, // Default to 70 to match home screen if not specified
+  });
 
   @override
   State<NavigationIcons> createState() => _NavigationIconsState();
@@ -25,7 +31,6 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   int _selectedIndex = 0;
 
-  final double _navbarHeight = 110.0;
   final double _iconSize = 35.0;
 
   @override
@@ -45,6 +50,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
   }
 
   void _openMenu() {
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
     final publicSpeakingController = context.read<PublicSpeakingController>();
 
     _overlayEntry = OverlayEntry(
@@ -52,7 +58,7 @@ class _NavigationIconsState extends State<NavigationIcons> {
         return ChangeNotifierProvider.value(
           value: publicSpeakingController,
           child: _OptionsTrayOverlay(
-            navbarHeight: _navbarHeight - 20,
+            navbarHeight: widget.navbarHeight + bottomPadding,
             onClose: _closeMenu,
             onNavigate: (VoidCallback navAction) {
               _closeMenu();
