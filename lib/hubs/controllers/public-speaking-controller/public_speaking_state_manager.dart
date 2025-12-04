@@ -4,11 +4,9 @@ enum PublicSpeakingState {
   home,
   profile,
   status,
-  // [ADDED] 'journey' state.
-  // We add this so the PublicSpeakingController can track when the user
-  // is viewing the Journey screen. This allows us to switch tabs instead of pushing pages.
   journey,
-  micTest,
+  micTest, // The gameplay mic test
+  micTestOnly, // [ADDED] The standalone utility mic test
   readying,
   speaking,
   inFeedback,
@@ -33,10 +31,6 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
     setPublicSpeakingState(PublicSpeakingState.home);
   }
 
-  // [ADDED] showJourney method.
-  // This method is called by the bottom navigation bar. It simply updates the state variable.
-  // Because this uses 'notifyListeners()', the PublicSpeakingHub will rebuild and show the
-  // Journey screen instantly via the IndexedStack.
   void showJourney() {
     setPublicSpeakingState(PublicSpeakingState.journey);
   }
@@ -49,11 +43,13 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
     setPublicSpeakingState(PublicSpeakingState.micTest);
   }
 
+  // [ADDED] Trigger for the standalone mic test
+  void startMicTestOnly() {
+    setPublicSpeakingState(PublicSpeakingState.micTestOnly);
+  }
+
   void goToNextFeedbackStep() {
     if (_currentFeedbackStep == FeedbackStep.progressionDisplay) {
-      // Assuming endGameplay() is in the main controller
-      // This can be handled by a callback or by overriding this method.
-      // For simplicity, we'll just move the core logic here.
       setPublicSpeakingState(PublicSpeakingState.home);
     } else {
       int nextIndex = _currentFeedbackStep.index + 1;

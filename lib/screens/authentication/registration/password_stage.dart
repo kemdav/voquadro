@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/registration_controller.dart';
+import 'package:voquadro/src/hex_color.dart';
 
 class RegistrationPasswordStage extends StatefulWidget {
   const RegistrationPasswordStage({super.key});
 
   @override
-  State<RegistrationPasswordStage> createState() => _RegistrationPasswordStageState();
+  State<RegistrationPasswordStage> createState() =>
+      _RegistrationPasswordStageState();
 }
 
 class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
@@ -61,8 +64,13 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                         children: [
                           IconButton(
                             onPressed: _goBack,
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
-                            style: IconButton.styleFrom(backgroundColor: buttonPurple),
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                            style: IconButton.styleFrom(
+                              backgroundColor: buttonPurple,
+                            ),
                             iconSize: 30,
                           ),
                         ],
@@ -72,8 +80,10 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                       Center(
                         child: CircleAvatar(
                           radius: 56,
-                          backgroundColor: Colors.grey.shade600,
-                          backgroundImage: const AssetImage('assets/images/dolph.png'),
+                          backgroundColor: "#f5fbf9".toColor(),
+                          backgroundImage: const AssetImage(
+                            'assets/images/dolph.png',
+                          ),
                         ),
                       ),
 
@@ -99,7 +109,8 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                       Text(
                         "You're getting there! 🐬",
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: primaryText,
                             ),
@@ -111,7 +122,9 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                         controller: _passwordController,
                         hintText: 'Password',
                         isVisible: _isPasswordVisible,
-                        onToggleVisibility: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                        onToggleVisibility: () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible,
+                        ),
                         validator: (value) {
                           if (value == null || value.length < 8) {
                             return 'Password must be at least 8 characters';
@@ -126,7 +139,10 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                         controller: _confirmPasswordController,
                         hintText: 'Confirm Password',
                         isVisible: _isConfirmPasswordVisible,
-                        onToggleVisibility: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                        onToggleVisibility: () => setState(
+                          () => _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible,
+                        ),
                         validator: (value) {
                           if (value != _passwordController.text) {
                             return 'Passwords do not match';
@@ -146,13 +162,18 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: buttonPurple,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
                             elevation: 6,
                             shadowColor: buttonPurple.withAlpha(102),
                           ),
                           child: const Text(
                             'Continue',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -187,7 +208,7 @@ class _PasswordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField( 
+    return TextFormField(
       controller: controller,
       obscureText: !isVisible,
       decoration: InputDecoration(
@@ -203,7 +224,10 @@ class _PasswordField extends StatelessWidget {
         ),
         filled: true,
         fillColor: const Color(0xFFE5D3EC),
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: Color(0xFFE5D3EC)),
@@ -218,7 +242,7 @@ class _PasswordField extends StatelessWidget {
         ),
       ),
       textInputAction: TextInputAction.done,
-      validator: validator, 
+      validator: validator,
     );
   }
 }

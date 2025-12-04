@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
@@ -109,18 +108,7 @@ class _SettingsStageState extends State<SettingsStage> {
                             );
                           },
                         ),
-                        const _TileDivider(),
-                        SettingsTile(
-                          title: 'Change Password',
-                          textColor: purpleDark,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const ChangePasswordStage(),
-                              ),
-                            );
-                          },
-                        ),
+
                         const _TileDivider(),
                         SettingsTile(
                           title: 'Linked Accounts',
@@ -138,29 +126,6 @@ class _SettingsStageState extends State<SettingsStage> {
                               builder: (BuildContext context) =>
                                   const DeleteConfirmationDialog(),
                             );
-                          },
-                        ),
-                        const _TileDivider(),
-                        SettingsTile(
-                          title: 'Log out',
-                          textColor: Colors
-                              .redAccent, // Changed from cyan for better UX
-                          onTap: () async {
-                            final appFlow = context.read<AppFlowController>();
-                            final navigator = Navigator.of(context);
-
-                            // Pop everything until we are at the root
-                            while (navigator.canPop()) {
-                              navigator.pop();
-                            }
-
-                            // Small delay to allow navigation to settle
-                            await Future.delayed(
-                              const Duration(milliseconds: 200),
-                            );
-
-                            // Then logout
-                            await appFlow.logout();
                           },
                         ),
                       ],
