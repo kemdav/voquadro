@@ -38,7 +38,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED] Hide bottom actions
+      case PublicSpeakingState.micTestOnly:
         return EmptyNavigationActions();
 
       case PublicSpeakingState.readying:
@@ -61,8 +61,7 @@ class PublicSpeakingHub extends StatelessWidget {
 
       case PublicSpeakingState.journey:
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState
-          .micTestOnly: // [ADDED] Hide upper actions (Page has its own back button)
+      case PublicSpeakingState.micTestOnly:
       case PublicSpeakingState.readying:
         return const EmptyActions();
 
@@ -84,7 +83,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return true;
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED] Full screen mode
+      case PublicSpeakingState.micTestOnly:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.inFeedback:
         return false;
@@ -102,7 +101,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return true;
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED]
+      case PublicSpeakingState.micTestOnly:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
       case PublicSpeakingState.inFeedback:
@@ -121,7 +120,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return [70, 160];
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED]
+      case PublicSpeakingState.micTestOnly:
         return [140, 40];
 
       case PublicSpeakingState.readying:
@@ -199,7 +198,6 @@ class PublicSpeakingHub extends StatelessWidget {
                           ),
                           const MicTestPage(),
 
-                          // [ADDED] MicTestOnlyPage at the index corresponding to PublicSpeakingState.micTestOnly
                           const MicTestOnlyPage(),
 
                           const ReadyingPromptPage(),

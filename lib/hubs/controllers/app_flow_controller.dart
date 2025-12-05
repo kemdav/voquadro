@@ -11,7 +11,7 @@ enum AppState {
   authenticated,
 }
 
-enum AppMode { modeSelection, publicSpeaking }
+enum AppMode { modeSelection, publicSpeaking, interviewMode }
 
 class AppFlowController with ChangeNotifier {
   AppState _appState = AppState.authenticating;

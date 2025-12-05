@@ -17,6 +17,8 @@ class GameModeManager extends StatelessWidget {
         return const PublicSpeakingHub();
       case AppMode.modeSelection:
         return const Text('Mode Selection');
+      case AppMode.interviewMode:
+        return const Text('Interview Mode');
     }
   }
 }

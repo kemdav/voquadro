@@ -8,7 +8,6 @@ class UnderConstructionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color backgroundColor = "2C2C3E".toColor();
 
-    // CHANGED: Removed Scaffold and AppBar.
     // This allows the parent (PublicSpeakingHub) to show its own bars.
     return Container(
       color: backgroundColor,
@@ -18,7 +17,6 @@ class UnderConstructionPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Added padding so content isn't hidden behind the top bar
             const SizedBox(height: 60),
 
             Image.asset(
@@ -57,7 +55,6 @@ class UnderConstructionPage extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 179), // 0.7 * 255 ≈ 179
               ),
             ),
-            // Added padding for bottom bar
             const SizedBox(height: 100),
           ],
         ),

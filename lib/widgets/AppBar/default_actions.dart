@@ -82,7 +82,6 @@ class _DefaultActionsState extends State<DefaultActions> {
           onClose: _removeBurgerMenu,
           onLogout: _handleLogout,
           onSettings: _handleSettings,
-          // [REMOVED] onMicTest
         );
       },
     );
@@ -97,8 +96,6 @@ class _DefaultActionsState extends State<DefaultActions> {
       context,
     ).push(MaterialPageRoute(builder: (_) => const SettingsStage()));
   }
-
-  // [REMOVED] _handleMicTest
 
   void _handleLogout() {
     context.read<SoundService>().playSfx('assets/audio/button_click.mp3');
@@ -333,7 +330,6 @@ class _BurgerMenuOverlay extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onSettings;
   final VoidCallback onLogout;
-  // [REMOVED] onMicTest
 
   const _BurgerMenuOverlay({
     required this.top,
@@ -342,9 +338,7 @@ class _BurgerMenuOverlay extends StatefulWidget {
     required this.onClose,
     required this.onSettings,
     required this.onLogout,
-    // [REMOVED] onMicTest
   });
-
   @override
   State<_BurgerMenuOverlay> createState() => _BurgerMenuOverlayState();
 }
@@ -448,7 +442,6 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
                                     _handleSelection(widget.onSettings),
                               ),
                               _buildDivider(),
-                              // [REMOVED] Mic Test Menu Item
                               _buildMenuItem(
                                 label: 'Log out',
                                 asset: 'assets/homepage_assets/exit_door.svg',

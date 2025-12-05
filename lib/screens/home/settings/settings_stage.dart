@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/hex_color.dart';
-import 'package:voquadro/screens/home/settings/change_password_stage.dart';
 import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
 import 'package:voquadro/widgets/Modals/terms_of_service_modal.dart';
 import 'package:voquadro/widgets/Modals/privacy_policy_modal.dart';
@@ -152,7 +151,6 @@ class _SettingsStageState extends State<SettingsStage> {
                           textColor: purpleDark,
                           trailing: const Icon(Icons.open_in_new, size: 20),
                           onTap: () {
-                            // [CHANGED] Show new PrivacyPolicyModal
                             showDialog(
                               context: context,
                               builder: (context) => const PrivacyPolicyModal(),
@@ -165,7 +163,6 @@ class _SettingsStageState extends State<SettingsStage> {
                           textColor: purpleDark,
                           trailing: const Icon(Icons.open_in_new, size: 20),
                           onTap: () {
-                            // [CHANGED] Show new TermsOfServiceModal
                             showDialog(
                               context: context,
                               builder: (context) => const TermsOfServiceModal(),
