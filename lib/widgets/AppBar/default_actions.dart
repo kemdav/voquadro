@@ -8,8 +8,9 @@ import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:voquadro/src/helper-class/progression_conversion_helper.dart';
-import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/Widget/confirmation_dialog_template.dart';
+import 'package:voquadro/data/notifiers.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class DefaultActions extends StatefulWidget {
   const DefaultActions({
@@ -34,9 +35,8 @@ class _DefaultActionsState extends State<DefaultActions> {
   OverlayEntry? _burgerMenuOverlayEntry;
 
   static const double _fabSize = 60.0;
-  static const double _visibleBarHeight = 80.0;
 
-  static final Color _fabColor = "7962A5".toColor();
+  static final Color _fabColor = VoquadroColors.publicSpeakingSecondary;
 
   @override
   void dispose() {
@@ -120,6 +120,8 @@ class _DefaultActionsState extends State<DefaultActions> {
   Widget build(BuildContext context) {
     final appFlow = context.watch<AppFlowController>();
     final user = appFlow.currentUser;
+    final double topPadding = MediaQuery.of(context).padding.top;
+    final double visibleBarHeight = 80.0 + topPadding;
 
     // Default values if user is not loaded
     int currentLevel = 1;
@@ -138,7 +140,7 @@ class _DefaultActionsState extends State<DefaultActions> {
     }
 
     return Positioned(
-      top: _visibleBarHeight - (_fabSize / 2),
+      top: visibleBarHeight - (_fabSize / 2),
       left: 20,
       right: 10,
       height: _fabSize + 10,
@@ -149,11 +151,28 @@ class _DefaultActionsState extends State<DefaultActions> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0, top: 4.0),
-              child: _LevelProgressBar(
-                currentLevel: currentLevel,
-                currentXp: currentXp,
-                requiredXp: requiredXp,
-                rankName: currentRank,
+              child: ValueListenableBuilder<int>(
+                valueListenable: publicModeSelectedNotifier,
+                builder: (context, mode, _) {
+                  if (mode == 1) {
+                    // Interview Mode
+                    return _LevelProgressBar(
+                      currentLevel: 1,
+                      currentXp: 0,
+                      requiredXp: 100,
+                      rankName: "Intern",
+                      barColor: VoquadroColors.interviewSecondary,
+                      textColor: VoquadroColors.interviewText,
+                    );
+                  }
+                  // Public Speaking Mode
+                  return _LevelProgressBar(
+                    currentLevel: currentLevel,
+                    currentXp: currentXp,
+                    requiredXp: requiredXp,
+                    rankName: currentRank,
+                  );
+                },
               ),
             ),
           ),
@@ -196,28 +215,34 @@ class _LevelProgressBar extends StatelessWidget {
   final int currentXp;
   final int requiredXp;
   final String rankName;
+  final Color? barColor;
+  final Color? textColor;
 
   const _LevelProgressBar({
     required this.currentLevel,
     required this.currentXp,
     required this.requiredXp,
     required this.rankName,
+    this.barColor,
+    this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final double progress = (currentXp / requiredXp).clamp(0.0, 1.0);
-    final Color textColor = "49416D".toColor();
-    final Color barColor = "7962A5".toColor();
+    final Color effectiveTextColor =
+        textColor ?? VoquadroColors.publicSpeakingPrimary;
+    final Color effectiveBarColor =
+        barColor ?? VoquadroColors.publicSpeakingSecondary;
 
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 230), // 0.9 * 255 ≈ 230
+        color: VoquadroColors.white.withValues(alpha: 230), // 0.9 * 255 ≈ 230
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 26),
+            color: VoquadroColors.shadowColorLight,
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -231,7 +256,7 @@ class _LevelProgressBar extends StatelessWidget {
             height: 54,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: barColor.withValues(alpha: 26), // Light purple bg
+              color: effectiveBarColor.withValues(alpha: 26), // Light purple bg
             ),
             child: ClipOval(
               child: Image.asset(
@@ -258,7 +283,7 @@ class _LevelProgressBar extends StatelessWidget {
                       rankName,
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
-                        color: textColor,
+                        color: effectiveTextColor,
                         fontSize: 13,
                       ),
                     ),
@@ -266,7 +291,7 @@ class _LevelProgressBar extends StatelessWidget {
                       'Lvl $currentLevel',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
-                        color: barColor,
+                        color: effectiveBarColor,
                         fontSize: 12,
                       ),
                     ),
@@ -281,7 +306,7 @@ class _LevelProgressBar extends StatelessWidget {
                     Container(
                       height: 6,
                       decoration: BoxDecoration(
-                        color: textColor.withValues(alpha: 26),
+                        color: effectiveTextColor.withValues(alpha: 26),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -291,7 +316,7 @@ class _LevelProgressBar extends StatelessWidget {
                       child: Container(
                         height: 6,
                         decoration: BoxDecoration(
-                          color: barColor,
+                          color: effectiveBarColor,
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -308,7 +333,7 @@ class _LevelProgressBar extends StatelessWidget {
                       '$currentXp / $requiredXp XP',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: textColor.withValues(alpha: 128),
+                        color: effectiveTextColor.withValues(alpha: 128),
                         fontSize: 9,
                       ),
                     ),
@@ -349,8 +374,8 @@ class _BurgerMenuOverlayState extends State<_BurgerMenuOverlay>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
 
-  static final Color _menuBgColor = "49416D".toColor();
-  static final Color _borderColor = "6C53A1".toColor();
+  static final Color _menuBgColor = VoquadroColors.publicSpeakingPrimary;
+  static final Color _borderColor = VoquadroColors.publicSpeakingBorder;
 
   @override
   void initState() {

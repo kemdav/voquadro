@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class MicTestPage extends StatefulWidget {
   const MicTestPage({super.key});
@@ -160,8 +160,8 @@ class _MicTestPageState extends State<MicTestPage> {
     final bool isGood = amplitude >= 0.2 && _isReadyToListen && _isActive;
 
     // Colors
-    final Color primaryPurple = "49416D".toColor();
-    final Color accentCyan = "23B5D3".toColor();
+    final Color primaryPurple = VoquadroColors.primaryPurple;
+    final Color accentCyan = VoquadroColors.accentCyan;
     final Color activeColor = _successDetected
         ? accentCyan
         : (isGood ? accentCyan : Colors.grey.shade300);

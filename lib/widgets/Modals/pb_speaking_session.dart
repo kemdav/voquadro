@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/services/sound_service.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:voquadro/src/models/session_model.dart';
 
 class PublicSpeakingFeedbackModal extends StatefulWidget {
@@ -97,7 +97,7 @@ class _PublicSpeakingFeedbackModalState
 
   @override
   Widget build(BuildContext context) {
-    final Color purpleDark = '49416D'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
 
     return Dialog(
       backgroundColor: const Color(0xFFF0E6F6),

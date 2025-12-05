@@ -4,8 +4,9 @@ import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:voquadro/src/hex_color.dart';
 import 'package:logger/logger.dart';
+import 'package:voquadro/widgets/Modals/mode_selection_modal.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class StartSpeakingActions extends StatefulWidget {
   const StartSpeakingActions({super.key});
@@ -70,13 +71,17 @@ class _StartSpeakingActionsState extends State<StartSpeakingActions>
                     context.read<SoundService>().playSfx(
                       'assets/audio/button_click.mp3',
                     );
-                    context.read<PublicSpeakingController>().startMicTest();
+                    if (publicModeSelectedNotifier.value == 1) {
+                      context.read<PublicSpeakingController>().showJourney();
+                    } else {
+                      context.read<PublicSpeakingController>().startMicTest();
+                    }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: "00A9A5".toColor(),
-                    foregroundColor: Colors.white,
+                    backgroundColor: VoquadroColors.primaryAction,
+                    foregroundColor: VoquadroColors.white,
                     elevation: 3.0,
-                    shadowColor: Colors.black.withValues(alpha: 0.3),
+                    shadowColor: VoquadroColors.shadowColorStrong,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(32),
                     ),
@@ -102,16 +107,17 @@ class _StartSpeakingActionsState extends State<StartSpeakingActions>
                   context.read<SoundService>().playSfx(
                     'assets/audio/button_click.mp3',
                   );
-                  // Toggle logic for mode switcher
-                  if (publicModeSelectedNotifier.value == 0) {
-                    publicModeSelectedNotifier.value = 1;
-                  } else {
-                    publicModeSelectedNotifier.value = 0;
-                  }
+                  
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (context) => const ModeSelectionModal(),
+                  );
                 },
                 style: FilledButton.styleFrom(
                   padding: EdgeInsets.zero,
-                  backgroundColor: "50D8D6".toColor(),
+                  backgroundColor: VoquadroColors.primaryAction,
                   shape: const CircleBorder(),
                   elevation: 3.0,
                 ),

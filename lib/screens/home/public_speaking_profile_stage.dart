@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:voquadro/widgets/Profile/profile_edit_sheet.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/services/user_service.dart';
@@ -259,10 +259,10 @@ class _PublicSpeakingProfileStageState
 
   @override
   Widget build(BuildContext context) {
-    final Color purpleDark = "#49416D".toColor();
-    final Color purpleMid = "#7962A5".toColor();
-    final Color cardBg = "#F0E6F6".toColor();
-    final Color pageBg = "#F7F3FB".toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color purpleMid = VoquadroColors.publicSpeakingSecondary;
+    final Color cardBg = const Color(0xFFF0E6F6); // Keeping as literal if not in VoquadroColors, or add it.
+    final Color pageBg = const Color(0xFFF7F3FB);
     return FutureBuilder<ProfileData>(
       future: _profileDataFuture,
       builder: (context, snapshot) {
@@ -376,7 +376,7 @@ class _PublicSpeakingProfileStageState
             icon: const Icon(Icons.arrow_back),
             iconSize: 40,
             style: IconButton.styleFrom(
-              backgroundColor: "#7962A5".toColor(),
+              backgroundColor: VoquadroColors.publicSpeakingSecondary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -385,7 +385,7 @@ class _PublicSpeakingProfileStageState
             icon: const Icon(Icons.edit),
             iconSize: 40,
             style: IconButton.styleFrom(
-              backgroundColor: "#7962A5".toColor(),
+              backgroundColor: VoquadroColors.publicSpeakingSecondary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -517,9 +517,9 @@ class _PublicSpeakingProfileStageState
         width: cardWidth,
         height: 110,
         decoration: BoxDecoration(
-          color: "#F5F5F5".toColor(),
+          color: const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: "#E0E0E0".toColor(), width: 1.5),
+          border: Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -590,7 +590,7 @@ class _PublicSpeakingProfileStageState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: "#F0E6F6".toColor(),
+      backgroundColor: const Color(0xFFF0E6F6),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

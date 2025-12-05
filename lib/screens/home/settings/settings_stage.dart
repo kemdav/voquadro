@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:voquadro/widgets/Modals/delete_account_confirmation.dart';
 import 'package:voquadro/widgets/Modals/terms_of_service_modal.dart';
 import 'package:voquadro/widgets/Modals/privacy_policy_modal.dart';
@@ -18,8 +18,8 @@ class _SettingsStageState extends State<SettingsStage> {
   @override
   Widget build(BuildContext context) {
     final soundService = context.watch<SoundService>();
-    final Color purpleDark = '49416D'.toColor();
-    final Color purpleMid = '7962A5'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color purpleMid = VoquadroColors.publicSpeakingSecondary;
     const Color cardBg = Color(0xFFF0E6F6);
     const Color pageBg = Color(0xFFF7F3FB);
 

@@ -4,7 +4,9 @@ import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
-import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
+import 'package:voquadro/screens/gameplay/shared/character_home_page.dart';
+import 'package:voquadro/data/notifiers.dart';
+import 'package:voquadro/data/interview_data.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_only.dart'; // Ensure this matches your file creation
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/readying_prompt_page.dart';
@@ -188,13 +190,45 @@ class PublicSpeakingHub extends StatelessWidget {
                       child: IndexedStack(
                         index: controller.currentState.index,
                         children: [
-                          const PublicSpeakingHomePage(),
+                          ValueListenableBuilder<int>(
+                            valueListenable: publicModeSelectedNotifier,
+                            builder: (context, mode, _) {
+                              if (mode == 1) {
+                                return CharacterHomePage(
+                                  facts: InterviewData.facts,
+                                  defaultImage: InterviewData.defaultImage,
+                                  soundEffectPath: InterviewData.soundEffect,
+                                  isVisible:
+                                      controller.currentState ==
+                                      PublicSpeakingState.home,
+                                  isTutorialActive: controller.isTutorialActive,
+                                );
+                              }
+                              return CharacterHomePage(
+                                facts: PublicSpeakingData.facts,
+                                defaultImage: PublicSpeakingData.defaultImage,
+                                soundEffectPath: PublicSpeakingData.soundEffect,
+                                isVisible:
+                                    controller.currentState ==
+                                    PublicSpeakingState.home,
+                                isTutorialActive: controller.isTutorialActive,
+                              );
+                            },
+                          ),
                           const PublicSpeakingProfileStage(),
                           const PublicSpeakingStatusPage(),
-                          PublicSpeakJourneySection(
-                            isVisible:
-                                controller.currentState ==
-                                PublicSpeakingState.journey,
+                          ValueListenableBuilder<int>(
+                            valueListenable: publicModeSelectedNotifier,
+                            builder: (context, mode, _) {
+                              if (mode == 1) {
+                                return const UnderConstructionPage();
+                              }
+                              return PublicSpeakJourneySection(
+                                isVisible:
+                                    controller.currentState ==
+                                    PublicSpeakingState.journey,
+                              );
+                            },
                           ),
                           const MicTestPage(),
 

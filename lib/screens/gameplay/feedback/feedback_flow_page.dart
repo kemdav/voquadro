@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 // Import your component and content widgets
 import 'package:voquadro/widgets/Widget/feedback_continue_button_widget.dart';
 import 'package:voquadro/widgets/Widget/feedback_progress_widget.dart';
@@ -21,10 +21,10 @@ class FeedbackFlowPage extends StatelessWidget {
     final controller = context.watch<PublicSpeakingController>();
     final currentIndex = controller.currentFeedbackStep.index;
 
-    final Color primaryPurple = "49416D".toColor();
-    final Color buttonPurple = "887CAF".toColor();
+    final Color primaryPurple = VoquadroColors.primaryPurple;
+    final Color buttonPurple = const Color(0xFF887CAF);
     final Color cardBackground = Colors.white;
-    final Color activeIndicator = "44D6D2".toColor();
+    final Color activeIndicator = const Color(0xFF44D6D2);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),

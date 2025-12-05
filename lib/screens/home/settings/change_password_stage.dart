@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:voquadro/screens/home/settings/settings_stage.dart';
 
 class ChangePasswordStage extends StatefulWidget {
@@ -28,8 +28,8 @@ class _ChangePasswordStageState extends State<ChangePasswordStage> {
 
   @override
   Widget build(BuildContext context) {
-    final Color purpleDark = '49416D'.toColor();
-    final Color purpleMid = '7962A5'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color purpleMid = VoquadroColors.publicSpeakingSecondary;
     const Color pageBg = Color(0xFFF7F3FB);
 
     // Match login input design

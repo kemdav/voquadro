@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 var logger = Logger();
 
@@ -30,7 +30,7 @@ class OnlyBackActions extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             iconSize: 50,
             style: IconButton.styleFrom(
-              backgroundColor: "7962A5".toColor(),
+              backgroundColor: VoquadroColors.publicSpeakingSecondary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -42,7 +42,7 @@ class OnlyBackActions extends StatelessWidget {
                 icon: const Icon(Icons.person),
                 iconSize: 50,
                 style: IconButton.styleFrom(
-                  backgroundColor: "7962A5".toColor(),
+                  backgroundColor: VoquadroColors.publicSpeakingSecondary,
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -52,7 +52,7 @@ class OnlyBackActions extends StatelessWidget {
                 icon: const Icon(Icons.settings),
                 iconSize: 50,
                 style: IconButton.styleFrom(
-                  backgroundColor: "7962A5".toColor(),
+                  backgroundColor: VoquadroColors.publicSpeakingSecondary,
                   foregroundColor: Colors.white,
                 ),
               ),

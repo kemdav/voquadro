@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class RankProgressionModal extends StatefulWidget {
   final int currentLevel;
@@ -70,8 +71,8 @@ class _RankProgressionModalState extends State<RankProgressionModal>
 
   @override
   Widget build(BuildContext context) {
-    final Color purpleDark = "#49416D".toColor();
-    final Color bg = "#F7F3FB".toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color bg = const Color(0xFFF7F3FB);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,

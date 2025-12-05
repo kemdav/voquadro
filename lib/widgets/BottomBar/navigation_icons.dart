@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
-import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/data/notifiers.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class NavigationIcons extends StatefulWidget {
   final double navbarHeight;
@@ -305,7 +305,7 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _opacityAnimation;
 
-  static final Color _optionTrayMenuBackgroundColor = "2C2C3E".toColor();
+  static final Color _optionTrayMenuBackgroundColor = VoquadroColors.trayBackground;
   static const Color _dividerColor = Colors.white12;
 
   @override

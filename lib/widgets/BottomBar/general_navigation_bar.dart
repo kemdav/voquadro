@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
 import 'package:voquadro/widgets/BottomBar/navigation_icons.dart';
+import 'package:voquadro/data/notifiers.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class GeneralNavigationBar extends StatelessWidget {
   const GeneralNavigationBar({
@@ -31,18 +32,26 @@ class GeneralNavigationBar extends StatelessWidget {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                height: navBarVisualHeight + bottomPadding,
-                decoration: BoxDecoration(
-                  color: "49416D".toColor(),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 15,
-                      offset: const Offset(0, -2),
+              child: ValueListenableBuilder<int>(
+                valueListenable: publicModeSelectedNotifier,
+                builder: (context, mode, _) {
+                  return Container(
+                    height: navBarVisualHeight + bottomPadding,
+                    decoration: BoxDecoration(
+                      color:
+                          mode == 1
+                              ? VoquadroColors.interviewPrimary
+                              : VoquadroColors.publicSpeakingPrimary,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 15,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           // Navigation icons (centered inside purple bar at bottom) - only show if navBarVisualHeight > 0
