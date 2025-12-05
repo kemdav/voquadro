@@ -70,25 +70,32 @@ class AppFlowController with ChangeNotifier {
   }
 
   Future<void> login(String username, String password) async {
+    debugPrint('AppFlowController: login called for $username');
     _appState = AppState.authenticating;
     loginErrorMessage = null;
     notifyListeners();
 
     try {
       // Call secure UserService to perform authentication
+      debugPrint(
+        'AppFlowController: Calling UserService.signInWithUsernameAndPassword',
+      );
       final user = await UserService.signInWithUsernameAndPassword(
         username: username,
         password: password,
       );
+      debugPrint('AppFlowController: Login success');
 
       currentUser = user; // Store the user data
       _appState = AppState.authenticated;
     } on AuthException catch (e) {
+      debugPrint('AppFlowController: AuthException: ${e.message}');
       //Catch the specific, structured error type.
       _appState = AppState.login;
       //Assign the clean message directly
       loginErrorMessage = e.message;
     } catch (e) {
+      debugPrint('AppFlowController: Unexpected error: $e');
       //Catch any other unexpected errors.
       _appState = AppState.login;
       loginErrorMessage =

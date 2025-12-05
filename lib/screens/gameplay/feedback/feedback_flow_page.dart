@@ -38,9 +38,21 @@ class FeedbackFlowPage extends StatelessWidget {
               index: controller.currentFeedbackStep.index,
               children: <Widget>[
                 // Pass colors and any other required data to your pages
-                TranscriptPage(cardBackground: cardBackground, primaryPurple: primaryPurple, isVisible: currentIndex == 0),
-                SpeakFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple, isVisible: currentIndex == 1),
-                StatFeedbackPage(cardBackground: cardBackground, primaryPurple: primaryPurple, isVisible: currentIndex == 2),
+                TranscriptPage(
+                  cardBackground: cardBackground,
+                  primaryPurple: primaryPurple,
+                  isVisible: currentIndex == 0,
+                ),
+                SpeakFeedbackPage(
+                  cardBackground: cardBackground,
+                  primaryPurple: primaryPurple,
+                  isVisible: currentIndex == 1,
+                ),
+                StatFeedbackPage(
+                  cardBackground: cardBackground,
+                  primaryPurple: primaryPurple,
+                  isVisible: currentIndex == 2,
+                ),
                 ProgressionPage(isVisible: currentIndex == 3),
               ],
             ),

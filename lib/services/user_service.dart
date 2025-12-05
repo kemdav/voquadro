@@ -153,13 +153,18 @@ class UserService {
     required String email,
     required String password,
   }) async {
+    debugPrint('UserService: createUser called for $username');
     try {
       // 1. Create the user in the Supabase Auth schema
+      debugPrint('UserService: Calling supabase.auth.signUp');
       final authResponse = await _supabase.auth.signUp(
         email: email,
         password: password,
         // We can store the username in the metadata
         data: {'username': username},
+      );
+      debugPrint(
+        'UserService: signUp completed. User ID: ${authResponse.user?.id}',
       );
 
       if (authResponse.user == null) {
@@ -168,12 +173,39 @@ class UserService {
 
       // 2. The trigger has already created the profile. Now, we just fetch it.
       //    This also confirms that the trigger worked correctly.
-      final userProfile = await getFullUserProfile(authResponse.user!.id);
+      //    Retry logic added to handle potential trigger delays.
+      User? userProfile;
+      int retries = 0;
+      while (retries < 5) {
+        try {
+          debugPrint(
+            'UserService: Attempting to fetch profile (Attempt ${retries + 1})',
+          );
+          userProfile = await getFullUserProfile(authResponse.user!.id);
+          debugPrint('UserService: Profile fetched successfully');
+          break; // Success!
+        } catch (e) {
+          debugPrint('UserService: Fetch profile failed: $e');
+          retries++;
+          if (retries >= 5) {
+            debugPrint('UserService: Max retries reached. Rethrowing.');
+            rethrow; // Give up after 5 tries
+          }
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+      }
 
       // Your other logic remains the same
-      await _createInitialUserSkills(userProfile.id);
-      return userProfile;
+      if (userProfile != null) {
+        debugPrint('UserService: Creating initial skills');
+        await _createInitialUserSkills(userProfile.id);
+        debugPrint('UserService: Initial skills created');
+        return userProfile;
+      } else {
+        throw AuthException('Failed to fetch user profile after creation.');
+      }
     } on AuthException catch (e) {
+      debugPrint('UserService: AuthException in createUser: ${e.message}');
       if (e.message.contains('User already registered')) {
         throw AuthException('Email is already taken.');
       }

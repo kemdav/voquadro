@@ -14,14 +14,17 @@ class RegistrationScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => RegistrationController(),
       child: Scaffold(
-        body: Consumer<RegistrationController>(
-          builder: (context, regController, child) {
-            // A great place for AnimatedSwitcher for smooth transitions!
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: _buildStage(context, regController.stage),
-            );
-          },
+        backgroundColor: const Color(0xFFF8F0FB),
+        body: SafeArea(
+          child: Consumer<RegistrationController>(
+            builder: (context, regController, child) {
+              // A great place for AnimatedSwitcher for smooth transitions!
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _buildStage(context, regController.stage),
+              );
+            },
+          ),
         ),
       ),
     );

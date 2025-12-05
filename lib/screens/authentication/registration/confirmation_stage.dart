@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/registration_controller.dart';
+import 'package:voquadro/src/hex_color.dart';
 
 class RegistrationConfirmationStage extends StatelessWidget {
   const RegistrationConfirmationStage({super.key});
@@ -11,19 +12,36 @@ class RegistrationConfirmationStage extends StatelessWidget {
   }
 
   Future<void> _completeRegistration(BuildContext context) async {
+    // Capture controllers before the async gap
     final registrationController = context.read<RegistrationController>();
     final appFlowController = context.read<AppFlowController>();
 
+    // This will trigger a rebuild of RegistrationScreen, causing this widget (ConfirmationStage)
+    // to be disposed as it switches to the 'submitting' loading indicator.
     await registrationController.completeRegistration();
 
-    if (context.mounted) {
-      // Check if registration was successful (no error message)
-      if (registrationController.errorMessage == null) {
+    // Because this widget is disposed, context.mounted would be false here.
+    // However, we already captured the controllers, so we can proceed with the logic.
+
+    // Check if registration was successful (no error message)
+    if (registrationController.errorMessage == null) {
+      debugPrint("Registration successful, proceeding to auto-login...");
+      try {
         appFlowController.login(
           registrationController.username!,
           registrationController.password!,
         );
+      } catch (e) {
+        debugPrint("Error calling login from registration: $e");
       }
+    } else {
+      debugPrint(
+        "Registration failed with error: ${registrationController.errorMessage}",
+      );
+      // If there was an error, the controller sets the stage back to confirmation.
+      // Since this widget was disposed, we can't update IT, but the parent RegistrationScreen
+      // will rebuild with the ConfirmationStage again (because of notifyListeners in controller),
+      // showing the error message.
     }
   }
 
@@ -55,7 +73,7 @@ class RegistrationConfirmationStage extends StatelessWidget {
           Center(
             child: CircleAvatar(
               radius: 56,
-              backgroundColor: Colors.grey.shade600,
+              backgroundColor: '#f5fbf9'.toColor(),
               backgroundImage: const AssetImage('assets/images/dolph.png'),
             ),
           ),
@@ -92,21 +110,52 @@ class RegistrationConfirmationStage extends StatelessWidget {
           const SizedBox(height: 40),
 
           Center(
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.grey[400],
-              child: Consumer<RegistrationController>(
-                builder: (context, controller, child) {
-                  return Text(
-                    controller.username ?? 'User',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+            child: Consumer<RegistrationController>(
+              builder: (context, controller, child) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: buttonPurple.withValues(alpha: 0.3),
+                      width: 1.5,
                     ),
-                  );
-                },
-              ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: buttonPurple.withValues(alpha: 0.1),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "NOVICE",
+                        style: TextStyle(
+                          color: buttonPurple.withValues(alpha: 0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        controller.username ?? 'User',
+                        style: const TextStyle(
+                          color: primaryText,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
 

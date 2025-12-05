@@ -35,9 +35,6 @@ class GeneralNavigationBar extends StatelessWidget {
                 height: navBarVisualHeight + bottomPadding,
                 decoration: BoxDecoration(
                   color: "49416D".toColor(),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.25),
@@ -55,12 +52,15 @@ class GeneralNavigationBar extends StatelessWidget {
               left: 0,
               right: 0,
               height: navBarVisualHeight,
-              child: Center(child: const NavigationIcons()),
+              child: Center(
+                child: NavigationIcons(navbarHeight: navBarVisualHeight),
+              ),
             ),
           // Actions widget (positioned above the purple navigation bar, or at bottom if no nav bar)
           if (actions != null)
             Positioned(
-              bottom: (navBarVisualHeight > 0 ? navBarVisualHeight + 20 : 20) +
+              bottom:
+                  (navBarVisualHeight > 0 ? navBarVisualHeight + 20 : 20) +
                   bottomPadding,
               left: 20,
               right: 20,
