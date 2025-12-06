@@ -84,4 +84,15 @@ mixin InterviewGameplay on ChangeNotifier {
   void disposeGameplay() {
     _readyingTimer?.cancel();
   }
+
+  /// Resets all gameplay state to default
+  void resetGameplay() {
+    _readyingTimer?.cancel();
+    _role = "";
+    _scenario = "";
+    _interviewerName = "";
+    _readyingTimeRemaining = _maxReadyingTime;
+    _isMicMuted = false;
+    notifyListeners();
+  }
 }

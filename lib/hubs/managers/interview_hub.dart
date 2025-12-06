@@ -6,6 +6,7 @@ import 'package:voquadro/hubs/controllers/interview-controller/interview_control
 import 'package:voquadro/screens/gameplay/interview/pages/interview_loading_page.dart';
 import 'package:voquadro/screens/gameplay/interview/pages/interview_readying_page.dart';
 import 'package:voquadro/screens/gameplay/interview/pages/interview_speaking_page.dart';
+import 'package:voquadro/screens/gameplay/interview/pages/interview_feedback_page.dart';
 import 'package:voquadro/screens/gameplay/shared/character_home_page.dart';
 import 'package:voquadro/data/interview_data.dart';
 import 'package:voquadro/screens/gameplay/shared/mic_test_page.dart';
@@ -217,8 +218,7 @@ class InterviewHub extends StatelessWidget {
                           // 7. Interviewing
                           const InterviewSpeakingPage(),
                           // 8. Feedback
-                          const SizedBox.shrink(),
-                          //const InterviewFeedbackPage(),
+                          const InterviewFeedbackPage(),
                           // 9. Under Construction
                           const UnderConstructionPage(),
                         ],

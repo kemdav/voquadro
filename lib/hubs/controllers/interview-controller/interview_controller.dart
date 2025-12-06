@@ -71,7 +71,8 @@ class InterviewController with ChangeNotifier, InterviewGameplay {
   }
 
   void endInterview() {
-    changeState(InterviewState.inFeedback);
+    resetGameplay();
+    changeState(InterviewState.home);
   }
 
   void exitGameplay() {
