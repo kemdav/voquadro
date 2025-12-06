@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/interview-controller/interview_controller.dart';
+import 'package:voquadro/screens/gameplay/interview/pages/interview_loading_page.dart';
+import 'package:voquadro/screens/gameplay/interview/pages/interview_readying_page.dart';
+import 'package:voquadro/screens/gameplay/interview/pages/interview_speaking_page.dart';
 import 'package:voquadro/screens/gameplay/shared/character_home_page.dart';
 import 'package:voquadro/data/interview_data.dart';
 import 'package:voquadro/screens/gameplay/shared/mic_test_page.dart';
@@ -13,7 +16,7 @@ import 'package:voquadro/widgets/AppBar/empty_actions.dart';
 import 'package:voquadro/widgets/AppBar/general_app_bar.dart';
 import 'package:voquadro/widgets/AppBar/default_actions.dart';
 import 'package:voquadro/widgets/BottomBar/empty_actions.dart';
-import 'package:voquadro/widgets/BottomBar/gameplay_actions.dart';
+import 'package:voquadro/widgets/BottomBar/interview_gameplay_actions.dart';
 import 'package:voquadro/widgets/BottomBar/general_navigation_bar.dart';
 import 'package:voquadro/widgets/BottomBar/start_speaking_actions.dart';
 import 'package:voquadro/screens/misc/under_construction.dart';
@@ -37,10 +40,13 @@ class InterviewHub extends StatelessWidget {
       case InterviewState.micTest:
         return EmptyNavigationActions();
 
+      case InterviewState.loading:
+        return const EmptyActions();
+
       case InterviewState.readying:
         return const EmptyActions();
       case InterviewState.interviewing:
-        return GameplayActions(); // Reuse or create InterviewGameplayActions
+        return const InterviewGameplayActions();
       case InterviewState.inFeedback:
         return const EmptyNavigationActions();
     }
@@ -57,6 +63,7 @@ class InterviewHub extends StatelessWidget {
 
       case InterviewState.journey:
       case InterviewState.micTest:
+      case InterviewState.loading:
       case InterviewState.readying:
         return const EmptyActions();
 
@@ -78,6 +85,7 @@ class InterviewHub extends StatelessWidget {
         return true;
 
       case InterviewState.micTest:
+      case InterviewState.loading:
       case InterviewState.readying:
       case InterviewState.inFeedback:
         return false;
@@ -95,6 +103,7 @@ class InterviewHub extends StatelessWidget {
         return true;
 
       case InterviewState.micTest:
+      case InterviewState.loading:
       case InterviewState.readying:
       case InterviewState.interviewing:
       case InterviewState.inFeedback:
@@ -115,6 +124,7 @@ class InterviewHub extends StatelessWidget {
       case InterviewState.micTest:
         return [140, 40];
 
+      case InterviewState.loading:
       case InterviewState.readying:
         return [120, 40];
       case InterviewState.interviewing:
@@ -200,16 +210,16 @@ class InterviewHub extends StatelessWidget {
                           ), // Reuse or create InterviewJourneySection
                           // 4. Mic Test
                           const MicTestPage(),
-                          // 5. Readying
-                          const SizedBox.shrink(),
-                          // const InterviewReadyingPage(),
-                          // 6. Interviewing
-                          const SizedBox.shrink(),
-                          //const InterviewSpeakingPage(),
-                          // 7. Feedback
+                          // 5. Loading
+                          const InterviewLoadingPage(),
+                          // 6. Readying
+                          const InterviewReadyingPage(),
+                          // 7. Interviewing
+                          const InterviewSpeakingPage(),
+                          // 8. Feedback
                           const SizedBox.shrink(),
                           //const InterviewFeedbackPage(),
-                          // 8. Under Construction
+                          // 9. Under Construction
                           const UnderConstructionPage(),
                         ],
                       ),

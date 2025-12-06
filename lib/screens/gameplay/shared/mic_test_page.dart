@@ -144,7 +144,7 @@ class _MicTestPageState extends State<MicTestPage> {
         if (_appFlowController.currentMode == AppMode.publicSpeaking) {
           await _publicSpeakingController?.generateRandomQuestionAndStart();
         } else if (_appFlowController.currentMode == AppMode.interviewMode) {
-          _interviewController?.startReadying();
+          _interviewController?.onMicTestPassed();
         }
       } catch (e) {
         debugPrint("Error starting session: $e");
