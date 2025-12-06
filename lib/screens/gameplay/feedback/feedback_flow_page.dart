@@ -4,14 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/theme/voquadro_colors.dart';
-// Import your component and content widgets
 import 'package:voquadro/widgets/Widget/feedback_continue_button_widget.dart';
 import 'package:voquadro/widgets/Widget/feedback_progress_widget.dart';
 import 'package:voquadro/screens/gameplay/feedback/progression_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/stat_feedback_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/transcript_page.dart';
 import 'package:voquadro/screens/gameplay/feedback/speak_feedback_page.dart';
-// ... import other feedback pages
 
 class FeedbackFlowPage extends StatelessWidget {
   const FeedbackFlowPage({super.key});

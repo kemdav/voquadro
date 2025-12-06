@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/theme/voquadro_colors.dart';
 
@@ -87,6 +89,14 @@ class ModeSelectionModal extends StatelessWidget {
     return InkWell(
       onTap: () {
         publicModeSelectedNotifier.value = index;
+        
+        final appFlow = context.read<AppFlowController>();
+        if (index == 0) {
+          appFlow.selectMode(AppMode.publicSpeaking);
+        } else if (index == 1) {
+          appFlow.selectMode(AppMode.interviewMode);
+        }
+        
         Navigator.pop(context);
       },
       borderRadius: BorderRadius.circular(16),

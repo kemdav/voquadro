@@ -1,9 +1,9 @@
-// [FILE: kemdav/voquadro/voquadro-feature-animation-dolph-and-other-stuff/lib/widgets/BottomBar/navigation_icons.dart]
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
+import 'package:voquadro/hubs/controllers/interview-controller/interview_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/home/public_speaking_profile_stage.dart';
 import 'package:voquadro/services/sound_service.dart';
@@ -51,12 +51,27 @@ class _NavigationIconsState extends State<NavigationIcons> {
 
   void _openMenu() {
     final double bottomPadding = MediaQuery.of(context).padding.bottom;
-    final publicSpeakingController = context.read<PublicSpeakingController>();
+    final appFlowController = context.read<AppFlowController>();
+
+    PublicSpeakingController? publicSpeakingController;
+    InterviewController? interviewController;
+
+    if (appFlowController.currentMode == AppMode.publicSpeaking) {
+      publicSpeakingController = context.read<PublicSpeakingController>();
+    } else if (appFlowController.currentMode == AppMode.interviewMode) {
+      interviewController = context.read<InterviewController>();
+    }
 
     _overlayEntry = OverlayEntry(
       builder: (context) {
-        return ChangeNotifierProvider.value(
-          value: publicSpeakingController,
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: appFlowController),
+            if (publicSpeakingController != null)
+              ChangeNotifierProvider.value(value: publicSpeakingController),
+            if (interviewController != null)
+              ChangeNotifierProvider.value(value: interviewController),
+          ],
           child: _OptionsTrayOverlay(
             navbarHeight: widget.navbarHeight + bottomPadding,
             onClose: _closeMenu,
@@ -105,7 +120,13 @@ class _NavigationIconsState extends State<NavigationIcons> {
         if (scaffoldState.isEndDrawerOpen) scaffoldState.closeEndDrawer();
       }
       Navigator.of(context).popUntil((route) => route.isFirst);
-      context.read<PublicSpeakingController>().showHome();
+
+      final appFlow = context.read<AppFlowController>();
+      if (appFlow.currentMode == AppMode.publicSpeaking) {
+        context.read<PublicSpeakingController>().showHome();
+      } else if (appFlow.currentMode == AppMode.interviewMode) {
+        context.read<InterviewController>().showHome();
+      }
     });
   }
 
@@ -124,14 +145,24 @@ class _NavigationIconsState extends State<NavigationIcons> {
           index: 1,
           assetPath: 'assets/homepage_assets/faq.svg',
           onTap: () => _onIconPressed(1, 'FAQ icon pressed!', () {
-            context.read<PublicSpeakingController>().showUnderConstruction();
+            final appFlow = context.read<AppFlowController>();
+            if (appFlow.currentMode == AppMode.publicSpeaking) {
+              context.read<PublicSpeakingController>().showUnderConstruction();
+            } else if (appFlow.currentMode == AppMode.interviewMode) {
+              context.read<InterviewController>().showUnderConstruction();
+            }
           }),
         ),
         _buildNavIcon(
           index: 2,
           assetPath: 'assets/homepage_assets/adventure_mode.svg',
           onTap: () => _onIconPressed(2, 'Adventure mode icon pressed!', () {
-            context.read<PublicSpeakingController>().showUnderConstruction();
+            final appFlow = context.read<AppFlowController>();
+            if (appFlow.currentMode == AppMode.publicSpeaking) {
+              context.read<PublicSpeakingController>().showUnderConstruction();
+            } else if (appFlow.currentMode == AppMode.interviewMode) {
+              context.read<InterviewController>().showUnderConstruction();
+            }
           }),
         ),
         ValueListenableBuilder<bool>(
@@ -143,7 +174,12 @@ class _NavigationIconsState extends State<NavigationIcons> {
               showBadge: hasNewFeedback,
               onTap: () => _onIconPressed(3, 'Journal pressed', () {
                 hasNewFeedbackNotifier.value = false;
-                context.read<PublicSpeakingController>().showJourney();
+                final appFlow = context.read<AppFlowController>();
+                if (appFlow.currentMode == AppMode.publicSpeaking) {
+                  context.read<PublicSpeakingController>().showJourney();
+                } else if (appFlow.currentMode == AppMode.interviewMode) {
+                  context.read<InterviewController>().showJourney();
+                }
               }),
             );
           },
@@ -401,9 +437,15 @@ class _OptionsTrayOverlayState extends State<_OptionsTrayOverlay>
                           context.read<SoundService>().playSfx(
                             'assets/audio/navigation_sfx.mp3',
                           );
-                          context
-                              .read<PublicSpeakingController>()
-                              .startMicTestOnly();
+                          final appFlow = context.read<AppFlowController>();
+                          if (appFlow.currentMode == AppMode.publicSpeaking) {
+                            context
+                                .read<PublicSpeakingController>()
+                                .startMicTestOnly();
+                          } else if (appFlow.currentMode ==
+                              AppMode.interviewMode) {
+                            context.read<InterviewController>().startMicTest();
+                          }
                         }),
                       ),
                     ],

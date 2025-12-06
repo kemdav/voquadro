@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/data/notifiers.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
+import 'package:voquadro/hubs/controllers/interview-controller/interview_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/services/sound_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -71,14 +72,17 @@ class _StartSpeakingActionsState extends State<StartSpeakingActions>
                     context.read<SoundService>().playSfx(
                       'assets/audio/button_click.mp3',
                     );
-                    if (publicModeSelectedNotifier.value == 1) {
-                      context.read<PublicSpeakingController>().showJourney();
+                    final appFlow = context.read<AppFlowController>();
+                    if (appFlow.currentMode == AppMode.interviewMode) {
+                      context.read<InterviewController>().startMicTest();
                     } else {
                       context.read<PublicSpeakingController>().startMicTest();
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: VoquadroColors.primaryAction,
+                    backgroundColor: context.read<AppFlowController>().currentMode == AppMode.interviewMode
+                        ? VoquadroColors.interviewPrimary
+                        : VoquadroColors.primaryAction,
                     foregroundColor: VoquadroColors.white,
                     elevation: 3.0,
                     shadowColor: VoquadroColors.shadowColorStrong,
@@ -86,9 +90,11 @@ class _StartSpeakingActionsState extends State<StartSpeakingActions>
                       borderRadius: BorderRadius.circular(32),
                     ),
                   ),
-                  child: const Text(
-                    'Start Speaking!',
-                    style: TextStyle(
+                  child: Text(
+                    context.read<AppFlowController>().currentMode == AppMode.interviewMode
+                        ? 'Start Interview!'
+                        : 'Start Speaking!',
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
                       fontFamily: 'Nunito',
