@@ -24,6 +24,7 @@ class InterviewController with ChangeNotifier, InterviewGameplay {
   InterviewState get currentState => _currentState;
 
   // Dependencies getter
+  @override
   AudioController get audioController => _audioController;
 
   InterviewController({
@@ -71,11 +72,11 @@ class InterviewController with ChangeNotifier, InterviewGameplay {
   }
 
   void endInterview() {
-    resetGameplay();
-    changeState(InterviewState.home);
+    finishInterviewSession();
   }
 
   void exitGameplay() {
+    resetGameplay();
     changeState(InterviewState.home);
   }
 }

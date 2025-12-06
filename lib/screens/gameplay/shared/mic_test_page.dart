@@ -45,7 +45,6 @@ class _MicTestPageState extends State<MicTestPage> {
     _onStateChanged();
   }
 
-  @override
   /// This function runs every time the App Flow State changes.
   void _onStateChanged() {
     if (!mounted) return;

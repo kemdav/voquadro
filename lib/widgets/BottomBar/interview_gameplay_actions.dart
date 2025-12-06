@@ -36,17 +36,30 @@ class InterviewGameplayActions extends StatelessWidget {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Mic Toggle Button
-            FloatingActionButton(
-              key: const ValueKey('micToggleBtn'),
-              heroTag: 'micToggleBtn',
-              onPressed: () => controller.toggleMic(),
-              backgroundColor: controller.isMicMuted ? Colors.red : Colors.white,
-              elevation: 4,
-              child: Icon(
-                controller.isMicMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                color: controller.isMicMuted ? Colors.white : Colors.black87,
-                size: 28,
+            // Mic Push-to-Talk Button
+            GestureDetector(
+              onTapDown: (_) => controller.startUserSpeech(),
+              onTapUp: (_) => controller.stopUserSpeech(),
+              onTapCancel: () => controller.stopUserSpeech(),
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: controller.isMicMuted ? Colors.red : Colors.green,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  controller.isMicMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
               ),
             ),
             const SizedBox(width: 24),

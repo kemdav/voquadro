@@ -1,14 +1,24 @@
 import 'dart:async';
-import 'dart:ffi';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:voquadro/hubs/controllers/audio_controller.dart';
+import 'package:path_provider/path_provider.dart';
 import 'interview_controller.dart';
 
 mixin InterviewGameplay on ChangeNotifier {
   // --- REQUIRED DEPENDENCIES (from InterviewController) ---
   void changeState(InterviewState newState);
+  AudioController get audioController;
   
   // --- GAMEPLAY STATE ---
   
+  // Session Recording
+  final List<String> _sessionAudioPaths = [];
+  List<String> get sessionAudioPaths => List.unmodifiable(_sessionAudioPaths);
+  
+  String? _mergedAudioPath;
+  String? get mergedAudioPath => _mergedAudioPath;
+
   // AI Generated Info
   String _role = "";
   String _scenario = "";
@@ -49,10 +59,20 @@ mixin InterviewGameplay on ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleMic() {
-    if (_isSpeaking) return; // Prevent toggling while AI is speaking
-    _isMicMuted = !_isMicMuted;
+  // --- PUSH TO TALK LOGIC ---
+
+  void startUserSpeech() {
+    if (_isSpeaking) return; // Cannot speak while AI is speaking
+    _isMicMuted = false;
     notifyListeners();
+    _startUserRecording();
+  }
+
+  void stopUserSpeech() {
+    if (_isSpeaking) return;
+    _isMicMuted = true;
+    notifyListeners();
+    _stopUserRecording();
   }
 
   /// Called when Mic Test is successful.
@@ -111,10 +131,36 @@ mixin InterviewGameplay on ChangeNotifier {
   // Control flag for speech playback
   bool _isPlayingResponse = false;
 
+  // --- RECORDING HELPERS ---
+
+  Future<void> _startUserRecording() async {
+    try {
+      // Start recording to a unique temp file (handled by AudioController)
+      await audioController.startRecording();
+    } catch (e) {
+      debugPrint("Error starting recording: $e");
+    }
+  }
+
+  Future<void> _stopUserRecording() async {
+    try {
+      final path = await audioController.stopRecording();
+      if (path != null) {
+        _sessionAudioPaths.add(path);
+        debugPrint("Recorded chunk saved: $path");
+      }
+    } catch (e) {
+      debugPrint("Error stopping recording: $e");
+    }
+  }
+
   /// Simulates the AI speaking a response with synchronized subtitles.
   /// This function takes the full response text and updates subtitles sequentially
   /// to mimic the flow of speech.
   Future<void> playAiResponse(String fullResponse) async {
+    // Ensure any previous user recording is stopped and saved
+    await _stopUserRecording();
+
     _isPlayingResponse = true;
     _isSpeaking = true;
     _isMicMuted = true; // Mute user while AI speaks
@@ -142,8 +188,11 @@ mixin InterviewGameplay on ChangeNotifier {
       clearSubtitle();
       _isSpeaking = false;
       _isPlayingResponse = false;
-      _isMicMuted = false; // Unmute user so they can answer
+      _isMicMuted = true; // Keep user muted until they press PTT
       notifyListeners();
+      
+      // Note: We do NOT automatically start recording here anymore.
+      // User must press and hold to record.
     }
   }
 
@@ -190,10 +239,45 @@ mixin InterviewGameplay on ChangeNotifier {
     stopSpeaking();
   }
 
+  /// Merges all recorded session chunks into a single file using FFmpeg
+  Future<void> _mergeAudioFiles() async {
+    // FFmpeg merge disabled due to build issues.
+    // The feedback page will handle sequential playback of chunks.
+    debugPrint("Skipping FFmpeg merge. Using sequential playback.");
+    return;
+  }
+
+  /// Finishes the interview, stops recording, merges audio, and moves to feedback
+  Future<void> finishInterviewSession() async {
+    _readyingTimer?.cancel();
+    stopSpeaking();
+    
+    // Stop active recording
+    try {
+      final path = await audioController.stopRecording();
+      if (path != null) {
+        _sessionAudioPaths.add(path);
+      }
+    } catch (e) {
+      debugPrint("Error stopping final recording: $e");
+    }
+    
+    if (_sessionAudioPaths.isNotEmpty) {
+      await _mergeAudioFiles();
+    }
+    
+    changeState(InterviewState.inFeedback);
+  }
+
   /// Resets all gameplay state to default
   void resetGameplay() {
     _readyingTimer?.cancel();
     stopSpeaking();
+    
+    // Clear session data
+    _sessionAudioPaths.clear();
+    _mergedAudioPath = null;
+
     _role = "";
     _scenario = "";
     _interviewerName = "";
