@@ -7,6 +7,7 @@ import 'package:voquadro/data/models/interview_response_model.dart';
 import 'package:voquadro/screens/gameplay/interview/pages/feedback/interview_stats_page.dart';
 import 'package:voquadro/screens/gameplay/interview/pages/feedback/interview_ai_feedback_page.dart';
 import 'package:voquadro/screens/gameplay/interview/pages/feedback/interview_audio_player.dart';
+import 'package:voquadro/screens/gameplay/interview/pages/feedback/interview_progression_page.dart';
 import 'dart:io';
 
 class InterviewFeedbackPage extends StatefulWidget {
@@ -73,6 +74,20 @@ class _InterviewFeedbackPageState extends State<InterviewFeedbackPage> {
                   primaryPurple: VoquadroColors.primaryPurple,
                   isVisible: _currentPage == 2,
                 ),
+                InterviewProgressionPage(
+                  cardBackground: Colors.grey.shade900,
+                  primaryPurple: VoquadroColors.primaryPurple,
+                  isVisible: _currentPage == 3,
+                  currentInterviewLevel: controller.userInterviewLevel,
+                  currentInterviewExp: controller.userInterviewExp,
+                  gainedInterviewExp: controller.gainedInterviewExp,
+                  currentPaceLevel: controller.userPaceLevel,
+                  currentPaceExp: controller.userPaceExp,
+                  gainedPaceExp: controller.gainedPaceExp,
+                  currentFillerLevel: controller.userFillerLevel,
+                  currentFillerExp: controller.userFillerExp,
+                  gainedFillerExp: controller.gainedFillerExp,
+                ),
               ],
             ),
           ),
@@ -80,7 +95,7 @@ class _InterviewFeedbackPageState extends State<InterviewFeedbackPage> {
           // Page Indicator
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(3, (index) => _buildDot(index)),
+            children: List.generate(4, (index) => _buildDot(index)),
           ),
           
           const SizedBox(height: 16),

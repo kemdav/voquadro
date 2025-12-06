@@ -59,6 +59,33 @@ mixin InterviewGameplay on ChangeNotifier {
   String _aiFeedback = "Based on your responses, you demonstrated strong technical knowledge. However, try to reduce the use of filler words like 'um' and 'uh'. Your pacing was generally good, but you rushed slightly during the explanation of your past projects.";
   String get aiFeedback => _aiFeedback;
 
+  // --- PROGRESSION DATA ---
+  int _gainedInterviewExp = 0;
+  int _gainedPaceExp = 0;
+  int _gainedFillerExp = 0;
+
+  int get gainedInterviewExp => _gainedInterviewExp;
+  int get gainedPaceExp => _gainedPaceExp;
+  int get gainedFillerExp => _gainedFillerExp;
+
+  // Mock User Stats (In a real app, these would come from a UserProfileService)
+  // These represent the user's stats BEFORE the current session
+  final int _userInterviewLevel = 5;
+  final int _userInterviewExp = 2400;
+  
+  final int _userPaceLevel = 3;
+  final int _userPaceExp = 800;
+
+  final int _userFillerLevel = 4;
+  final int _userFillerExp = 1200;
+
+  int get userInterviewLevel => _userInterviewLevel;
+  int get userInterviewExp => _userInterviewExp;
+  int get userPaceLevel => _userPaceLevel;
+  int get userPaceExp => _userPaceExp;
+  int get userFillerLevel => _userFillerLevel;
+  int get userFillerExp => _userFillerExp;
+
   // --- FLOW METHODS ---
 
   void updateSubtitle(String text) {
@@ -68,6 +95,19 @@ mixin InterviewGameplay on ChangeNotifier {
 
   void clearSubtitle() {
     _interviewerSubtitle = "";
+    notifyListeners();
+  }
+
+  void calculateSessionExp() {
+    // Simple calculation logic based on number of responses
+    // In reality, this would be based on AI analysis scores
+    int responseCount = _sessionResponses.length;
+    if (responseCount == 0) responseCount = 1; // Minimum 1 for testing if empty
+    
+    _gainedInterviewExp = responseCount * 50 + 100; // Base 100 + 50 per response
+    _gainedPaceExp = responseCount * 20 + 50;
+    _gainedFillerExp = responseCount * 15 + 30;
+    
     notifyListeners();
   }
 
@@ -296,6 +336,7 @@ mixin InterviewGameplay on ChangeNotifier {
       await _mergeAudioFiles();
     }
     
+    calculateSessionExp();
     changeState(InterviewState.inFeedback);
   }
 
