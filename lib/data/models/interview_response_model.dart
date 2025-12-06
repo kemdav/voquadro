@@ -3,9 +3,6 @@ class InterviewResponseModel {
   final Duration duration;
   final Duration responseTime;
   String transcript;
-  
-  // We might want to track which question this response belongs to later, 
-  // but for now the user asked for audio, duration, and blank transcript.
 
   InterviewResponseModel({
     required this.audioPath,
@@ -13,6 +10,24 @@ class InterviewResponseModel {
     required this.responseTime,
     this.transcript = "",
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'audio_path': audioPath,
+      'duration_ms': duration.inMilliseconds,
+      'response_time_ms': responseTime.inMilliseconds,
+      'transcript': transcript,
+    };
+  }
+
+  factory InterviewResponseModel.fromMap(Map<String, dynamic> map) {
+    return InterviewResponseModel(
+      audioPath: map['audio_path'] ?? '',
+      duration: Duration(milliseconds: map['duration_ms'] ?? 0),
+      responseTime: Duration(milliseconds: map['response_time_ms'] ?? 0),
+      transcript: map['transcript'] ?? '',
+    );
+  }
 
   @override
   String toString() {
