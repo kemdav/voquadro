@@ -53,28 +53,43 @@ class InterviewSpeakingPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.mic, color: Colors.white70, size: 16),
-                          SizedBox(width: 8),
-                          Text(
-                            "Speaking...",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Container(
+                        key: ValueKey(controller.isSpeaking),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: controller.isSpeaking
+                              ? VoquadroColors.primaryPurple.withOpacity(0.8)
+                              : Colors.black54,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              controller.isSpeaking
+                                  ? Icons.volume_up_rounded
+                                  : Icons.graphic_eq_rounded,
+                              color: Colors.white,
+                              size: 16,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              controller.isSpeaking
+                                  ? "Speaking..."
+                                  : "Listening...",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -181,6 +196,36 @@ class InterviewSpeakingPage extends StatelessWidget {
                   ),
                 ),
               ),
+
+              // 3. Subtitles (Bottom Center)
+              if (controller.interviewerSubtitle.isNotEmpty)
+                Positioned(
+                  bottom: 130,
+                  left: 24,
+                  right: 24,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        controller.interviewerSubtitle,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           );
         },
