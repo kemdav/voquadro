@@ -219,6 +219,7 @@ class InterviewHub extends StatelessWidget {
                           const InterviewSpeakingPage(),
                           // 8. Feedback
                           InterviewFeedbackPage(
+                            key: ValueKey(controller.gameplaySessionId),
                             sessionAudioPaths: controller.sessionAudioPaths,
                             mergedAudioPath: controller.mergedAudioPath,
                             sessionResponses: controller.sessionResponses,

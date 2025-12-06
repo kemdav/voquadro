@@ -13,6 +13,10 @@ mixin InterviewGameplay on ChangeNotifier {
   
   // --- GAMEPLAY STATE ---
   
+  // Session ID to force UI rebuilds on new sessions
+  String _gameplaySessionId = DateTime.now().toIso8601String();
+  String get gameplaySessionId => _gameplaySessionId;
+
   // Session Recording
   final List<InterviewResponseModel> _sessionResponses = [];
   List<InterviewResponseModel> get sessionResponses => List.unmodifiable(_sessionResponses);
@@ -344,6 +348,9 @@ mixin InterviewGameplay on ChangeNotifier {
   void resetGameplay() {
     _readyingTimer?.cancel();
     stopSpeaking();
+    
+    // Generate new session ID to reset UI states
+    _gameplaySessionId = DateTime.now().toIso8601String();
     
     // Clear session data
     _sessionResponses.clear();

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:voquadro/theme/voquadro_colors.dart';
 import 'dart:io';
+import 'dart:async';
 
 class InterviewAudioPlayer extends StatefulWidget {
   final String? mergedAudioPath;
@@ -23,6 +25,11 @@ class _InterviewAudioPlayerState extends State<InterviewAudioPlayer> {
   Duration _totalDuration = Duration.zero;
   Duration _currentPosition = Duration.zero;
 
+  StreamSubscription<PlayerState>? _playerStateSubscription;
+  StreamSubscription<Duration?>? _durationSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<SequenceState?>? _sequenceStateSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -33,13 +40,32 @@ class _InterviewAudioPlayerState extends State<InterviewAudioPlayer> {
   void didUpdateWidget(InterviewAudioPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.mergedAudioPath != oldWidget.mergedAudioPath ||
-        widget.sessionAudioPaths != oldWidget.sessionAudioPaths) {
-      _player.stop();
+        !listEquals(widget.sessionAudioPaths, oldWidget.sessionAudioPaths)) {
+      _stopAndReinit();
+    }
+  }
+
+  Future<void> _stopAndReinit() async {
+    try {
+      await _player.stop();
+    } catch (e) {
+      // Ignore stop errors
+    }
+    if (mounted) {
       _initAudio();
     }
   }
 
+  void _cancelSubscriptions() {
+    _playerStateSubscription?.cancel();
+    _durationSubscription?.cancel();
+    _positionSubscription?.cancel();
+    _sequenceStateSubscription?.cancel();
+  }
+
   Future<void> _initAudio() async {
+    _cancelSubscriptions();
+    
     try {
       _totalDuration = Duration.zero;
       _currentPosition = Duration.zero;
@@ -58,7 +84,7 @@ class _InterviewAudioPlayerState extends State<InterviewAudioPlayer> {
         await _player.setAudioSource(playlist);
       }
 
-      _player.playerStateStream.listen((state) {
+      _playerStateSubscription = _player.playerStateStream.listen((state) {
         if (mounted) {
           setState(() {
             _isPlaying = state.playing;
@@ -66,13 +92,13 @@ class _InterviewAudioPlayerState extends State<InterviewAudioPlayer> {
         }
       });
 
-      _player.durationStream.listen((d) {
+      _durationSubscription = _player.durationStream.listen((d) {
         if (mounted && widget.mergedAudioPath != null) {
            setState(() => _totalDuration = d ?? Duration.zero);
         }
       });
 
-      _player.positionStream.listen((p) {
+      _positionSubscription = _player.positionStream.listen((p) {
         if (mounted) {
           if (widget.mergedAudioPath != null) {
             setState(() => _currentPosition = p);
@@ -82,7 +108,7 @@ class _InterviewAudioPlayerState extends State<InterviewAudioPlayer> {
         }
       });
       
-      _player.sequenceStateStream.listen((sequenceState) {
+      _sequenceStateSubscription = _player.sequenceStateStream.listen((sequenceState) {
         if (sequenceState == null) return;
         // Handle playlist duration logic if needed
       });
@@ -93,6 +119,7 @@ class _InterviewAudioPlayerState extends State<InterviewAudioPlayer> {
   }
 
   void _updatePlaylistPosition(Duration currentItemPosition) {
+    if (!mounted) return;
     setState(() {
       _currentPosition = currentItemPosition;
       _totalDuration = _player.duration ?? Duration.zero;
@@ -101,6 +128,7 @@ class _InterviewAudioPlayerState extends State<InterviewAudioPlayer> {
 
   @override
   void dispose() {
+    _cancelSubscriptions();
     _player.dispose();
     super.dispose();
   }
