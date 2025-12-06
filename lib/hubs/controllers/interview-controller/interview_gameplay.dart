@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:voquadro/data/models/interview_response_model.dart';
 import 'interview_controller.dart';
 
 mixin InterviewGameplay on ChangeNotifier {
@@ -13,11 +14,18 @@ mixin InterviewGameplay on ChangeNotifier {
   // --- GAMEPLAY STATE ---
   
   // Session Recording
-  final List<String> _sessionAudioPaths = [];
-  List<String> get sessionAudioPaths => List.unmodifiable(_sessionAudioPaths);
+  final List<InterviewResponseModel> _sessionResponses = [];
+  List<InterviewResponseModel> get sessionResponses => List.unmodifiable(_sessionResponses);
+  
+  // Helper to get just paths for playback
+  List<String> get sessionAudioPaths => _sessionResponses.map((e) => e.audioPath).toList();
   
   String? _mergedAudioPath;
   String? get mergedAudioPath => _mergedAudioPath;
+  
+  DateTime? _recordingStartTime;
+  DateTime? _aiFinishedSpeakingTime;
+  Duration _currentResponseLatency = Duration.zero;
 
   // AI Generated Info
   String _role = "";
@@ -63,6 +71,14 @@ mixin InterviewGameplay on ChangeNotifier {
 
   void startUserSpeech() {
     if (_isSpeaking) return; // Cannot speak while AI is speaking
+    
+    // Calculate response latency (time since AI finished speaking)
+    if (_aiFinishedSpeakingTime != null) {
+      _currentResponseLatency = DateTime.now().difference(_aiFinishedSpeakingTime!);
+    } else {
+      _currentResponseLatency = Duration.zero;
+    }
+    
     _isMicMuted = false;
     notifyListeners();
     _startUserRecording();
@@ -135,6 +151,7 @@ mixin InterviewGameplay on ChangeNotifier {
 
   Future<void> _startUserRecording() async {
     try {
+      _recordingStartTime = DateTime.now();
       // Start recording to a unique temp file (handled by AudioController)
       await audioController.startRecording();
     } catch (e) {
@@ -146,9 +163,24 @@ mixin InterviewGameplay on ChangeNotifier {
     try {
       final path = await audioController.stopRecording();
       if (path != null) {
-        _sessionAudioPaths.add(path);
-        debugPrint("Recorded chunk saved: $path");
+        final duration = _recordingStartTime != null 
+            ? DateTime.now().difference(_recordingStartTime!) 
+            : Duration.zero;
+            
+        final response = InterviewResponseModel(
+          audioPath: path,
+          duration: duration,
+          responseTime: _currentResponseLatency,
+        );
+        
+        _sessionResponses.add(response);
+        debugPrint("Recorded response saved: $response");
       }
+      _recordingStartTime = null;
+      // Reset latency for subsequent chunks in the same turn (if any)
+      // or keep it? Usually subsequent chunks are continuations, so latency is 0 or relative.
+      // For now, we'll keep the initial latency for the first chunk, and maybe 0 for others?
+      // But since PTT is "one hold", usually it's one chunk per response.
     } catch (e) {
       debugPrint("Error stopping recording: $e");
     }
@@ -189,6 +221,7 @@ mixin InterviewGameplay on ChangeNotifier {
       _isSpeaking = false;
       _isPlayingResponse = false;
       _isMicMuted = true; // Keep user muted until they press PTT
+      _aiFinishedSpeakingTime = DateTime.now(); // Mark when AI finished
       notifyListeners();
       
       // Note: We do NOT automatically start recording here anymore.
@@ -253,16 +286,9 @@ mixin InterviewGameplay on ChangeNotifier {
     stopSpeaking();
     
     // Stop active recording
-    try {
-      final path = await audioController.stopRecording();
-      if (path != null) {
-        _sessionAudioPaths.add(path);
-      }
-    } catch (e) {
-      debugPrint("Error stopping final recording: $e");
-    }
+    await _stopUserRecording();
     
-    if (_sessionAudioPaths.isNotEmpty) {
+    if (_sessionResponses.isNotEmpty) {
       await _mergeAudioFiles();
     }
     
@@ -275,8 +301,10 @@ mixin InterviewGameplay on ChangeNotifier {
     stopSpeaking();
     
     // Clear session data
-    _sessionAudioPaths.clear();
+    _sessionResponses.clear();
     _mergedAudioPath = null;
+    _recordingStartTime = null;
+    _aiFinishedSpeakingTime = null;
 
     _role = "";
     _scenario = "";

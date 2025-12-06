@@ -221,6 +221,7 @@ class InterviewHub extends StatelessWidget {
                           InterviewFeedbackPage(
                             sessionAudioPaths: controller.sessionAudioPaths,
                             mergedAudioPath: controller.mergedAudioPath,
+                            sessionResponses: controller.sessionResponses,
                           ),
                           // 9. Under Construction
                           const UnderConstructionPage(),

@@ -3,16 +3,19 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/interview-controller/interview_controller.dart';
 import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:voquadro/data/models/interview_response_model.dart';
 import 'dart:io';
 
 class InterviewFeedbackPage extends StatefulWidget {
   final String? mergedAudioPath;
   final List<String> sessionAudioPaths;
+  final List<InterviewResponseModel> sessionResponses;
 
   const InterviewFeedbackPage({
     super.key,
     this.mergedAudioPath,
     this.sessionAudioPaths = const [],
+    this.sessionResponses = const [],
   });
 
   @override
@@ -260,7 +263,60 @@ class _InterviewFeedbackPageState extends State<InterviewFeedbackPage> {
               ),
             ),
 
-            const Spacer(),
+            const SizedBox(height: 24),
+            
+            // Debug Info Section
+            const Text(
+              "Debug: Response Data",
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                itemCount: widget.sessionResponses.length,
+                itemBuilder: (context, index) {
+                  final response = widget.sessionResponses[index];
+                  return Card(
+                    color: Colors.grey.shade900,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Response #${index + 1}",
+                            style: TextStyle(
+                              color: VoquadroColors.primaryPurple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Duration: ${response.duration.inSeconds}.${response.duration.inMilliseconds.remainder(1000)}s",
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          Text(
+                            "Latency: ${response.responseTime.inMilliseconds}ms",
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          Text(
+                            "Path: ...${response.audioPath.split('/').last}",
+                            style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            
+            const SizedBox(height: 16),
             
             SizedBox(
               width: double.infinity,
