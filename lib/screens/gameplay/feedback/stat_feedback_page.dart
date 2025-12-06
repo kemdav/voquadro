@@ -398,19 +398,16 @@ class FadeSlideTransition extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
-        final animation = CurvedAnimation(
-          parent: controller,
-          curve: Interval(
-            intervalStart,
-            intervalEnd,
-            curve: Curves.easeOutQuart,
-          ),
-        );
+        final double curvedValue = Interval(
+          intervalStart,
+          intervalEnd,
+          curve: Curves.easeOutQuart,
+        ).transform(controller.value);
 
         return Opacity(
-          opacity: animation.value,
+          opacity: curvedValue,
           child: Transform.translate(
-            offset: Offset(0, 20 * (1 - animation.value)),
+            offset: Offset(0, 20 * (1 - curvedValue)),
             child: child,
           ),
         );

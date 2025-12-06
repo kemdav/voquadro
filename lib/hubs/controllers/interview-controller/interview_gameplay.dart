@@ -55,6 +55,10 @@ mixin InterviewGameplay on ChangeNotifier {
   String _interviewerSubtitle = "";
   String get interviewerSubtitle => _interviewerSubtitle;
 
+  // AI Feedback
+  String _aiFeedback = "Based on your responses, you demonstrated strong technical knowledge. However, try to reduce the use of filler words like 'um' and 'uh'. Your pacing was generally good, but you rushed slightly during the explanation of your past projects.";
+  String get aiFeedback => _aiFeedback;
+
   // --- FLOW METHODS ---
 
   void updateSubtitle(String text) {
