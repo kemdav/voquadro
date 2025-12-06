@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SoundService extends ChangeNotifier {
   final AudioPlayer _musicPlayer = AudioPlayer();
@@ -24,6 +25,36 @@ class SoundService extends ChangeNotifier {
 
   SoundService() {
     _musicPlayer.setLoopMode(LoopMode.one);
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isMusicMuted = prefs.getBool('music_muted') ?? false;
+      _isSfxMuted = prefs.getBool('sfx_muted') ?? false;
+      _isDolphSfxMuted = prefs.getBool('dolph_sfx_muted') ?? false;
+      _musicVolume = prefs.getDouble('music_volume') ?? 0.5;
+      _sfxVolume = prefs.getDouble('sfx_volume') ?? 1.0;
+      
+      _updateMusicVolume();
+      notifyListeners();
+    } catch (e) {
+      _logger.e("Error loading sound settings: $e");
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('music_muted', _isMusicMuted);
+      await prefs.setBool('sfx_muted', _isSfxMuted);
+      await prefs.setBool('dolph_sfx_muted', _isDolphSfxMuted);
+      await prefs.setDouble('music_volume', _musicVolume);
+      await prefs.setDouble('sfx_volume', _sfxVolume);
+    } catch (e) {
+      _logger.e("Error saving sound settings: $e");
+    }
   }
 
   /// Plays background music from an asset.
@@ -151,29 +182,34 @@ class SoundService extends ChangeNotifier {
   void setMusicVolume(double volume) {
     _musicVolume = volume.clamp(0.0, 1.0);
     _updateMusicVolume();
+    _saveSettings();
     notifyListeners();
   }
 
   void setSfxVolume(double volume) {
     _sfxVolume = volume.clamp(0.0, 1.0);
     _updateCelebrationVolume();
+    _saveSettings();
     notifyListeners();
   }
 
   void toggleMusicMute() {
     _isMusicMuted = !_isMusicMuted;
     _updateMusicVolume();
+    _saveSettings();
     notifyListeners();
   }
 
   void toggleSfxMute() {
     _isSfxMuted = !_isSfxMuted;
     _updateCelebrationVolume();
+    _saveSettings();
     notifyListeners();
   }
 
   void toggleDolphSfxMute() {
     _isDolphSfxMuted = !_isDolphSfxMuted;
+    _saveSettings();
     notifyListeners();
   }
 

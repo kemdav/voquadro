@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
+import 'package:voquadro/hubs/managers/interview_hub.dart';
 import 'package:voquadro/hubs/managers/public_speaking_hub.dart';
 
 class GameModeManager extends StatelessWidget {
@@ -17,6 +18,8 @@ class GameModeManager extends StatelessWidget {
         return const PublicSpeakingHub();
       case AppMode.modeSelection:
         return const Text('Mode Selection');
+      case AppMode.interviewMode:
+        return const InterviewHub();
     }
   }
 }

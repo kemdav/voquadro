@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
-import 'package:voquadro/src/hex_color.dart'; // Ensure you have this
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class TranscriptPage extends StatefulWidget {
   const TranscriptPage({
@@ -58,7 +58,7 @@ class _TranscriptPageState extends State<TranscriptPage>
     final audioController = context.watch<AudioController>();
     
     // Define an accent color (Teal/Cyan) matching previous screens
-    final Color accentCyan = "23B5D3".toColor(); 
+    final Color accentCyan = VoquadroColors.accentCyan; 
 
     return Consumer<PublicSpeakingController>(
       builder: (context, controller, child) {

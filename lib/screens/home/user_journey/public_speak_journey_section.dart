@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:voquadro/src/models/session_model.dart';
 import 'package:voquadro/widgets/Modals/pb_speaking_session.dart';
 import 'package:provider/provider.dart';
@@ -105,7 +105,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
     final currentLevelExp = levelInfo.currentLevelExp;
     final expToNextLevel = levelInfo.expToNextLevel;
 
-    final Color purpleDark = '49416D'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
     const Color cardBg = Color(0xFFF0E6F6);
     const Color pageBg = Color(0xFFF7F3FB);
 
@@ -768,7 +768,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: '6C53A1'.toColor(),
+              color: VoquadroColors.publicSpeakingBorder,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -783,7 +783,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
               return Text(
                 animatedValue.toString(),
                 style: TextStyle(
-                  color: '6C53A1'.toColor(),
+                  color: VoquadroColors.publicSpeakingBorder,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                 ),
@@ -795,7 +795,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
             Text(
               sublabel,
               style: TextStyle(
-                color: '6C53A1'.toColor().withValues(alpha: 0.7),
+                color: VoquadroColors.publicSpeakingBorder.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -845,12 +845,12 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: '49416D'.toColor().withValues(
+                    color: VoquadroColors.primaryPurple.withValues(
                       alpha: 0.1,
                     ), // ~10% opacity
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.mic, color: '49416D'.toColor(), size: 24),
+                  child: Icon(Icons.mic, color: VoquadroColors.primaryPurple, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -864,7 +864,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: '49416D'.toColor(),
+                          color: VoquadroColors.primaryPurple,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -875,7 +875,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: '49416D'.toColor().withValues(alpha: 0.6),
+                          color: VoquadroColors.primaryPurple.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -884,7 +884,7 @@ class _PublicSpeakJourneySectionState extends State<PublicSpeakJourneySection>
                 const SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right,
-                  color: '49416D'.toColor().withValues(alpha: 0.4),
+                  color: VoquadroColors.primaryPurple.withValues(alpha: 0.4),
                 ),
               ],
             ),

@@ -392,7 +392,6 @@ class PublicSpeakingController
 
         _appFlowController.updateCurrentUser(updatedUser);
 
-        // [ADDED] Trigger the red dot on the Journal icon
         hasNewFeedbackNotifier.value = true;
       } catch (e) {
         logger.d("An error occurred while saving session or updating EXP: $e");

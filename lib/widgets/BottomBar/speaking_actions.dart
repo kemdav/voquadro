@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:voquadro/src/hex_color.dart';
 
 var logger = Logger();
 
@@ -16,7 +15,7 @@ class SpeakingActions extends StatelessWidget {
             value: 0.3,
             minHeight: 10,
             backgroundColor: Colors.grey[300],
-            color: "6CCC51".toColor(),
+            color: const Color(0xFF6CCC51),
           ),
         ),
       ],

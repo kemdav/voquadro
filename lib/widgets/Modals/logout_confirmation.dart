@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class LogoutConfirmationModal extends StatelessWidget {
   const LogoutConfirmationModal({super.key});
@@ -14,8 +14,8 @@ class LogoutConfirmationModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color purpleDark = '49416D'.toColor();
-    final Color purpleMid = '7962A5'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color purpleMid = VoquadroColors.publicSpeakingSecondary;
     const Color dialogBg = Color(0xFFF7F3FB);
     const Color noButtonBg = Color(0xFFF0E6F6);
 

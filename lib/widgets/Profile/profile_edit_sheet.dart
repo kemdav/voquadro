@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 /// ProfileEditSheet
 /// Reusable bottom-sheet editor following Voquadro styles.
@@ -88,11 +88,11 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
-                borderSide: BorderSide(color: '7962A5'.toColor()),
+                borderSide: BorderSide(color: VoquadroColors.publicSpeakingSecondary),
                 borderRadius: BorderRadius.circular(12),
               ),
               enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: '7962A5'.toColor()),
+                borderSide: BorderSide(color: VoquadroColors.publicSpeakingSecondary),
                 borderRadius: BorderRadius.circular(12),
               ),
               hintText: 'Write your bio here...',
@@ -124,7 +124,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
       icon: Icon(icon, color: Colors.white),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: '7962A5'.toColor(),
+        backgroundColor: VoquadroColors.publicSpeakingSecondary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -138,7 +138,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: '49416D'.toColor(),
+        backgroundColor: VoquadroColors.primaryPurple,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

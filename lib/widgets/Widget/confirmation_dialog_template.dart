@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class ConfirmationDialog extends StatelessWidget {
   final VoidCallback onConfirm;
@@ -9,10 +9,10 @@ class ConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Define the colors used in this specific widget
-    final Color purpleDark = '49416D'.toColor();
-    final Color purpleMid = '7962A5'.toColor();
-    final Color dialogBg = 'F7F3FB'.toColor();
-    final Color noButtonBg = 'F0E6F6'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color purpleMid = VoquadroColors.publicSpeakingSecondary;
+    final Color dialogBg = const Color(0xFFF7F3FB);
+    final Color noButtonBg = const Color(0xFFF0E6F6);
 
     return Dialog(
       backgroundColor: Colors.transparent,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 /// ProfileTemplate
 /// Reusable, presentational widget that renders the profile UI used across
@@ -45,7 +45,7 @@ class ProfileActions extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             iconSize: 40,
             style: IconButton.styleFrom(
-              backgroundColor: "7962A5".toColor(),
+              backgroundColor: VoquadroColors.publicSpeakingSecondary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -56,7 +56,7 @@ class ProfileActions extends StatelessWidget {
             icon: const Icon(Icons.edit),
             iconSize: 40,
             style: IconButton.styleFrom(
-              backgroundColor: "7962A5".toColor(),
+              backgroundColor: VoquadroColors.publicSpeakingSecondary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -122,8 +122,8 @@ class ProfileTemplate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color purpleDark = '49416D'.toColor();
-    final Color purpleMid = '7962A5'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color purpleMid = VoquadroColors.publicSpeakingSecondary;
     const Color cardBg = Color(0xFFF0E6F6);
     const Color pageBg = Color(0xFFF7F3FB);
 
@@ -373,13 +373,13 @@ class _StatTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, color: '6C53A1'.toColor(), size: 30),
+          Icon(icon, color: VoquadroColors.publicSpeakingBorder, size: 30),
           const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: '6C53A1'.toColor(),
+              color: VoquadroColors.publicSpeakingBorder,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -387,7 +387,7 @@ class _StatTile extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: '6C53A1'.toColor(),
+              color: VoquadroColors.publicSpeakingBorder,
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),

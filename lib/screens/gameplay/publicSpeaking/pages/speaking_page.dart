@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-class SpeakingPage extends StatelessWidget {
-  const SpeakingPage({super.key});
+class PublicSpeakingPage extends StatelessWidget {
+  const PublicSpeakingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     // Colors
-    final Color primaryPurple = "49416D".toColor();
+    final Color primaryPurple = VoquadroColors.primaryPurple;
     final Color accentRed = Colors.redAccent;
     final Color bgGrey = const Color(0xFFF8F9FC);
 
@@ -23,49 +23,56 @@ class SpeakingPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgGrey,
       body: SafeArea(
-        child: Column(
-          children: [
-            // 1. TOP BAR (Timer & Recording Status)
-            _buildTopBar(progress, primaryPurple, accentRed),
-
-            const Spacer(flex: 1),
-
-            // 2. QUESTION CARD (Hero Element)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: _buildQuestionCard(
-                session?.generatedQuestion ??
-                    controller.currentQuestion ??
-                    "Waiting for question...",
-                primaryPurple,
-              ),
-            ),
-
-            const Spacer(flex: 2),
-
-            // 3. VISUALIZER & CHARACTER
-            // We stack the character with a visual "sound wave" effect behind/around
-            SizedBox(
-              height: 250,
-              child: Stack(
-                alignment: Alignment.bottomCenter,
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
                 children: [
-                  // Animated Pulse (Simulating voice activity)
-                  const Positioned(bottom: 40, child: PulsingWave()),
-                  // Character Image
-                  Positioned(
-                    bottom: 0,
-                    child: Image.asset(
-                      'assets/images/dolph.png',
-                      height: 220,
-                      fit: BoxFit.contain,
+                  // 1. TOP BAR (Timer & Recording Status)
+                  _buildTopBar(progress, primaryPurple, accentRed),
+
+                  const Spacer(flex: 1),
+
+                  // 2. QUESTION CARD (Hero Element)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: _buildQuestionCard(
+                      session?.generatedQuestion ??
+                          controller.currentQuestion ??
+                          "Waiting for question...",
+                      primaryPurple,
                     ),
                   ),
+
+                  const Spacer(flex: 2),
+
+                  // 3. VISUALIZER & CHARACTER
+                  // We stack the character with a visual "sound wave" effect behind/around
+                  SizedBox(
+                    height: 250,
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        // Animated Pulse (Simulating voice activity)
+                        const Positioned(bottom: 40, child: PulsingWave()),
+                        // Character Image
+                        Positioned(
+                          bottom: 0,
+                          child: Image.asset(
+                            'assets/images/dolph.png',
+                            height: 220,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Add spacing for the bottom buttons (GameplayActions)
+                  const SizedBox(height: 140),
                 ],
               ),
             ),
-            // Add spacing for the bottom buttons (GameplayActions)
-            const SizedBox(height: 140),
           ],
         ),
       ),
@@ -212,7 +219,7 @@ class _PulsingWaveState extends State<PulsingWave>
 
   @override
   Widget build(BuildContext context) {
-    final Color color = "23B5D3".toColor(); // Accent Cyan
+    final Color color = VoquadroColors.accentCyan; // Accent Cyan
 
     return AnimatedBuilder(
       animation: _controller,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/registration_controller.dart';
-import 'package:voquadro/src/hex_color.dart';
 
 class RegistrationPasswordStage extends StatefulWidget {
   const RegistrationPasswordStage({super.key});
@@ -80,7 +79,7 @@ class _RegistrationPasswordStageState extends State<RegistrationPasswordStage> {
                       Center(
                         child: CircleAvatar(
                           radius: 56,
-                          backgroundColor: "#f5fbf9".toColor(),
+                          backgroundColor: const Color(0xFFF5FBF9),
                           backgroundImage: const AssetImage(
                             'assets/images/dolph.png',
                           ),

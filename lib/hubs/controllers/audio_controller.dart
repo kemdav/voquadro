@@ -123,7 +123,9 @@ class AudioController with ChangeNotifier {
   }
 
   /// Starts the audio recording process.
-  Future<void> startRecording() async {
+  /// If [filePath] is provided, records to that path.
+  /// Otherwise, records to a temporary file.
+  Future<void> startRecording({String? filePath}) async {
     // 1. Check for microphone permission
     var status = await Permission.microphone.status;
     if (!status.isGranted) {
@@ -143,24 +145,39 @@ class AudioController with ChangeNotifier {
 
     await _configureAudioSession();
 
-    // 2. Find a temporary directory to save the file
-    final Directory tempDir = await getTemporaryDirectory();
-    _audioPath = '${tempDir.path}/myaudio.m4a';
+    // 2. Determine file path
+    if (filePath != null) {
+      _audioPath = filePath;
+    } else {
+      final Directory tempDir = await getTemporaryDirectory();
+      _audioPath = '${tempDir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    }
 
     // 3. Start recording
+    // Check if already recording
+    if (await _audioRecorder.isRecording()) {
+      await _audioRecorder.stop();
+    }
+
     const config = RecordConfig(encoder: AudioEncoder.aacLc);
     await _audioRecorder.start(config, path: _audioPath!);
 
     _audioState = AudioState.recording;
-    logger.d('Saving audio to: $_audioPath');
+    logger.d('Started recording to: $_audioPath');
     notifyListeners();
   }
 
   /// Stops the audio recording process.
-  Future<void> stopRecording() async {
-    await _audioRecorder.stop();
-    _audioState = AudioState.stopped;
-    notifyListeners();
+  /// Returns the path of the recorded file.
+  Future<String?> stopRecording() async {
+    if (await _audioRecorder.isRecording()) {
+      await _audioRecorder.stop();
+      _audioState = AudioState.stopped;
+      logger.d('Stopped recording. File saved at: $_audioPath');
+      notifyListeners();
+      return _audioPath;
+    }
+    return null;
   }
 
   /// Uploads the recorded audio file to a server.

@@ -168,7 +168,6 @@ class _ModePageState extends State<PublicSpeakingHomePage> {
               child: CustomPaint(
                 painter: _BubblePainter(),
                 child: Container(
-                  // Added extra bottom padding (16 + 12) to account for the tail
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                   width: 280,
                   child: Text(

@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/services/sound_service.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class GameplayActions extends StatelessWidget {
   const GameplayActions({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final primaryPurple = "49416D".toColor();
-    final accentCyan = "23B5D3".toColor();
+    final primaryPurple = VoquadroColors.primaryPurple;
+    final accentCyan = VoquadroColors.accentCyan;
 
     return Consumer<PublicSpeakingController>(
       builder: (context, controller, child) {

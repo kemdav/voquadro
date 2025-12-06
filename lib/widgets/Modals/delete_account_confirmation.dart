@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 
@@ -94,8 +94,8 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final Color purpleDark = '49416D'.toColor();
-    final Color purpleMid = '7962A5'.toColor();
+    final Color purpleDark = VoquadroColors.primaryPurple;
+    final Color purpleMid = VoquadroColors.publicSpeakingSecondary;
     const Color dialogBg = Color(0xFFF7F3FB);
     const Color noButtonBg = Color(0xFFF0E6F6);
 

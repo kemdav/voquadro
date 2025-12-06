@@ -4,8 +4,10 @@ import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
-import 'package:voquadro/screens/gameplay/publicSpeaking/public_speaking_home_page.dart';
-import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
+import 'package:voquadro/screens/gameplay/shared/character_home_page.dart';
+import 'package:voquadro/data/notifiers.dart';
+import 'package:voquadro/data/interview_data.dart';
+import 'package:voquadro/screens/gameplay/shared/mic_test_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_only.dart'; // Ensure this matches your file creation
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/readying_prompt_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/speaking_page.dart';
@@ -38,7 +40,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return const EmptyNavigationActions();
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED] Hide bottom actions
+      case PublicSpeakingState.micTestOnly:
         return EmptyNavigationActions();
 
       case PublicSpeakingState.readying:
@@ -61,8 +63,7 @@ class PublicSpeakingHub extends StatelessWidget {
 
       case PublicSpeakingState.journey:
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState
-          .micTestOnly: // [ADDED] Hide upper actions (Page has its own back button)
+      case PublicSpeakingState.micTestOnly:
       case PublicSpeakingState.readying:
         return const EmptyActions();
 
@@ -84,7 +85,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return true;
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED] Full screen mode
+      case PublicSpeakingState.micTestOnly:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.inFeedback:
         return false;
@@ -102,7 +103,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return true;
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED]
+      case PublicSpeakingState.micTestOnly:
       case PublicSpeakingState.readying:
       case PublicSpeakingState.speaking:
       case PublicSpeakingState.inFeedback:
@@ -121,7 +122,7 @@ class PublicSpeakingHub extends StatelessWidget {
         return [70, 160];
 
       case PublicSpeakingState.micTest:
-      case PublicSpeakingState.micTestOnly: // [ADDED]
+      case PublicSpeakingState.micTestOnly:
         return [140, 40];
 
       case PublicSpeakingState.readying:
@@ -189,21 +190,52 @@ class PublicSpeakingHub extends StatelessWidget {
                       child: IndexedStack(
                         index: controller.currentState.index,
                         children: [
-                          const PublicSpeakingHomePage(),
+                          ValueListenableBuilder<int>(
+                            valueListenable: publicModeSelectedNotifier,
+                            builder: (context, mode, _) {
+                              if (mode == 1) {
+                                return CharacterHomePage(
+                                  facts: InterviewData.facts,
+                                  defaultImage: InterviewData.defaultImage,
+                                  soundEffectPath: InterviewData.soundEffect,
+                                  isVisible:
+                                      controller.currentState ==
+                                      PublicSpeakingState.home,
+                                  isTutorialActive: controller.isTutorialActive,
+                                );
+                              }
+                              return CharacterHomePage(
+                                facts: PublicSpeakingData.facts,
+                                defaultImage: PublicSpeakingData.defaultImage,
+                                soundEffectPath: PublicSpeakingData.soundEffect,
+                                isVisible:
+                                    controller.currentState ==
+                                    PublicSpeakingState.home,
+                                isTutorialActive: controller.isTutorialActive,
+                              );
+                            },
+                          ),
                           const PublicSpeakingProfileStage(),
                           const PublicSpeakingStatusPage(),
-                          PublicSpeakJourneySection(
-                            isVisible:
-                                controller.currentState ==
-                                PublicSpeakingState.journey,
+                          ValueListenableBuilder<int>(
+                            valueListenable: publicModeSelectedNotifier,
+                            builder: (context, mode, _) {
+                              if (mode == 1) {
+                                return const UnderConstructionPage();
+                              }
+                              return PublicSpeakJourneySection(
+                                isVisible:
+                                    controller.currentState ==
+                                    PublicSpeakingState.journey,
+                              );
+                            },
                           ),
                           const MicTestPage(),
 
-                          // [ADDED] MicTestOnlyPage at the index corresponding to PublicSpeakingState.micTestOnly
                           const MicTestOnlyPage(),
 
-                          const ReadyingPromptPage(),
-                          const SpeakingPage(),
+                          const PublicSpeakingReadyingPromptPage(),
+                          const PublicSpeakingPage(),
                           const FeedbackFlowPage(),
                           const UnderConstructionPage(),
                         ],

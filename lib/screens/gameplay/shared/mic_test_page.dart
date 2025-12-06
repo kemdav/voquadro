@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voquadro/hubs/controllers/app_flow_controller.dart';
 import 'package:voquadro/hubs/controllers/audio_controller.dart';
+import 'package:voquadro/hubs/controllers/interview-controller/interview_controller.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:voquadro/src/hex_color.dart';
+import 'package:voquadro/theme/voquadro_colors.dart';
 
 class MicTestPage extends StatefulWidget {
   const MicTestPage({super.key});
@@ -20,28 +22,27 @@ class _MicTestPageState extends State<MicTestPage> {
   bool _isProcessingAI = false;
 
   Timer? _visualTimer;
-  late PublicSpeakingController _publicSpeakingController;
+  late AppFlowController _appFlowController;
+  PublicSpeakingController? _publicSpeakingController;
+  InterviewController? _interviewController;
   late AudioController _audioController;
 
   @override
   void initState() {
     super.initState();
-    _publicSpeakingController = context.read<PublicSpeakingController>();
+    _appFlowController = context.read<AppFlowController>();
     _audioController = context.read<AudioController>();
 
-    // 1. Listen to the controller immediately
-    _publicSpeakingController.addListener(_onStateChanged);
+    if (_appFlowController.currentMode == AppMode.publicSpeaking) {
+      _publicSpeakingController = context.read<PublicSpeakingController>();
+      _publicSpeakingController!.addListener(_onStateChanged);
+    } else if (_appFlowController.currentMode == AppMode.interviewMode) {
+      _interviewController = context.read<InterviewController>();
+      _interviewController!.addListener(_onStateChanged);
+    }
 
     // 2. Run initial check (in case we start on this page)
     _onStateChanged();
-  }
-
-  @override
-  void dispose() {
-    // 3. Clean up listener
-    _publicSpeakingController.removeListener(_onStateChanged);
-    _stopEverything(fromDispose: true);
-    super.dispose();
   }
 
   /// This function runs every time the App Flow State changes.
@@ -49,8 +50,14 @@ class _MicTestPageState extends State<MicTestPage> {
     if (!mounted) return;
 
     // Check if we are the active page in the IndexedStack
-    final bool shouldBeActive =
-        _publicSpeakingController.currentState == PublicSpeakingState.micTest;
+    bool shouldBeActive = false;
+    if (_appFlowController.currentMode == AppMode.publicSpeaking) {
+      shouldBeActive =
+          _publicSpeakingController?.currentState == PublicSpeakingState.micTest;
+    } else if (_appFlowController.currentMode == AppMode.interviewMode) {
+      shouldBeActive =
+          _interviewController?.currentState == InterviewState.micTest;
+    }
 
     if (shouldBeActive && !_isActive) {
       // CASE A: We just became active (User entered Mic Page)
@@ -111,7 +118,6 @@ class _MicTestPageState extends State<MicTestPage> {
   }
 
   Future<void> _handleSuccess(
-    PublicSpeakingController psController,
     AudioController audioController,
   ) async {
     // Prevent double triggers
@@ -134,10 +140,11 @@ class _MicTestPageState extends State<MicTestPage> {
 
       try {
         // CALL THE CONTROLLER
-        // This will change the state to 'readying' (or similar).
-        // Once that happens, '_onStateChanged' will fire, and
-        // '_stopEverything()' will run automatically.
-        await psController.generateRandomQuestionAndStart();
+        if (_appFlowController.currentMode == AppMode.publicSpeaking) {
+          await _publicSpeakingController?.generateRandomQuestionAndStart();
+        } else if (_appFlowController.currentMode == AppMode.interviewMode) {
+          _interviewController?.onMicTestPassed();
+        }
       } catch (e) {
         debugPrint("Error starting session: $e");
         // If AI fails, restart the sequence so user can try again
@@ -152,7 +159,6 @@ class _MicTestPageState extends State<MicTestPage> {
   Widget build(BuildContext context) {
     // Listen to values
     final audioController = context.watch<AudioController>();
-    final publicSpeakingController = context.read<PublicSpeakingController>();
 
     final double amplitude = audioController.currentAmplitude;
 
@@ -160,8 +166,8 @@ class _MicTestPageState extends State<MicTestPage> {
     final bool isGood = amplitude >= 0.2 && _isReadyToListen && _isActive;
 
     // Colors
-    final Color primaryPurple = "49416D".toColor();
-    final Color accentCyan = "23B5D3".toColor();
+    final Color primaryPurple = VoquadroColors.primaryPurple;
+    final Color accentCyan = VoquadroColors.accentCyan;
     final Color activeColor = _successDetected
         ? accentCyan
         : (isGood ? accentCyan : Colors.grey.shade300);
@@ -169,7 +175,7 @@ class _MicTestPageState extends State<MicTestPage> {
     // Auto-trigger (Debounced by flags)
     if (isGood && !_successDetected && !_isProcessingAI) {
       Future.microtask(
-        () => _handleSuccess(publicSpeakingController, audioController),
+        () => _handleSuccess(audioController),
       );
     }
 

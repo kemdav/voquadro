@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
-import 'package:voquadro/src/hex_color.dart'; 
+import 'package:voquadro/theme/voquadro_colors.dart'; 
 
 class SpeakFeedbackPage extends StatefulWidget {
   const SpeakFeedbackPage({
@@ -53,7 +53,7 @@ class _SpeakFeedbackPageState extends State<SpeakFeedbackPage>
 
   @override
   Widget build(BuildContext context) {
-    final Color accentCyan = "23B5D3".toColor();
+    final Color accentCyan = VoquadroColors.accentCyan;
 
     return Consumer<PublicSpeakingController>(
       builder: (context, controller, child) {

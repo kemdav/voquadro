@@ -6,7 +6,7 @@ enum PublicSpeakingState {
   status,
   journey,
   micTest, // The gameplay mic test
-  micTestOnly, // [ADDED] The standalone utility mic test
+  micTestOnly,
   readying,
   speaking,
   inFeedback,
@@ -43,7 +43,6 @@ mixin PublicSpeakingStateManager on ChangeNotifier {
     setPublicSpeakingState(PublicSpeakingState.micTest);
   }
 
-  // [ADDED] Trigger for the standalone mic test
   void startMicTestOnly() {
     setPublicSpeakingState(PublicSpeakingState.micTestOnly);
   }
