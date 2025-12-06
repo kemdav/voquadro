@@ -7,7 +7,7 @@ import 'package:voquadro/screens/gameplay/feedback/feedback_flow_page.dart';
 import 'package:voquadro/screens/gameplay/shared/character_home_page.dart';
 import 'package:voquadro/data/notifiers.dart';
 import 'package:voquadro/data/interview_data.dart';
-import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_page.dart';
+import 'package:voquadro/screens/gameplay/shared/mic_test_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/mic_test_only.dart'; // Ensure this matches your file creation
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/readying_prompt_page.dart';
 import 'package:voquadro/screens/gameplay/publicSpeaking/pages/speaking_page.dart';
@@ -234,8 +234,8 @@ class PublicSpeakingHub extends StatelessWidget {
 
                           const MicTestOnlyPage(),
 
-                          const ReadyingPromptPage(),
-                          const SpeakingPage(),
+                          const PublicSpeakingReadyingPromptPage(),
+                          const PublicSpeakingPage(),
                           const FeedbackFlowPage(),
                           const UnderConstructionPage(),
                         ],

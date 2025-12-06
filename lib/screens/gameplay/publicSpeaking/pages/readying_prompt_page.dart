@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:voquadro/hubs/controllers/public-speaking-controller/public_speaking_controller.dart';
 import 'package:voquadro/theme/voquadro_colors.dart';
 
-class ReadyingPromptPage extends StatelessWidget {
-  const ReadyingPromptPage({super.key});
+class PublicSpeakingReadyingPromptPage extends StatelessWidget {
+  const PublicSpeakingReadyingPromptPage({super.key});
 
   @override
   Widget build(BuildContext context) {
